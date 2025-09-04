@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF--8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <title>🇫🇷 French Listening Study</title>
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇫🇷</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* --- CSS Reset & Variables --- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --primary-color: #4A90E2;
+      --success-color: #50E3C2;
+      --warning-color: #F5A623;
+      --secondary-color: #B8E986;
+      --text-color: #4A4A4A;
+      --light-gray: #F7F7F7;
+      --border-color: #EAEAEA;
+      --background-color: #FFFFFF;
+      --font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --border-radius: 12px;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    /* --- Base Layout (Viewport App) --- */
+    html, body {
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      font-family: var(--font-family);
+      background-color: var(--light-gray);
+      color: var(--text-color);
+    }
+
+    .container {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto auto auto;
+      grid-template-columns: 1fr;
+      grid-template-areas: "header" "sub-header" "display" "controls" "countdown" "footer";
+      padding: 0.75rem;
+      gap: 0.75rem;
+    }
+
+    /* --- Desktop Layout --- */
+    @media (min-width: 1024px) and (min-height: 600px) {
+      .container {
+        grid-template-rows: auto auto 1fr auto;
+        grid-template-columns: 280px 1fr 200px;
+        grid-template-areas: "header header header" "sub-header sub-header sub-header" "history display controls" "footer footer footer";
+        padding: 1.5rem;
+        gap: 1.5rem;
+      }
+      .container.history-hidden { grid-template-columns: 40px 1fr 200px; }
+    }
+
+    /* --- Header, Sub-header & Progress Bar --- */
+    .header { grid-area: header; display: flex; flex-direction: column; gap: 0.75rem; }
+    .header-top { display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { font-size: 1.25em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .header-actions { display: flex; align-items: center; gap: 1rem; flex-shrink: 0; }
+    .icon-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-color); transition: transform 0.2s; }
+    .icon-btn:hover { transform: scale(1.1); }
+    .language-flags { display: flex; gap: 0.5rem; }
+    .language-flag { font-size: 1.5rem; cursor: pointer; opacity: 0.5; transition: all 0.2s ease; }
+    .language-flag.active { opacity: 1; transform: scale(1.15); }
+    
+    .progress-bar { width: 100%; height: 5px; background-color: var(--border-color); border-radius: 5px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; width: 0%; background-color: var(--success-color); transition: width 0.3s ease-in-out; border-radius: 5px; }
+
+    .sub-header { grid-area: sub-header; display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); font-size: 0.8em; }
+    .status-indicator { background-color: var(--light-gray); padding: 0.25rem 0.75rem; border-radius: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+    /* --- Main Display --- */
+    .display-container { grid-area: display; background: var(--primary-color); color: white; border-radius: var(--border-radius); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+    .display-area-upper { font-size: clamp(2rem, 8vw, 4.5rem); font-weight: 800; text-align: center; }
+    .session-complete-message { font-size: clamp(1.5rem, 5vw, 2.5rem); opacity: 0.9; }
+
+    /* --- Controls --- */
+    .controls-vertical { grid-area: controls; display: flex; flex-direction: column; gap: 0.75rem; }
+    @media (max-width: 1023px) { .controls-vertical { flex-direction: row; flex-wrap: wrap; } }
+    .btn { padding: 0.75rem 1rem; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 700; transition: all .2s ease; color: white; text-align: center; }
+    @media (max-width: 1023px) { .btn { flex-grow: 1; min-width: 120px; } }
+    .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); }
+    .btn:disabled { background-color: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-primary { background-color: var(--primary-color); }
+    .btn-secondary { background-color: var(--secondary-color); color: var(--text-color); }
+    .btn-success { background-color: var(--success-color); }
+    .btn-warning { background-color: var(--warning-color); }
+    .btn-info { background-color: #90b8de; }
+
+    /* --- History Sidebar --- */
+    .history-sidebar { grid-area: history; display: none; flex-direction: column; background: var(--background-color); border-radius: var(--border-radius); box-shadow: var(--shadow); padding: 1rem; overflow: hidden; transition: all 0.3s ease-in-out; }
+    @media (min-width: 1024px) and (min-height: 600px) { .history-sidebar { display: flex; } }
+    .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-shrink: 0; }
+    .history-title { font-weight: bold; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; flex-grow: 1; }
+    #historyToggleBtn { margin-left: 0.5rem; transform: rotate(0deg); transition: transform 0.3s; }
+    .history-list { flex-grow: 1; overflow-y: auto; padding-right: 0.5rem; }
+    .history-item { padding: 0.25rem 0.5rem; border-radius: 4px; }
+    .history-item:nth-child(even) { background-color: var(--light-gray); }
+
+    .container.history-hidden .history-sidebar { padding: 1rem 0; }
+    .container.history-hidden .history-title,
+    .container.history-hidden .history-list { display: none; }
+    .container.history-hidden #historyToggleBtn { transform: rotate(180deg); }
+
+    /* --- Countdown --- */
+    .countdown-wrapper { grid-area: countdown; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; min-height: 60px; }
+    .progress-ring { position: absolute; width: 60px; height: 60px; }
+    .progress-ring__circle { transition: stroke-dashoffset 0.1s linear; transform: rotate(-90deg); transform-origin: 50% 50%; stroke-width: 6; stroke: var(--success-color); stroke-linecap: round; }
+    .progress-ring__track { stroke-width: 6; stroke: var(--border-color); }
+    .countdown-text { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); }
+
+    /* --- Footer / Status Bar --- */
+    .footer { grid-area: footer; display: flex; justify-content: space-between; align-items: center; padding-top: 0.5rem; border-top: 1px solid var(--border-color); font-size: 0.8em; gap: 1rem; }
+    #statusInfo { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #fileInfo { white-space: nowrap; text-align: right; flex-shrink: 0; }
+
+    /* --- Modals --- */
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(74, 74, 74, 0.5); align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+    .modal.visible { display: flex; }
+    .modal-content { background-color: var(--background-color); padding: 1.5rem; border-radius: var(--border-radius); width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
+    .modal-header h2 { margin: 0; }
+    .modal-section { margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; }
+    .modal-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0;}
+    .modal-section label { font-weight: 600; display: block; margin-bottom: 0.5rem; }
+    .mode-options, .word-lists-options { display: flex; flex-direction: column; gap: 0.75rem; }
+    .mode-option { display: flex; align-items: center; gap: 0.5rem; }
+    .close-btn { font-size: 1.5rem; }
+    #welcomeModal .modal-content { text-align: center; }
+    #welcomeUploadArea { padding: 2rem; border: 3px dashed var(--primary-color); border-radius: var(--border-radius); cursor: pointer; background-color: var(--light-gray); }
+    #welcomeUploadArea:hover { background-color: #eaf2fa; }
+    
+    .word-list { max-height: 60vh; overflow-y: auto; }
+
+    /* --- Toast Notification --- */
+    .toast {
+      position: fixed;
+      bottom: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 1rem 1.5rem;
+      background-color: var(--text-color);
+      color: white;
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      transition: bottom 0.5s ease-in-out;
+      z-index: 2000;
+      font-weight: 600;
+    }
+    .toast.visible {
+      bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-top">
+        <h1>🇫🇷 French Study</h1>
+        <div class="header-actions">
+          <button id="helpBtn" class="icon-btn" title="Help">?</button>
+          <button id="settingsBtn" class="icon-btn" title="Settings">⚙️</button>
+          <div class="language-flags">
+            <div class="language-flag active" id="langEn" onclick="setLanguage('en')">🇺🇸</div>
+            <div class="language-flag" id="langFr" onclick="setLanguage('fr')">🇫🇷</div>
+          </div>
+        </div>
+      </div>
+      <div class="progress-bar">
+        <div id="progressBarFill" class="progress-bar-fill"></div>
+      </div>
+    </header>
+
+    <div class="sub-header">
+      <div id="activeVoiceDisplay" class="status-indicator"></div>
+      <div id="activeStudyModeDisplay" class="status-indicator"></div>
+      <div id="activeShuffleDisplay" class="status-indicator"></div>
+    </div>
+
+    <aside class="history-sidebar">
+      <div class="history-header">
+        <div class="history-title" data-i18n="history_title">Revealed Words</div>
+        <button id="historyToggleBtn" class="icon-btn" title="Toggle History Panel">‹</button>
+      </div>
+      <div class="history-list" id="historyList"></div>
+    </aside>
+
+    <main class="display-container">
+      <div class="display-area-upper" id="displayAreaUpper">Welcome!</div>
+    </main>
+
+    <aside class="controls-vertical">
+      <button class="btn btn-primary" id="nextBtn" onclick="nextWord()" disabled data-i18n="btn_next">Next (Space)</button>
+      <button class="btn btn-secondary" id="repeatBtn" onclick="repeatWord()" disabled data-i18n="btn_repeat">Repeat (R)</button>
+      <button class="btn btn-success" id="showBtn" onclick="showCurrentWord()" disabled data-i18n="btn_show">Show (S)</button>
+      <button class="btn btn-warning" id="voiceBtn" onclick="toggleVoice()" disabled data-i18n="btn_toggleVoice">Voice (V)</button>
+      <button class="btn btn-info" id="viewListBtn" onclick="showWordList()" disabled>View List</button>
+      <button class="btn btn-info" id="historyBtn" disabled>History</button>
+    </aside>
+
+    <div class="countdown-wrapper">
+      <svg class="progress-ring" viewBox="0 0 100 100">
+        <circle class="progress-ring__track" cx="50" cy="50" r="45" fill="transparent" />
+        <circle class="progress-ring__circle" cx="50" cy="50" r="45" fill="transparent" />
+      </svg>
+      <span id="countdownText" class="countdown-text">--</span>
+    </div>
+
+    <footer class="footer">
+      <div id="statusInfo">Load a word list to start.</div>
+      <div id="fileInfo">No file loaded.</div>
+    </footer>
+  </div>
+
+  <div id="welcomeModal" class="modal">
+    <div class="modal-content">
+        <h2>Welcome to the French Study App!</h2>
+        <p style="margin: 1rem 0;">To begin, please load one or more `.txt` files containing your words.</p>
+        <div id="welcomeUploadArea">
+            <h3 style="pointer-events: none;">Drag & Drop File(s) Here</h3>
+            <p style="pointer-events: none; margin: 0.5rem 0;">or</p>
+            <button class="btn btn-primary" id="welcomeBrowseBtn">Browse Files</button>
+        </div>
+    </div>
+  </div>
+
+  <div id="settingsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Settings</h2>
+        <button class="icon-btn close-btn">&times;</button>
+      </div>
+      <div id="wordListsSection" class="modal-section" style="display: none;">
+        <label>Active Word Lists</label>
+        <div id="wordListsOptions" class="word-lists-options"></div>
+      </div>
+      <div class="modal-section">
+        <label for="voiceSelect" data-i18n="label_voice">Voice:</label>
+        <select id="voiceSelect" style="width: 100%; padding: 0.5rem;"></select>
+      </div>
+      <div class="modal-section">
+        <label data-i18n="label_studyMode">Study Mode:</label>
+        <div class="mode-options">
+          <div class="mode-option"><input type="radio" id="modeSimultaneous" name="studyMode" value="simultaneous"><label for="modeSimultaneous">Listen and Read simultaneously</label></div>
+          <div class="mode-option"><input type="radio" id="modeDisplayFirst" name="studyMode" value="displayFirst"><label for="modeDisplayFirst">Read first, then Listen after</label><input type="number" id="displayFirstDelay" min="0" max="10" value="0" style="width: 50px;"><span data-i18n="label_seconds">seconds</span></div>
+          <div class="mode-option"><input type="radio" id="modeSpeakFirst" name="studyMode" value="speakFirst" checked><label for="modeSpeakFirst">Listen first, then Read after</label><input type="number" id="speakFirstDelay" min="0" max="10" value="0" style="width: 50px;"><span data-i18n="label_seconds">seconds</span></div>
+          <div class="mode-option"><input type="checkbox" id="shuffleToggle"><label for="shuffleToggle" data-i18n="label_shuffle">Shuffle words</label></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="helpModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h2>Help</h2><button class="icon-btn close-btn">&times;</button></div>
+        <div class="modal-section">
+            <h4>🚀 Getting Started</h4>
+            <p>Load a word list by dragging one or more <code>.txt</code> files onto the page, or by clicking the welcome screen to browse your files.</p>
+        </div>
+        <div class="modal-section">
+            <h4>🎮 Main Controls</h4>
+            <ul>
+                <li><b>Next (Space):</b> Proceeds to the next word.</li>
+                <li><b>Repeat (R):</b> Repeats the audio for the current word.</li>
+                <li><b>Show (S):</b> Instantly reveals the text of the current word.</li>
+            </ul>
+        </div>
+        <div class="modal-section">
+            <h4>⚙️ Settings</h4>
+            <p>Click the gear icon to manage settings. You can choose from different study modes, select voices, and enable/disable your loaded word lists for the current session.</p>
+        </div>
+        <div class="modal-section">
+            <h4>↔️ Panels</h4>
+            <p>On desktop, you can click the <b>‹</b> icon on the "Revealed Words" panel to collapse and expand it.</p>
+        </div>
+    </div>
+  </div>
+
+  <div id="wordListModal" class="modal">
+     <div class="modal-content">
+      <div class="modal-header"><h2>Current Word List</h2><button class="icon-btn close-btn">&times;</button></div>
+      <div class="word-list" id="wordListContent"></div>
+    </div>
+  </div>
+  
+  <div id="historyModal" class="modal">
+     <div class="modal-content">
+      <div class="modal-header"><h2>Revealed Words</h2><button class="icon-btn close-btn">&times;</button></div>
+      <div id="historyModalContent" class="word-list"></div>
+    </div>
+  </div>
+
+  <div id="confirmationDialog" class="modal">
+    <div class="modal-content" style="text-align: center;">
+      <h3>Reset Study Progress</h3>
+      <p id="confirmationDialogText"></p>
+      <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem;">
+        <button class="btn btn-primary" id="confirmReset">Yes, Continue</button>
+        <button class="btn btn-secondary" id="cancelReset">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastNotification" class="toast"></div>
+
+<script>
+    const i18n = {
+      en: {
+        btn_next: "Next (Space)", btn_repeat: "Repeat (R)", btn_show: "Show (S)", btn_toggleVoice: "Voice (V)",
+        status_ready: "Ready to start a new session", history_title: "Revealed Words",
+        label_voice: "Voice:", opt_systemVoice: "System Voice", label_studyMode: "Study Mode:",
+        label_shuffle: "Shuffle words", label_seconds: "seconds",
+        restart_message: "🎉 Starting over from the beginning.", listening: "Listening...", reveal_prompt: "???", ready_to_start: "Ready to start!",
+        session_complete: "🎉 Session Complete!", start_next_session: "Start Next (Space)",
+        toast_single_file: "✅ {count} words loaded – ready to study!",
+        toast_multi_file: "✅ {wordCount} words from {fileCount} files loaded – ready to study!",
+        confirm_shuffle: "Changing shuffle mode will reset your progress. Are you sure?",
+        confirm_word_list: "Changing active word lists will reset your progress. Are you sure?"
+      },
+      fr: {
+        btn_next: "Suivant (Espace)", btn_repeat: "Répéter (R)", btn_show: "Afficher (S)", btn_toggleVoice: "Voix (V)",
+        status_ready: "Prêt à commencer une nouvelle session", history_title: "Mots révélés",
+        label_voice: "Voix :", opt_systemVoice: "Voix Système", label_studyMode: "Mode d'étude :",
+        label_shuffle: "Mélanger les mots", label_seconds: "secondes",
+        restart_message: "🎉 Reprise depuis le début.", listening: "Écoute...", reveal_prompt: "???", ready_to_start: "Prêt à commencer !",
+        session_complete: "🎉 Session terminée !", start_next_session: "Commencer (Espace)",
+        toast_single_file: "✅ {count} mots chargés – prêt à étudier !",
+        toast_multi_file: "✅ {wordCount} mots de {fileCount} fichiers chargés – prêt à étudier !",
+        confirm_shuffle: "Changer le mode de mélange réinitialisera votre progression. C'est certain ?",
+        confirm_word_list: "Changer les listes de mots actives réinitialisera votre progression. C'est certain ?"
+      }
+    };
+
+    // --- GLOBAL VARIABLES ---
+    let wordLists = {}; // { filename: { words: [], enabled: true } }
+    let words = [], currentIndex = 0, currentWord = "";
+    let availableVoices = [], currentVoice = "system", displayHistory = [];
+    let studyMode = "speakFirst";
+    let displayFirstDelay = 0, speakFirstDelay = 0;
+    let countdownInterval = null;
+    let isInSpeakFirstMode = false;
+    let shuffleEnabled = false;
+    let isSessionComplete = false;
+    const synth = window.speechSynthesis;
+    let curLang = "en";
+    let confirmationCallback = null;
+
+    // --- DOM ELEMENTS ---
+    const progressCircle = document.querySelector('.progress-ring__circle');
+    const radius = progressCircle.r.baseVal.value;
+    const circumference = radius * 2 * Math.PI;
+    progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
+    progressCircle.style.strokeDashoffset = circumference;
+    const allModals = document.querySelectorAll('.modal');
+    const progressBarFill = document.getElementById('progressBarFill');
+    const nextBtn = document.getElementById('nextBtn');
+    const welcomeModal = document.getElementById('welcomeModal');
+    const settingsModal = document.getElementById('settingsModal');
+    const helpModal = document.getElementById('helpModal');
+    const wordListModal = document.getElementById('wordListModal');
+    const confirmationDialog = document.getElementById('confirmationDialog');
+    const toastNotification = document.getElementById('toastNotification');
+    const historyModal = document.getElementById('historyModal');
+    const historyModalContent = document.getElementById('historyModalContent');
+    const historyBtn = document.getElementById('historyBtn');
+
+
+    // --- CORE FUNCTIONS ---
+    function setLanguage(lang) {
+      curLang = lang;
+      document.getElementById('langEn').classList.toggle('active', lang === 'en');
+      document.getElementById('langFr').classList.toggle('active', lang === 'fr');
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (i18n[lang] && i18n[lang][key]) {
+          el.textContent = i18n[lang][key];
+        }
+      });
+      updateStatusInfo(words.length > 0 ? `Word ${currentIndex}/${words.length}`: "Load a word list to start.");
+      updateAllIndicators();
+    }
+    
+    // NEW: Robust voice loading function for all browsers
+    function populateVoiceList() {
+        const voices = synth.getVoices();
+        if (voices.length > 0) {
+            loadVoices(voices);
+        } else {
+            synth.onvoiceschanged = () => {
+                const updatedVoices = synth.getVoices();
+                loadVoices(updatedVoices);
+            };
+        }
+    }
+
+    function loadVoices(voices) {
+      availableVoices = voices;
+      const vs = document.getElementById("voiceSelect");
+      
+      vs.innerHTML = ''; 
+
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "system";
+      defaultOption.textContent = "System Default French Voice";
+      vs.appendChild(defaultOption);
+
+      const qualityKeywords = ["premium", "enhanced", "siri"];
+
+      availableVoices
+        .filter(voice => {
+          const lang = voice.lang.toLowerCase();
+          const name = voice.name.toLowerCase();
+          return lang.startsWith("fr") && qualityKeywords.some(keyword => name.includes(keyword));
+        })
+        .forEach(voice => {
+          const opt = document.createElement("option");
+          opt.value = voice.name;
+          opt.textContent = `${voice.name} (${voice.lang})`;
+          vs.appendChild(opt);
+        });
+        
+      updateVoiceIndicator();
+    }
+
+    async function handleFileLoad(files) {
+        let totalWords = 0;
+        for (const file of files) {
+            const content = await file.text();
+            const fileWords = content.split("\n").filter(w => w.trim());
+            wordLists[file.name] = { words: fileWords, enabled: true };
+            totalWords += fileWords.length;
+        }
+
+        generateWordListsUI();
+        rebuildActiveWordsList();
+        welcomeModal.classList.remove('visible');
+        
+        let toastMessage;
+        if (files.length === 1) {
+            toastMessage = i18n[curLang].toast_single_file.replace('{count}', totalWords);
+        } else {
+            toastMessage = i18n[curLang].toast_multi_file.replace('{wordCount}', totalWords).replace('{fileCount}', files.length);
+        }
+        showToast(toastMessage);
+    }
+    
+    function shuffleArray(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } }
+
+    function initializeStudy() {
+      isSessionComplete = false;
+      currentIndex = 0;
+      currentWord = "";
+      displayHistory = [];
+      ['nextBtn', 'repeatBtn', 'showBtn', 'voiceBtn', 'historyBtn'].forEach(id => document.getElementById(id).disabled = words.length === 0);
+      document.getElementById('viewListBtn').disabled = words.length === 0;
+      nextBtn.textContent = i18n[curLang].btn_next;
+      updateStatusInfo(words.length > 0 ? i18n[curLang].ready_to_start : "Load a word list to start.");
+      updateDisplayUpper(i18n[curLang].ready_to_start);
+      updateHistoryList();
+      updateProgressBar();
+      document.getElementById('countdownText').textContent = '--';
+    }
+
+    function speakWord(w) {
+      if (synth.speaking) synth.cancel();
+      const u = new SpeechSynthesisUtterance(w);
+      if (currentVoice !== "system") {
+        const sv = availableVoices.find(v => v.name === currentVoice);
+        if (sv) u.voice = sv;
+      }
+      u.lang = "fr-FR"; u.rate = 0.9;
+      return new Promise(resolve => { u.onend = resolve; synth.speak(u); });
+    }
+
+    function startCountdown(seconds) {
+      if (countdownInterval) clearInterval(countdownInterval);
+      progressCircle.style.transition = 'stroke-dashoffset 0.1s linear';
+      
+      const countdownTextEl = document.getElementById('countdownText');
+      const totalDuration = seconds * 1000;
+      let startTime = Date.now();
+
+      countdownInterval = setInterval(() => {
+        const elapsedTime = Date.now() - startTime;
+        if (elapsedTime >= totalDuration) {
+          clearInterval(countdownInterval);
+          progressCircle.style.strokeDashoffset = circumference;
+          countdownTextEl.textContent = '--';
+          if (isInSpeakFirstMode && currentWord) {
+            updateDisplayUpper(currentWord);
+            addToHistory(currentWord);
+            isInSpeakFirstMode = false;
+          }
+        } else {
+          const progress = elapsedTime / totalDuration;
+          const offset = circumference - (progress * circumference);
+          progressCircle.style.strokeDashoffset = offset;
+          const secondsLeft = Math.ceil((totalDuration - elapsedTime) / 1000);
+          countdownTextEl.textContent = `${secondsLeft}s`;
+        }
+      }, 50);
+    }
+
+    function updateHistoryList() {
+      const historyList = document.getElementById("historyList");
+      historyList.innerHTML = "";
+      if (displayHistory.length === 0) return;
+      displayHistory.forEach(item => {
+        const historyItem = document.createElement("div");
+        historyItem.className = "history-item";
+        historyItem.textContent = item;
+        historyList.appendChild(historyItem);
+      });
+      historyList.scrollTop = historyList.scrollHeight;
+    }
+
+    function addToHistory(word) {
+      const historyEntry = `${currentIndex}/${words.length}: ${word}`;
+      if (!displayHistory.includes(historyEntry)) {
+        displayHistory.push(historyEntry);
+        updateHistoryList();
+      }
+    }
+
+    async function nextWord() {
+      if (!words.length) return;
+      if (isSessionComplete) {
+        if (shuffleEnabled) shuffleArray(words);
+        initializeStudy();
+        return;
+      }
+
+      if (currentIndex >= words.length) {
+        if (studyMode === "speakFirst" && currentWord) addToHistory(currentWord);
+        isSessionComplete = true;
+        updateDisplayUpper(i18n[curLang].session_complete, true);
+        nextBtn.textContent = i18n[curLang].start_next_session;
+        updateProgressBar();
+        ['repeatBtn', 'showBtn', 'voiceBtn'].forEach(id => document.getElementById(id).disabled = true);
+        return;
+      }
+
+      if (studyMode === "speakFirst" && currentWord) addToHistory(currentWord);
+      currentWord = words[currentIndex];
+      currentIndex++;
+      updateProgressBar();
+
+      studyMode = document.querySelector('input[name="studyMode"]:checked').value;
+      displayFirstDelay = parseInt(document.getElementById("displayFirstDelay").value);
+      speakFirstDelay = parseInt(document.getElementById("speakFirstDelay").value);
+
+      if (studyMode === "simultaneous") {
+        updateDisplayUpper(currentWord);
+        addToHistory(currentWord);
+        await speakWord(currentWord);
+      } else if (studyMode === "displayFirst") {
+        updateDisplayUpper(currentWord);
+        addToHistory(currentWord);
+        if (displayFirstDelay > 0) {
+          startCountdown(displayFirstDelay);
+          setTimeout(() => speakWord(currentWord), displayFirstDelay * 1000);
+        } else {
+          await speakWord(currentWord);
+        }
+      } else if (studyMode === "speakFirst") {
+        updateDisplayUpper(i18n[curLang].listening);
+        await speakWord(currentWord);
+        if (speakFirstDelay > 0) {
+          isInSpeakFirstMode = true;
+          startCountdown(speakFirstDelay);
+        } else {
+          updateDisplayUpper(i18n[curLang].reveal_prompt);
+        }
+      }
+      updateStatusInfo(`Word ${currentIndex}/${words.length}`);
+    }
+
+    async function repeatWord() { if (currentWord) await speakWord(currentWord); }
+
+    function showCurrentWord() {
+      if (currentWord) {
+        updateDisplayUpper(currentWord);
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+            progressCircle.style.strokeDashoffset = circumference;
+            document.getElementById('countdownText').textContent = '--';
+        }
+        isInSpeakFirstMode = false;
+        addToHistory(currentWord);
+      }
+    }
+
+    function toggleVoice() {
+      const vs = document.getElementById("voiceSelect");
+      if (vs.options.length === 0) return;
+      vs.selectedIndex = (vs.selectedIndex + 1) % vs.options.length;
+      currentVoice = vs.value;
+      updateVoiceIndicator();
+    }
+    
+    // --- UI UPDATE & MANAGEMENT FUNCTIONS ---
+    function updateProgressBar() {
+        const progress = words.length > 0 ? (currentIndex / words.length) * 100 : 0;
+        progressBarFill.style.width = `${progress}%`;
+    }
+
+    function updateVoiceIndicator() {
+        const selectedOption = document.getElementById('voiceSelect').selectedOptions[0];
+        if (!selectedOption) { document.getElementById('activeVoiceDisplay').textContent = '🗣️ No Voices Available'; return; }
+        document.getElementById('activeVoiceDisplay').textContent = `🗣️ ${selectedOption.text}`;
+    }
+
+    function updateStudyModeIndicator() {
+      const mode = document.querySelector('input[name="studyMode"]:checked');
+      const label = document.querySelector(`label[for="${mode.id}"]`);
+      document.getElementById('activeStudyModeDisplay').textContent = `📖 Mode: ${label.textContent.split(',')[0]}`;
+    }
+
+    function updateShuffleIndicator() {
+      document.getElementById('activeShuffleDisplay').textContent = shuffleEnabled ? "🔀 Shuffle: On" : "➡️ Shuffle: Off";
+    }
+
+    function updateAllIndicators() {
+      updateVoiceIndicator();
+      updateStudyModeIndicator();
+      updateShuffleIndicator();
+    }
+    
+    function generateWordListsUI() {
+        const container = document.getElementById('wordListsOptions');
+        const section = document.getElementById('wordListsSection');
+        container.innerHTML = '';
+        const filenames = Object.keys(wordLists);
+        if (filenames.length > 1) {
+            section.style.display = 'block';
+            filenames.forEach(name => {
+                const item = document.createElement('div');
+                item.className = 'mode-option';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = wordLists[name].enabled;
+                checkbox.id = `file--${name}`;
+                checkbox.dataset.filename = name;
+                checkbox.addEventListener('change', () => {
+                    confirmationCallback = () => {
+                        wordLists[name].enabled = checkbox.checked;
+                        rebuildActiveWordsList();
+                    };
+                    document.getElementById('confirmationDialogText').textContent = i18n[curLang].confirm_word_list;
+                    confirmationDialog.classList.add('visible');
+                });
+                const label = document.createElement('label');
+                label.htmlFor = `file--${name}`;
+                label.textContent = `${name} (${wordLists[name].words.length} words)`;
+                item.appendChild(checkbox);
+                item.appendChild(label);
+                container.appendChild(item);
+            });
+        } else {
+            section.style.display = 'none';
+        }
+    }
+
+    function rebuildActiveWordsList() {
+        let newWordList = [];
+        let fileCount = 0;
+        for(const filename in wordLists) {
+            if(wordLists[filename].enabled) {
+                newWordList = newWordList.concat(wordLists[filename].words);
+                fileCount++;
+            }
+        }
+        words = newWordList;
+        originalWordOrder = [...words]; // Update original order for unshuffling
+        document.getElementById('fileInfo').textContent = `${words.length} words from ${fileCount} file(s)`;
+        initializeStudy();
+    }
+
+    function showToast(message, duration = 3000) {
+        toastNotification.textContent = message;
+        toastNotification.classList.add('visible');
+        setTimeout(() => {
+            toastNotification.classList.remove('visible');
+        }, duration);
+    }
+
+    function updateDisplayUpper(t, isComplete = false) { 
+        const el = document.getElementById("displayAreaUpper");
+        el.textContent = t;
+        el.classList.toggle('session-complete-message', isComplete);
+    }
+    function updateStatusInfo(m) { document.getElementById("statusInfo").textContent = m; }
+    
+    // --- EVENT LISTENERS ---
+    // Modals
+    document.getElementById('settingsBtn').addEventListener('click', () => settingsModal.classList.add('visible'));
+    document.getElementById('helpBtn').addEventListener('click', () => helpModal.classList.add('visible'));
+    
+    historyBtn.addEventListener('click', () => {
+        historyModalContent.innerHTML = ""; // Clear previous content
+        if (displayHistory.length === 0) {
+            historyModalContent.textContent = "No words have been revealed yet in this session.";
+        } else {
+            displayHistory.forEach(item => {
+                const historyItem = document.createElement("div");
+                historyItem.className = "history-item";
+                historyItem.textContent = item;
+                historyModalContent.appendChild(historyItem);
+            });
+        }
+        historyModal.classList.add('visible');
+    });
+
+    const wordListContent = document.getElementById("wordListContent");
+    document.getElementById('viewListBtn').addEventListener('click', () => {
+        wordListContent.innerHTML = "";
+        words.forEach((word, index) => {
+            const wordItem = document.createElement("div");
+            wordItem.className = "history-item";
+            wordItem.textContent = `${index + 1}. ${word}`;
+            if (index === currentIndex - 1) wordItem.style.fontWeight = "bold";
+            wordListContent.appendChild(wordItem);
+        });
+        wordListModal.classList.add('visible');
+    });
+    
+    // Confirmation Dialog & Shuffle Logic
+    document.getElementById('shuffleToggle').addEventListener('change', e => {
+        e.preventDefault();
+        confirmationCallback = () => {
+            shuffleEnabled = !shuffleEnabled; 
+            document.getElementById('shuffleToggle').checked = shuffleEnabled;
+            if (shuffleEnabled) shuffleArray(words);
+            else words = [...originalWordOrder];
+            updateShuffleIndicator();
+            initializeStudy();
+        };
+        document.getElementById('confirmationDialogText').textContent = i18n[curLang].confirm_shuffle;
+        confirmationDialog.classList.add('visible');
+    });
+
+    document.getElementById('confirmReset').addEventListener('click', () => {
+        if (confirmationCallback) confirmationCallback();
+        confirmationDialog.classList.remove('visible');
+        confirmationCallback = null;
+    });
+    document.getElementById('cancelReset').addEventListener('click', () => {
+        // Revert UI change if action is cancelled
+        generateWordListsUI();
+        document.getElementById('shuffleToggle').checked = shuffleEnabled;
+        confirmationDialog.classList.remove('visible');
+        confirmationCallback = null;
+    });
+
+    // File Loading
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file'; fileInput.accept = '.txt'; fileInput.multiple = true;
+    fileInput.addEventListener('change', e => {
+      if (e.target.files.length > 0) handleFileLoad(Array.from(e.target.files));
+    });
+    document.getElementById('welcomeBrowseBtn').addEventListener('click', () => fileInput.click());
+    document.getElementById('welcomeUploadArea').addEventListener('click', () => fileInput.click());
+    document.body.addEventListener("dragover", e => { e.preventDefault(); e.stopPropagation(); });
+    document.body.addEventListener("drop", e => {
+      e.preventDefault(); e.stopPropagation();
+      const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.txt'));
+      if (files.length > 0) handleFileLoad(files);
+    });
+    
+    document.getElementById('historyToggleBtn').addEventListener('click', () => document.querySelector('.container').classList.toggle('history-hidden'));
+
+    // Keyboard Shortcuts & Modal Closing
+    document.addEventListener("keydown", e => {
+      if (e.key === 'Escape') allModals.forEach(modal => modal.classList.remove('visible'));
+      if (e.target.tagName.toLowerCase() === 'input' || document.querySelector('.modal.visible')) return;
+      const btnId = { ' ': 'nextBtn', 'r': 'repeatBtn', 's': 'showBtn', 'v': 'voiceBtn' }[e.key.toLowerCase()];
+      if (btnId && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        const btn = document.getElementById(btnId);
+        if(btn && !btn.disabled) btn.click();
+      }
+    });
+    
+    allModals.forEach(modal => {
+        modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('visible'); });
+        const closeBtn = modal.querySelector('.close-btn');
+        if(closeBtn) closeBtn.addEventListener('click', () => modal.classList.remove('visible'));
+    });
+    
+    document.getElementById('voiceSelect').addEventListener('change', e => { currentVoice = e.target.value; updateVoiceIndicator(); });
+    document.querySelectorAll('input[name="studyMode"]').forEach(radio => radio.addEventListener('change', updateStudyModeIndicator));
+
+    // --- INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', () => {
+        populateVoiceList(); // Use the new robust function
+        setLanguage("en");
+        updateAllIndicators();
+        welcomeModal.classList.add('visible');
+    });
+  </script>
+</body>
+</html>

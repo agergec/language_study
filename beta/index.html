@@ -436,28 +436,51 @@
       updateVoiceIndicator();
     }
 
-    async function handleFileLoad(files) {
+async function handleFileLoad(files) {
         let totalWords = 0;
+
+        // A helper function to read a file using the FileReader API
+        const readFile = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(reader.error);
+                reader.readAsText(file);
+            });
+        };
+
         for (const file of files) {
-            const content = await file.text();
-            const fileWords = content.split("\n").filter(w => w.trim());
-            wordLists[file.name] = { words: fileWords, enabled: true };
-            totalWords += fileWords.length;
+            try {
+                // Use the new helper function instead of file.text()
+                const content = await readFile(file);
+                const fileWords = content.split("\n").filter(w => w.trim());
+                if (fileWords.length > 0) {
+                  wordLists[file.name] = { words: fileWords, enabled: true };
+                  totalWords += fileWords.length;
+                }
+            } catch (err) {
+                console.error(`Error reading file ${file.name}:`, err);
+                // Optionally show a toast notification for the error
+                showToast(`Error: Could not load ${file.name}.`);
+            }
         }
 
-        generateWordListsUI();
-        rebuildActiveWordsList();
-        welcomeModal.classList.remove('visible');
-        
-        let toastMessage;
-        if (files.length === 1) {
-            toastMessage = i18n[curLang].toast_single_file.replace('{count}', totalWords);
-        } else {
-            toastMessage = i18n[curLang].toast_multi_file.replace('{wordCount}', totalWords).replace('{fileCount}', files.length);
+        if (totalWords > 0) {
+            generateWordListsUI();
+            rebuildActiveWordsList();
+            welcomeModal.classList.remove('visible');
+
+            let toastMessage;
+            const fileCount = Object.keys(wordLists).length;
+
+            if (fileCount === 1) {
+                toastMessage = i18n[curLang].toast_single_file.replace('{count}', totalWords);
+            } else {
+                toastMessage = i18n[curLang].toast_multi_file.replace('{wordCount}', totalWords).replace('{fileCount}', fileCount);
+            }
+            showToast(toastMessage);
         }
-        showToast(toastMessage);
-    }
-    
+    }   
     function shuffleArray(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } }
 
     function initializeStudy() {

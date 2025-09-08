@@ -234,7 +234,10 @@
             <h3 style="pointer-events: none;">Drag & Drop File(s) Here</h3>
             <p style="pointer-events: none; margin: 0.5rem 0;">or</p>
             <button class="btn btn-primary" id="welcomeBrowseBtn">Browse Files</button>
-        </div>
+            
+            <p style="margin-top: 1rem; color: red; font-weight: bold;">-- IOS TEST --</p>
+            <input type="file" id="iosTestInput" accept=".txt" multiple style="display: block; margin: 1rem auto;">
+            </div>
     </div>
   </div>
 
@@ -394,7 +397,6 @@
       updateAllIndicators();
     }
     
-    // NEW: Robust voice loading function for all browsers
     function populateVoiceList() {
         const voices = synth.getVoices();
         if (voices.length > 0) {
@@ -436,36 +438,49 @@
       updateVoiceIndicator();
     }
 
-async function handleFileLoad(files) {
+    // --- START: MODIFIED FUNCTION FOR DEBUGGING ---
+    async function handleFileLoad(files) {
+        console.log('--- handleFileLoad CALLED ---');
+        console.log('Number of files received:', files.length);
+        console.log('Files object:', files); // This will show us the array of file objects
+
         let totalWords = 0;
 
-        // A helper function to read a file using the FileReader API
         const readFile = (file) => {
+            console.log('Attempting to read file:', file.name, 'Size:', file.size, 'Type:', file.type);
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = () => reject(reader.error);
+                reader.onload = (event) => {
+                    console.log('FileReader onload event fired for:', file.name);
+                    resolve(event.target.result);
+                };
+                reader.onerror = (error) => {
+                    console.error('FileReader onerror event fired for:', file.name, error);
+                    reject(error);
+                };
                 reader.readAsText(file);
             });
         };
 
         for (const file of files) {
             try {
-                // Use the new helper function instead of file.text()
                 const content = await readFile(file);
+                console.log(`Successfully read content from ${file.name}. Content length: ${content.length}`);
                 const fileWords = content.split("\n").filter(w => w.trim());
                 if (fileWords.length > 0) {
                   wordLists[file.name] = { words: fileWords, enabled: true };
                   totalWords += fileWords.length;
                 }
             } catch (err) {
-                console.error(`Error reading file ${file.name}:`, err);
-                // Optionally show a toast notification for the error
+                console.error(`Failed to process file ${file.name}:`, err);
                 showToast(`Error: Could not load ${file.name}.`);
             }
         }
 
+        console.log('File processing loop finished. Total words found:', totalWords);
+
         if (totalWords > 0) {
+            console.log('Updating UI with new words.');
             generateWordListsUI();
             rebuildActiveWordsList();
             welcomeModal.classList.remove('visible');
@@ -479,8 +494,12 @@ async function handleFileLoad(files) {
                 toastMessage = i18n[curLang].toast_multi_file.replace('{wordCount}', totalWords).replace('{fileCount}', fileCount);
             }
             showToast(toastMessage);
+        } else {
+            console.log('No words were loaded, UI will not be updated.');
         }
-    }   
+    }
+    // --- END: MODIFIED FUNCTION FOR DEBUGGING ---
+    
     function shuffleArray(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } }
 
     function initializeStudy() {
@@ -792,9 +811,19 @@ async function handleFileLoad(files) {
     // File Loading
     const fileInput = document.createElement('input');
     fileInput.type = 'file'; fileInput.accept = '.txt'; fileInput.multiple = true;
+    
+    // --- START: MODIFIED EVENT LISTENER FOR DEBUGGING ---
     fileInput.addEventListener('change', e => {
-      if (e.target.files.length > 0) handleFileLoad(Array.from(e.target.files));
+      console.log('--- HIDDEN <input> "change" EVENT FIRED ---');
+      if (e.target.files && e.target.files.length > 0) {
+        console.log('Files detected in event. Calling handleFileLoad.');
+        handleFileLoad(Array.from(e.target.files));
+      } else {
+        console.warn('Change event fired, but no files were found in e.target.files.');
+      }
     });
+    // --- END: MODIFIED EVENT LISTENER FOR DEBUGGING ---
+
     document.getElementById('welcomeBrowseBtn').addEventListener('click', () => fileInput.click());
     document.getElementById('welcomeUploadArea').addEventListener('click', () => fileInput.click());
     document.body.addEventListener("dragover", e => { e.preventDefault(); e.stopPropagation(); });
@@ -833,6 +862,18 @@ async function handleFileLoad(files) {
         setLanguage("en");
         updateAllIndicators();
         welcomeModal.classList.add('visible');
+        
+        // --- START: EVENT LISTENER FOR VISIBLE TEST INPUT ---
+        document.getElementById('iosTestInput').addEventListener('change', e => {
+          console.log('--- VISIBLE <input> "change" EVENT FIRED ---');
+          if (e.target.files && e.target.files.length > 0) {
+            console.log('Visible input has files. Calling handleFileLoad.');
+            handleFileLoad(Array.from(e.target.files));
+          } else {
+            console.warn('Visible input change event fired, but no files were found.');
+          }
+        });
+        // --- END: EVENT LISTENER FOR VISIBLE TEST INPUT ---
     });
   </script>
 </body>

@@ -35,9 +35,14 @@
 
     /* --- Base Layout (Viewport App) --- */
     html, body {
-      height: 100vh;
-      width: 100vw;
-      overflow: hidden;
+      height: auto;
+      min-height: 100vh;
+      min-height: 100svh;
+      min-height: 100dvh;
+      width: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       font-family: var(--font-family);
       background-color: var(--light-gray);
       color: var(--text-color);
@@ -45,12 +50,14 @@
 
     .container {
       width: 100%;
-      height: 100%;
+      min-height: 100%;
       display: grid;
       grid-template-rows: auto auto 1fr auto auto auto;
       grid-template-columns: 1fr;
       grid-template-areas: "header" "sub-header" "display" "controls" "countdown" "footer";
       padding: 0.75rem;
+      padding-top: calc(0.75rem + env(safe-area-inset-top));
+      padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
       gap: 0.75rem;
     }
 
@@ -61,6 +68,8 @@
         grid-template-columns: 280px 1fr 200px;
         grid-template-areas: "header header header" "sub-header sub-header sub-header" "history display controls" "footer footer footer";
         padding: 1.5rem;
+        padding-top: calc(1.5rem + env(safe-area-inset-top));
+        padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
         gap: 1.5rem;
       }
       .container.history-hidden { grid-template-columns: 40px 1fr 200px; }
@@ -1192,8 +1201,19 @@
 
     document.getElementById('welcomeBrowseBtn').addEventListener('click', () => fileInput.click());
     document.getElementById('welcomeUploadArea').addEventListener('click', () => fileInput.click());
-    document.body.addEventListener("dragover", e => { e.preventDefault(); e.stopPropagation(); });
+    function isFileDrag(e) {
+      try {
+        if (!e.dataTransfer) return false;
+        if (e.dataTransfer.files && e.dataTransfer.files.length) return true;
+        if (e.dataTransfer.types && typeof e.dataTransfer.types.includes === 'function') {
+          return e.dataTransfer.types.includes('Files');
+        }
+      } catch (_) { }
+      return false;
+    }
+    document.body.addEventListener("dragover", e => { if (isFileDrag(e)) { e.preventDefault(); e.stopPropagation(); } });
     document.body.addEventListener("drop", e => {
+      if (!isFileDrag(e)) return;
       e.preventDefault(); e.stopPropagation();
       const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.txt'));
       if (files.length > 0) handleFileLoad(files);

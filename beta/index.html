@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title data-i18n="page_title">🇫🇷 French Listening Study</title>
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇫🇷</text></svg>">
@@ -165,14 +165,16 @@
       bottom: 20px;
     }
     /* iOS Safari adjustments: allow scroll and safe-area padding only on iOS */
-    body.is-ios {
+    html.is-ios, body.is-ios {
       height: auto;
       min-height: 100svh;
+      width: 100%;
       overflow-x: hidden;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
     }
     body.is-ios .container {
+      height: auto;
       min-height: 100%;
       padding-top: calc(0.75rem + env(safe-area-inset-top));
       padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
@@ -513,7 +515,7 @@
     let isInSpeakFirstMode = false;
     let shuffleEnabled = false;
     let isSessionComplete = false;
-    const APP_VERSION = 'v0.9.2-beta';
+    const APP_VERSION = 'v0.9.3-beta';
     // Privative prefix mode state
     let prefixWords = [];
     let prefixIndex = 0;
@@ -1295,7 +1297,7 @@
         updateAllIndicators();
         welcomeModal.classList.add('visible');
         // Apply iOS-only layout tweaks
-        if (isIOS) document.body.classList.add('is-ios');
+        if (isIOS) { document.body.classList.add('is-ios'); document.documentElement.classList.add('is-ios'); }
         // Initialize privative controls visibility on load
         document.getElementById('privativeControls').style.display = (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') ? 'flex' : 'none';
         // Show iOS-specific voice hint

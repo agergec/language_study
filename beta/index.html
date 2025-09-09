@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title data-i18n="page_title">🇫🇷 French Listening Study</title>
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇫🇷</text></svg>">
@@ -207,8 +207,8 @@
           <button id="helpBtn" class="icon-btn" title="Help" data-i18n-title="title_help">?</button>
           <button id="settingsBtn" class="icon-btn" title="Settings" data-i18n-title="title_settings">⚙️</button>
           <div class="language-flags">
-            <div class="language-flag active" id="langEn" onclick="setLanguage('en')">🇺🇸</div>
-            <div class="language-flag" id="langFr" onclick="setLanguage('fr')">🇫🇷</div>
+            <button class="language-flag active" id="langEn" type="button" aria-label="English">🇺🇸</button>
+            <button class="language-flag" id="langFr" type="button" aria-label="Français">🇫🇷</button>
           </div>
         </div>
       </div>
@@ -225,22 +225,22 @@
 
     <aside class="history-sidebar">
       <div class="history-header">
-        <div class="history-title" data-i18n="history_title">Revealed Words</div>
+        <div class="history-title" data-i18n="history_title">Answers</div>
         <button id="historyToggleBtn" class="icon-btn" title="Toggle History Panel" data-i18n-title="title_toggle_history">‹</button>
       </div>
       <div class="history-list" id="historyList"></div>
     </aside>
 
     <main class="display-container">
-      <div class="display-area-upper" id="displayAreaUpper" data-i18n="welcome_message">Welcome!</div>
+      <div class="display-area-upper" id="displayAreaUpper" aria-live="polite" data-i18n="welcome_message">Welcome!</div>
     </main>
 
     <aside class="controls-vertical">
-      <button class="btn btn-primary" id="nextBtn" onclick="nextWord()" disabled data-i18n="btn_next">Next (Space)</button>
-      <button class="btn btn-secondary" id="repeatBtn" onclick="repeatWord()" disabled data-i18n="btn_repeat">Repeat (R)</button>
-      <button class="btn btn-success" id="showBtn" onclick="showCurrentWord()" disabled data-i18n="btn_show">Show (S)</button>
-      <button class="btn btn-warning" id="voiceBtn" onclick="toggleVoice()" disabled data-i18n="btn_toggleVoice">Voice (V)</button>
-      <button class="btn btn-info" id="viewListBtn" onclick="showWordList()" disabled data-i18n="btn_view_list">View List</button>
+      <button class="btn btn-primary" id="nextBtn" disabled data-i18n="btn_next">Next (Space)</button>
+      <button class="btn btn-secondary" id="repeatBtn" disabled data-i18n="btn_repeat">Repeat (R)</button>
+      <button class="btn btn-success" id="showBtn" disabled data-i18n="btn_show">Show (S)</button>
+      <button class="btn btn-warning" id="voiceBtn" disabled data-i18n="btn_toggleVoice">Voice (V)</button>
+      <button class="btn btn-info" id="viewListBtn" disabled data-i18n="btn_view_list">View List</button>
       <button class="btn btn-info" id="historyBtn" disabled data-i18n="btn_history">History</button>
       <div id="privativeControls" style="display:none; gap:0.5rem; flex-wrap:wrap;">
         <button class="btn btn-secondary" id="prefixUnBtn" type="button" data-i18n="btn_prefix_un">Prefix: un</button>
@@ -257,7 +257,7 @@
     </div>
 
     <footer class="footer">
-      <div id="statusInfo" data-i18n="status_load_prompt">Load a word list to start.</div>
+      <div id="statusInfo" aria-live="polite" data-i18n="status_load_prompt">Load a word list to start.</div>
       <div id="fileInfo" data-i18n="file_info_none">No file loaded.</div>
     </footer>
   </div>
@@ -282,7 +282,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h2 data-i18n="settings_title">Settings</h2>
-        <button class="icon-btn close-btn">&times;</button>
+        <button class="icon-btn close-btn" aria-label="Close">&times;</button>
       </div>
       <div id="wordListsSection" class="modal-section" style="display: none;">
         <label data-i18n="label_active_word_lists">Active Word Lists</label>
@@ -313,7 +313,7 @@
 
   <div id="helpModal" class="modal">
     <div class="modal-content">
-        <div class="modal-header"><h2 data-i18n="help_title">Help</h2><button class="icon-btn close-btn">&times;</button></div>
+        <div class="modal-header"><h2 data-i18n="help_title">Help</h2><button class="icon-btn close-btn" aria-label="Close">&times;</button></div>
         <div class="modal-section">
             <h4 data-i18n="help_getting_started">🚀 Getting Started</h4>
             <p data-i18n="help_getting_started_body">Load a word list by dragging one or more <code>.txt</code> files onto the page, or by clicking the welcome screen to browse your files.</p>
@@ -336,21 +336,21 @@
         </div>
         <div class="modal-section">
             <h4 data-i18n="help_panels">↔️ Panels</h4>
-            <p data-i18n="help_panels_body">On desktop, you can click the <b>‹</b> icon on the "Revealed Words" panel to collapse and expand it.</p>
+            <p data-i18n="help_panels_body">On desktop, you can click the <b>‹</b> icon on the "Answers" panel to collapse and expand it.</p>
         </div>
     </div>
   </div>
 
   <div id="wordListModal" class="modal">
      <div class="modal-content">
-      <div class="modal-header"><h2 data-i18n="word_list_modal_title">Current Word List</h2><button class="icon-btn close-btn">&times;</button></div>
+      <div class="modal-header"><h2 data-i18n="word_list_modal_title">Current Word List</h2><button class="icon-btn close-btn" aria-label="Close">&times;</button></div>
       <div class="word-list" id="wordListContent"></div>
     </div>
   </div>
   
   <div id="historyModal" class="modal">
      <div class="modal-content">
-      <div class="modal-header"><h2 data-i18n="history_title">Revealed Words</h2><button class="icon-btn close-btn">&times;</button></div>
+      <div class="modal-header"><h2 data-i18n="history_title">Answers</h2><button class="icon-btn close-btn" aria-label="Close">&times;</button></div>
       <div id="historyModalContent" class="word-list"></div>
     </div>
   </div>
@@ -370,6 +370,7 @@
   <div id="appVersionCorner" class="app-version-corner"></div>
 
 <script>
+    'use strict';
     const i18n = {
       en: {
         page_title: "🇫🇷 French Listening Study",
@@ -518,6 +519,7 @@
     let shuffleEnabled = false;
     let isSessionComplete = false;
     const APP_VERSION = 'v1.1.0-beta';
+    let originalWordOrder = [];
     // Privative prefix mode state
     let prefixWords = [];
     let prefixIndex = 0;
@@ -671,6 +673,12 @@
         vs.appendChild(opt);
       });
 
+      // Apply saved voice preference, if any
+      try {
+        const saved = localStorage.getItem('voice');
+        if (saved) currentVoice = saved;
+      } catch (_) {}
+
       // Preserve current selection if possible
       let existingIndex = Array.from(vs.options).findIndex(o => o.value === currentVoice);
       if (existingIndex >= 0) {
@@ -691,67 +699,44 @@
       updateVoiceIndicator();
     }
 
-    // --- START: MODIFIED FUNCTION FOR DEBUGGING ---
     async function handleFileLoad(files) {
-        console.log('--- handleFileLoad CALLED ---');
-        console.log('Number of files received:', files.length);
-        console.log('Files object:', files); // This will show us the array of file objects
-
         let totalWords = 0;
 
-        const readFile = (file) => {
-            console.log('Attempting to read file:', file.name, 'Size:', file.size, 'Type:', file.type);
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    console.log('FileReader onload event fired for:', file.name);
-                    resolve(event.target.result);
-                };
-                reader.onerror = (error) => {
-                    console.error('FileReader onerror event fired for:', file.name, error);
-                    reject(error);
-                };
-                reader.readAsText(file);
-            });
-        };
+        const readFile = (file) => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => resolve(event.target.result);
+            reader.onerror = (error) => reject(error);
+            reader.readAsText(file);
+        });
 
         for (const file of files) {
             try {
                 const content = await readFile(file);
-                console.log(`Successfully read content from ${file.name}. Content length: ${content.length}`);
                 const fileWords = content.split("\n").filter(w => w.trim());
                 if (fileWords.length > 0) {
                   wordLists[file.name] = { words: fileWords, enabled: true };
                   totalWords += fileWords.length;
                 }
             } catch (err) {
-                console.error(`Failed to process file ${file.name}:`, err);
                 showToast(`Error: Could not load ${file.name}.`);
             }
         }
 
-        console.log('File processing loop finished. Total words found:', totalWords);
-
         if (totalWords > 0) {
-            console.log('Updating UI with new words.');
             generateWordListsUI();
             rebuildActiveWordsList();
             welcomeModal.classList.remove('visible');
 
             let toastMessage;
             const fileCount = Object.keys(wordLists).length;
-
             if (fileCount === 1) {
                 toastMessage = i18n[curLang].toast_single_file.replace('{count}', totalWords);
             } else {
                 toastMessage = i18n[curLang].toast_multi_file.replace('{wordCount}', totalWords).replace('{fileCount}', fileCount);
             }
             showToast(toastMessage);
-        } else {
-            console.log('No words were loaded, UI will not be updated.');
         }
     }
-    // --- END: MODIFIED FUNCTION FOR DEBUGGING ---
     
     function shuffleArray(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } }
 
@@ -1155,18 +1140,7 @@
         historyModal.classList.add('visible');
     });
 
-    const wordListContent = document.getElementById("wordListContent");
-    document.getElementById('viewListBtn').addEventListener('click', () => {
-        wordListContent.innerHTML = "";
-        words.forEach((word, index) => {
-            const wordItem = document.createElement("div");
-            wordItem.className = "history-item";
-            wordItem.textContent = `${index + 1}. ${word}`;
-            if (index === currentIndex - 1) wordItem.style.fontWeight = "bold";
-            wordListContent.appendChild(wordItem);
-        });
-        wordListModal.classList.add('visible');
-    });
+    // viewListBtn binding moved to DOMContentLoaded for consistency
     
     // Confirmation Dialog & Shuffle Logic
     document.getElementById('shuffleToggle').addEventListener('change', e => {
@@ -1205,17 +1179,11 @@
     const fileInput = document.createElement('input');
     fileInput.type = 'file'; fileInput.accept = '.txt'; fileInput.multiple = true;
     
-    // --- START: MODIFIED EVENT LISTENER FOR DEBUGGING ---
     fileInput.addEventListener('change', e => {
-      console.log('--- HIDDEN <input> "change" EVENT FIRED ---');
       if (e.target.files && e.target.files.length > 0) {
-        console.log('Files detected in event. Calling handleFileLoad.');
         handleFileLoad(Array.from(e.target.files));
-      } else {
-        console.warn('Change event fired, but no files were found in e.target.files.');
       }
     });
-    // --- END: MODIFIED EVENT LISTENER FOR DEBUGGING ---
 
     if (!isIOS) {
       document.getElementById('welcomeBrowseBtn').addEventListener('click', () => fileInput.click());
@@ -1295,12 +1263,17 @@
       privativeAnswered = true;
     });
     
-    document.getElementById('voiceSelect').addEventListener('change', e => { currentVoice = e.target.value; updateVoiceIndicator(); });
+    document.getElementById('voiceSelect').addEventListener('change', e => { 
+      currentVoice = e.target.value; 
+      try { localStorage.setItem('voice', currentVoice); } catch (_) {}
+      updateVoiceIndicator(); 
+    });
     document.getElementById('voiceSelect').addEventListener('focus', populateVoiceList);
     const voiceTestBtn = document.getElementById('voiceTestBtn');
     if (voiceTestBtn) voiceTestBtn.addEventListener('click', () => { speakWord(i18n[curLang].test_phrase); });
-    document.querySelectorAll('input[name="studyMode"]').forEach(radio => radio.addEventListener('change', () => {
+    document.querySelectorAll('input[name="studyMode"]').forEach(radio => radio.addEventListener('change', (e) => {
       updateStudyModeIndicator();
+      try { localStorage.setItem('studyMode', e.target.value); } catch (_) {}
       document.getElementById('privativeControls').style.display = (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') ? 'flex' : 'none';
       updateProgressBar();
     }));
@@ -1309,6 +1282,14 @@
     document.addEventListener('DOMContentLoaded', () => {
         populateVoiceList(); // Use the new robust function
         setLanguage("en");
+        // Restore saved study mode if available
+        try {
+          const savedMode = localStorage.getItem('studyMode');
+          if (savedMode) {
+            const el = document.querySelector(`input[name="studyMode"][value="${savedMode}"]`);
+            if (el && !el.disabled) el.checked = true;
+          }
+        } catch (_) {}
         updateAllIndicators();
         welcomeModal.classList.add('visible');
         // Apply iOS-only layout tweaks
@@ -1337,6 +1318,35 @@
         const verWelcome = document.getElementById('welcomeVersion');
         if (verCorner) verCorner.textContent = APP_VERSION;
         if (verWelcome) verWelcome.textContent = APP_VERSION;
+
+        // Bind control buttons (migrated from inline handlers)
+        const nb = document.getElementById('nextBtn');
+        if (nb) nb.addEventListener('click', nextWord);
+        const rb = document.getElementById('repeatBtn');
+        if (rb) rb.addEventListener('click', repeatWord);
+        const sb = document.getElementById('showBtn');
+        if (sb) sb.addEventListener('click', showCurrentWord);
+        const vb = document.getElementById('voiceBtn');
+        if (vb) vb.addEventListener('click', toggleVoice);
+        const vlb = document.getElementById('viewListBtn');
+        if (vlb) vlb.addEventListener('click', () => {
+          const wordListContent = document.getElementById("wordListContent");
+          wordListContent.innerHTML = "";
+          words.forEach((word, index) => {
+            const wordItem = document.createElement("div");
+            wordItem.className = "history-item";
+            wordItem.textContent = `${index + 1}. ${word}`;
+            if (index === currentIndex - 1) wordItem.style.fontWeight = "bold";
+            wordListContent.appendChild(wordItem);
+          });
+          wordListModal.classList.add('visible');
+        });
+
+        // Bind language flag buttons
+        const flagEn = document.getElementById('langEn');
+        const flagFr = document.getElementById('langFr');
+        if (flagEn) flagEn.addEventListener('click', () => setLanguage('en'));
+        if (flagFr) flagFr.addEventListener('click', () => setLanguage('fr'));
     });
   </script>
 </body>

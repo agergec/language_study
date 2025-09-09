@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-  <title>🇫🇷 French Listening Study</title>
+  <title data-i18n="page_title">🇫🇷 French Listening Study</title>
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇫🇷</text></svg>">
 
@@ -170,10 +170,10 @@
   <div class="container">
     <header class="header">
       <div class="header-top">
-        <h1>🇫🇷 French Study</h1>
+        <h1 data-i18n="header_title">🇫🇷 French Study</h1>
         <div class="header-actions">
-          <button id="helpBtn" class="icon-btn" title="Help">?</button>
-          <button id="settingsBtn" class="icon-btn" title="Settings">⚙️</button>
+          <button id="helpBtn" class="icon-btn" title="Help" data-i18n-title="title_help">?</button>
+          <button id="settingsBtn" class="icon-btn" title="Settings" data-i18n-title="title_settings">⚙️</button>
           <div class="language-flags">
             <div class="language-flag active" id="langEn" onclick="setLanguage('en')">🇺🇸</div>
             <div class="language-flag" id="langFr" onclick="setLanguage('fr')">🇫🇷</div>
@@ -194,13 +194,13 @@
     <aside class="history-sidebar">
       <div class="history-header">
         <div class="history-title" data-i18n="history_title">Revealed Words</div>
-        <button id="historyToggleBtn" class="icon-btn" title="Toggle History Panel">‹</button>
+        <button id="historyToggleBtn" class="icon-btn" title="Toggle History Panel" data-i18n-title="title_toggle_history">‹</button>
       </div>
       <div class="history-list" id="historyList"></div>
     </aside>
 
     <main class="display-container">
-      <div class="display-area-upper" id="displayAreaUpper">Welcome!</div>
+      <div class="display-area-upper" id="displayAreaUpper" data-i18n="welcome_message">Welcome!</div>
     </main>
 
     <aside class="controls-vertical">
@@ -208,8 +208,8 @@
       <button class="btn btn-secondary" id="repeatBtn" onclick="repeatWord()" disabled data-i18n="btn_repeat">Repeat (R)</button>
       <button class="btn btn-success" id="showBtn" onclick="showCurrentWord()" disabled data-i18n="btn_show">Show (S)</button>
       <button class="btn btn-warning" id="voiceBtn" onclick="toggleVoice()" disabled data-i18n="btn_toggleVoice">Voice (V)</button>
-      <button class="btn btn-info" id="viewListBtn" onclick="showWordList()" disabled>View List</button>
-      <button class="btn btn-info" id="historyBtn" disabled>History</button>
+      <button class="btn btn-info" id="viewListBtn" onclick="showWordList()" disabled data-i18n="btn_view_list">View List</button>
+      <button class="btn btn-info" id="historyBtn" disabled data-i18n="btn_history">History</button>
     </aside>
 
     <div class="countdown-wrapper">
@@ -221,19 +221,19 @@
     </div>
 
     <footer class="footer">
-      <div id="statusInfo">Load a word list to start.</div>
-      <div id="fileInfo">No file loaded.</div>
+      <div id="statusInfo" data-i18n="status_load_prompt">Load a word list to start.</div>
+      <div id="fileInfo" data-i18n="file_info_none">No file loaded.</div>
     </footer>
   </div>
 
   <div id="welcomeModal" class="modal">
     <div class="modal-content">
-        <h2>Welcome to the French Study App!</h2>
-        <p style="margin: 1rem 0;">To begin, please load one or more `.txt` files containing your words.</p>
+        <h2 data-i18n="welcome_title">Welcome to the French Study App!</h2>
+        <p style="margin: 1rem 0;" data-i18n="welcome_instructions">To begin, please load one or more `.txt` files containing your words.</p>
         <div id="welcomeUploadArea">
-            <h3 style="pointer-events: none;">Drag & Drop File(s) Here</h3>
-            <p style="pointer-events: none; margin: 0.5rem 0;">or</p>
-            <button class="btn btn-primary" id="welcomeBrowseBtn">Browse Files</button>
+            <h3 style="pointer-events: none;" data-i18n="welcome_drag_drop">Drag & Drop File(s) Here</h3>
+            <p style="pointer-events: none; margin: 0.5rem 0;" data-i18n="welcome_or">or</p>
+            <button class="btn btn-primary" id="welcomeBrowseBtn" data-i18n="welcome_browse">Browse Files</button>
         </div>
     </div>
   </div>
@@ -241,11 +241,11 @@
   <div id="settingsModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Settings</h2>
+        <h2 data-i18n="settings_title">Settings</h2>
         <button class="icon-btn close-btn">&times;</button>
       </div>
       <div id="wordListsSection" class="modal-section" style="display: none;">
-        <label>Active Word Lists</label>
+        <label data-i18n="label_active_word_lists">Active Word Lists</label>
         <div id="wordListsOptions" class="word-lists-options"></div>
       </div>
       <div class="modal-section">
@@ -255,9 +255,9 @@
       <div class="modal-section">
         <label data-i18n="label_studyMode">Study Mode:</label>
         <div class="mode-options">
-          <div class="mode-option"><input type="radio" id="modeSimultaneous" name="studyMode" value="simultaneous"><label for="modeSimultaneous">Listen and Read simultaneously</label></div>
-          <div class="mode-option"><input type="radio" id="modeDisplayFirst" name="studyMode" value="displayFirst"><label for="modeDisplayFirst">Read first, then Listen after</label><input type="number" id="displayFirstDelay" min="0" max="10" value="0" style="width: 50px;"><span data-i18n="label_seconds">seconds</span></div>
-          <div class="mode-option"><input type="radio" id="modeSpeakFirst" name="studyMode" value="speakFirst" checked><label for="modeSpeakFirst">Listen first, then Read after</label><input type="number" id="speakFirstDelay" min="0" max="10" value="0" style="width: 50px;"><span data-i18n="label_seconds">seconds</span></div>
+          <div class="mode-option"><input type="radio" id="modeSimultaneous" name="studyMode" value="simultaneous"><label for="modeSimultaneous" data-i18n="mode_simultaneous">Listen and Read simultaneously</label></div>
+          <div class="mode-option"><input type="radio" id="modeDisplayFirst" name="studyMode" value="displayFirst"><label for="modeDisplayFirst" data-i18n="mode_display_first">Read first, then Listen after</label><input type="number" id="displayFirstDelay" min="0" max="10" value="0" style="width: 50px;"><span data-i18n="label_seconds">seconds</span></div>
+          <div class="mode-option"><input type="radio" id="modeSpeakFirst" name="studyMode" value="speakFirst" checked><label for="modeSpeakFirst" data-i18n="mode_speak_first">Listen first, then Read after</label><input type="number" id="speakFirstDelay" min="0" max="10" value="0" style="width: 50px;"><span data-i18n="label_seconds">seconds</span></div>
           <div class="mode-option"><input type="checkbox" id="shuffleToggle"><label for="shuffleToggle" data-i18n="label_shuffle">Shuffle words</label></div>
         </div>
       </div>
@@ -266,51 +266,51 @@
 
   <div id="helpModal" class="modal">
     <div class="modal-content">
-        <div class="modal-header"><h2>Help</h2><button class="icon-btn close-btn">&times;</button></div>
+        <div class="modal-header"><h2 data-i18n="help_title">Help</h2><button class="icon-btn close-btn">&times;</button></div>
         <div class="modal-section">
-            <h4>🚀 Getting Started</h4>
-            <p>Load a word list by dragging one or more <code>.txt</code> files onto the page, or by clicking the welcome screen to browse your files.</p>
+            <h4 data-i18n="help_getting_started">🚀 Getting Started</h4>
+            <p data-i18n="help_getting_started_body">Load a word list by dragging one or more <code>.txt</code> files onto the page, or by clicking the welcome screen to browse your files.</p>
         </div>
         <div class="modal-section">
-            <h4>🎮 Main Controls</h4>
+            <h4 data-i18n="help_main_controls">🎮 Main Controls</h4>
             <ul>
-                <li><b>Next (Space):</b> Proceeds to the next word.</li>
-                <li><b>Repeat (R):</b> Repeats the audio for the current word.</li>
-                <li><b>Show (S):</b> Instantly reveals the text of the current word.</li>
+                <li data-i18n="help_main_controls_next"><b>Next (Space):</b> Proceeds to the next word.</li>
+                <li data-i18n="help_main_controls_repeat"><b>Repeat (R):</b> Repeats the audio for the current word.</li>
+                <li data-i18n="help_main_controls_show"><b>Show (S):</b> Instantly reveals the text of the current word.</li>
             </ul>
         </div>
         <div class="modal-section">
-            <h4>⚙️ Settings</h4>
-            <p>Click the gear icon to manage settings. You can choose from different study modes, select voices, and enable/disable your loaded word lists for the current session.</p>
+            <h4 data-i18n="help_settings">⚙️ Settings</h4>
+            <p data-i18n="help_settings_body">Click the gear icon to manage settings. You can choose from different study modes, select voices, and enable/disable your loaded word lists for the current session.</p>
         </div>
         <div class="modal-section">
-            <h4>↔️ Panels</h4>
-            <p>On desktop, you can click the <b>‹</b> icon on the "Revealed Words" panel to collapse and expand it.</p>
+            <h4 data-i18n="help_panels">↔️ Panels</h4>
+            <p data-i18n="help_panels_body">On desktop, you can click the <b>‹</b> icon on the "Revealed Words" panel to collapse and expand it.</p>
         </div>
     </div>
   </div>
 
   <div id="wordListModal" class="modal">
      <div class="modal-content">
-      <div class="modal-header"><h2>Current Word List</h2><button class="icon-btn close-btn">&times;</button></div>
+      <div class="modal-header"><h2 data-i18n="word_list_modal_title">Current Word List</h2><button class="icon-btn close-btn">&times;</button></div>
       <div class="word-list" id="wordListContent"></div>
     </div>
   </div>
   
   <div id="historyModal" class="modal">
      <div class="modal-content">
-      <div class="modal-header"><h2>Revealed Words</h2><button class="icon-btn close-btn">&times;</button></div>
+      <div class="modal-header"><h2 data-i18n="history_title">Revealed Words</h2><button class="icon-btn close-btn">&times;</button></div>
       <div id="historyModalContent" class="word-list"></div>
     </div>
   </div>
 
   <div id="confirmationDialog" class="modal">
     <div class="modal-content" style="text-align: center;">
-      <h3>Reset Study Progress</h3>
+      <h3 data-i18n="confirm_title">Reset Study Progress</h3>
       <p id="confirmationDialogText"></p>
       <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem;">
-        <button class="btn btn-primary" id="confirmReset">Yes, Continue</button>
-        <button class="btn btn-secondary" id="cancelReset">Cancel</button>
+        <button class="btn btn-primary" id="confirmReset" data-i18n="confirm_yes_continue">Yes, Continue</button>
+        <button class="btn btn-secondary" id="cancelReset" data-i18n="confirm_cancel">Cancel</button>
       </div>
     </div>
   </div>
@@ -320,10 +320,54 @@
 <script>
     const i18n = {
       en: {
+        page_title: "🇫🇷 French Listening Study",
+        header_title: "🇫🇷 French Study",
+        title_help: "Help",
+        title_settings: "Settings",
+        title_toggle_history: "Toggle History Panel",
+        welcome_message: "Welcome!",
+        btn_view_list: "View List",
+        btn_history: "History",
+        status_load_prompt: "Load a word list to start.",
+        file_info_none: "No file loaded.",
+        welcome_title: "Welcome to the French Study App!",
+        welcome_instructions: "To begin, please load one or more `.txt` files containing your words.",
+        welcome_drag_drop: "Drag & Drop File(s) Here",
+        welcome_or: "or",
+        welcome_browse: "Browse Files",
+        settings_title: "Settings",
+        label_active_word_lists: "Active Word Lists",
         btn_next: "Next (Space)", btn_repeat: "Repeat (R)", btn_show: "Show (S)", btn_toggleVoice: "Voice (V)",
         status_ready: "Ready to start a new session", history_title: "Revealed Words",
         label_voice: "Voice:", opt_systemVoice: "System Voice", label_studyMode: "Study Mode:",
         label_shuffle: "Shuffle words", label_seconds: "seconds",
+        mode_simultaneous: "Listen and Read simultaneously",
+        mode_display_first: "Read first, then Listen after",
+        mode_speak_first: "Listen first, then Read after",
+        help_title: "Help",
+        word_list_modal_title: "Current Word List",
+        help_getting_started: "🚀 Getting Started",
+        help_getting_started_body: "Load a word list by dragging one or more <code>.txt</code> files onto the page, or by clicking the welcome screen to browse your files.",
+        help_main_controls: "🎮 Main Controls",
+        help_main_controls_next: "<b>Next (Space):</b> Proceeds to the next word.",
+        help_main_controls_repeat: "<b>Repeat (R):</b> Repeats the audio for the current word.",
+        help_main_controls_show: "<b>Show (S):</b> Instantly reveals the text of the current word.",
+        help_settings: "⚙️ Settings",
+        help_settings_body: "Click the gear icon to manage settings. You can choose from different study modes, select voices, and enable/disable your loaded word lists for the current session.",
+        help_panels: "↔️ Panels",
+        help_panels_body: "On desktop, you can click the <b>‹</b> icon on the \"Revealed Words\" panel to collapse and expand it.",
+        confirm_title: "Reset Study Progress",
+        confirm_yes_continue: "Yes, Continue",
+        confirm_cancel: "Cancel",
+        no_voices: "🗣️ No Voices Available",
+        indicator_mode_prefix: "📖 Mode:",
+        indicator_shuffle_on: "🔀 Shuffle: On",
+        indicator_shuffle_off: "➡️ Shuffle: Off",
+        status_word_progress: "Word {current}/{total}",
+        opt_system_french_voice: "System Default French Voice",
+        words_lower: "words",
+        file_info: "{wordCount} words from {fileCount} file(s)",
+        history_empty: "No words have been revealed yet in this session.",
         restart_message: "🎉 Starting over from the beginning.", listening: "Listening...", reveal_prompt: "???", ready_to_start: "Ready to start!",
         session_complete: "🎉 Session Complete!", start_next_session: "Start Next (Space)",
         toast_single_file: "✅ {count} words loaded – ready to study!",
@@ -332,10 +376,54 @@
         confirm_word_list: "Changing active word lists will reset your progress. Are you sure?"
       },
       fr: {
+        page_title: "🇫🇷 Étude d'écoute en français",
+        header_title: "🇫🇷 Étude de français",
+        title_help: "Aide",
+        title_settings: "Paramètres",
+        title_toggle_history: "Basculer le panneau d'historique",
+        welcome_message: "Bienvenue !",
+        btn_view_list: "Voir la liste",
+        btn_history: "Historique",
+        status_load_prompt: "Chargez une liste de mots pour commencer.",
+        file_info_none: "Aucun fichier chargé.",
+        welcome_title: "Bienvenue dans l'application d'étude de français !",
+        welcome_instructions: "Pour commencer, chargez un ou plusieurs fichiers `.txt` contenant vos mots.",
+        welcome_drag_drop: "Glissez-déposez les fichiers ici",
+        welcome_or: "ou",
+        welcome_browse: "Parcourir les fichiers",
+        settings_title: "Paramètres",
+        label_active_word_lists: "Listes de mots actives",
         btn_next: "Suivant (Espace)", btn_repeat: "Répéter (R)", btn_show: "Afficher (S)", btn_toggleVoice: "Voix (V)",
         status_ready: "Prêt à commencer une nouvelle session", history_title: "Mots révélés",
         label_voice: "Voix :", opt_systemVoice: "Voix Système", label_studyMode: "Mode d'étude :",
         label_shuffle: "Mélanger les mots", label_seconds: "secondes",
+        mode_simultaneous: "Écouter et lire simultanément",
+        mode_display_first: "Lire d'abord, puis écouter après",
+        mode_speak_first: "Écouter d'abord, puis lire après",
+        help_title: "Aide",
+        word_list_modal_title: "Liste de mots actuelle",
+        help_getting_started: "🚀 Pour commencer",
+        help_getting_started_body: "Chargez une liste de mots en faisant glisser un ou plusieurs fichiers <code>.txt</code> sur la page, ou cliquez sur l'écran d'accueil pour parcourir vos fichiers.",
+        help_main_controls: "🎮 Contrôles principaux",
+        help_main_controls_next: "<b>Suivant (Espace):</b> Passe au mot suivant.",
+        help_main_controls_repeat: "<b>Répéter (R):</b> Répète l'audio du mot actuel.",
+        help_main_controls_show: "<b>Afficher (S):</b> Révèle instantanément le texte du mot actuel.",
+        help_settings: "⚙️ Paramètres",
+        help_settings_body: "Cliquez sur l'icône d'engrenage pour gérer les paramètres. Vous pouvez choisir différents modes d'étude, sélectionner des voix et activer/désactiver vos listes de mots chargées pour la session en cours.",
+        help_panels: "↔️ Panneaux",
+        help_panels_body: "Sur ordinateur, vous pouvez cliquer sur l'icône <b>‹</b> du panneau \"Mots révélés\" pour le réduire ou l'agrandir.",
+        confirm_title: "Réinitialiser la progression d'étude",
+        confirm_yes_continue: "Oui, continuer",
+        confirm_cancel: "Annuler",
+        no_voices: "🗣️ Aucune voix disponible",
+        indicator_mode_prefix: "📖 Mode :",
+        indicator_shuffle_on: "🔀 Mélange : Activé",
+        indicator_shuffle_off: "➡️ Mélange : Désactivé",
+        status_word_progress: "Mot {current}/{total}",
+        opt_system_french_voice: "Voix française par défaut du système",
+        words_lower: "mots",
+        file_info: "{wordCount} mots de {fileCount} fichier(s)",
+        history_empty: "Aucun mot n'a encore été révélé dans cette session.",
         restart_message: "🎉 Reprise depuis le début.", listening: "Écoute...", reveal_prompt: "???", ready_to_start: "Prêt à commencer !",
         session_complete: "🎉 Session terminée !", start_next_session: "Commencer (Espace)",
         toast_single_file: "✅ {count} mots chargés – prêt à étudier !",
@@ -387,10 +475,26 @@
       document.querySelectorAll("[data-i18n]").forEach(el => {
         const key = el.getAttribute("data-i18n");
         if (i18n[lang] && i18n[lang][key]) {
-          el.textContent = i18n[lang][key];
+          const val = i18n[lang][key];
+          if (/[<>&]/.test(val)) {
+            el.innerHTML = val;
+          } else {
+            el.textContent = val;
+          }
         }
       });
-      updateStatusInfo(words.length > 0 ? `Word ${currentIndex}/${words.length}`: "Load a word list to start.");
+      document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        if (i18n[lang] && i18n[lang][key]) {
+          el.setAttribute('title', i18n[lang][key]);
+        }
+      });
+      if (words.length > 0) {
+        const msg = i18n[lang].status_word_progress.replace('{current}', currentIndex).replace('{total}', words.length);
+        updateStatusInfo(msg);
+      } else {
+        updateStatusInfo(i18n[lang].status_load_prompt);
+      }
       updateAllIndicators();
     }
     
@@ -415,7 +519,7 @@
 
       const defaultOption = document.createElement("option");
       defaultOption.value = "system";
-      defaultOption.textContent = "System Default French Voice";
+      defaultOption.textContent = i18n[curLang].opt_system_french_voice;
       vs.appendChild(defaultOption);
 
       const qualityKeywords = ["premium", "enhanced", "siri"];
@@ -468,7 +572,7 @@
       ['nextBtn', 'repeatBtn', 'showBtn', 'voiceBtn', 'historyBtn'].forEach(id => document.getElementById(id).disabled = words.length === 0);
       document.getElementById('viewListBtn').disabled = words.length === 0;
       nextBtn.textContent = i18n[curLang].btn_next;
-      updateStatusInfo(words.length > 0 ? i18n[curLang].ready_to_start : "Load a word list to start.");
+      updateStatusInfo(words.length > 0 ? i18n[curLang].ready_to_start : i18n[curLang].status_load_prompt);
       updateDisplayUpper(i18n[curLang].ready_to_start);
       updateHistoryList();
       updateProgressBar();
@@ -586,7 +690,7 @@
           updateDisplayUpper(i18n[curLang].reveal_prompt);
         }
       }
-      updateStatusInfo(`Word ${currentIndex}/${words.length}`);
+      updateStatusInfo(i18n[curLang].status_word_progress.replace('{current}', currentIndex).replace('{total}', words.length));
     }
 
     async function repeatWord() { if (currentWord) await speakWord(currentWord); }
@@ -620,18 +724,18 @@
 
     function updateVoiceIndicator() {
         const selectedOption = document.getElementById('voiceSelect').selectedOptions[0];
-        if (!selectedOption) { document.getElementById('activeVoiceDisplay').textContent = '🗣️ No Voices Available'; return; }
+        if (!selectedOption) { document.getElementById('activeVoiceDisplay').textContent = i18n[curLang].no_voices; return; }
         document.getElementById('activeVoiceDisplay').textContent = `🗣️ ${selectedOption.text}`;
     }
 
     function updateStudyModeIndicator() {
       const mode = document.querySelector('input[name="studyMode"]:checked');
       const label = document.querySelector(`label[for="${mode.id}"]`);
-      document.getElementById('activeStudyModeDisplay').textContent = `📖 Mode: ${label.textContent.split(',')[0]}`;
+      document.getElementById('activeStudyModeDisplay').textContent = `${i18n[curLang].indicator_mode_prefix} ${label.textContent.split(',')[0]}`;
     }
 
     function updateShuffleIndicator() {
-      document.getElementById('activeShuffleDisplay').textContent = shuffleEnabled ? "🔀 Shuffle: On" : "➡️ Shuffle: Off";
+      document.getElementById('activeShuffleDisplay').textContent = shuffleEnabled ? i18n[curLang].indicator_shuffle_on : i18n[curLang].indicator_shuffle_off;
     }
 
     function updateAllIndicators() {
@@ -665,7 +769,7 @@
                 });
                 const label = document.createElement('label');
                 label.htmlFor = `file--${name}`;
-                label.textContent = `${name} (${wordLists[name].words.length} words)`;
+                label.textContent = `${name} (${wordLists[name].words.length} ${i18n[curLang].words_lower})`;
                 item.appendChild(checkbox);
                 item.appendChild(label);
                 container.appendChild(item);
@@ -686,7 +790,7 @@
         }
         words = newWordList;
         originalWordOrder = [...words]; // Update original order for unshuffling
-        document.getElementById('fileInfo').textContent = `${words.length} words from ${fileCount} file(s)`;
+        document.getElementById('fileInfo').textContent = i18n[curLang].file_info.replace('{wordCount}', words.length).replace('{fileCount}', fileCount);
         initializeStudy();
     }
 
@@ -713,7 +817,7 @@
     historyBtn.addEventListener('click', () => {
         historyModalContent.innerHTML = ""; // Clear previous content
         if (displayHistory.length === 0) {
-            historyModalContent.textContent = "No words have been revealed yet in this session.";
+            historyModalContent.textContent = i18n[curLang].history_empty;
         } else {
             displayHistory.forEach(item => {
                 const historyItem = document.createElement("div");

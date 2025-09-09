@@ -459,7 +459,7 @@
     const UA = navigator.userAgent || '';
     const isIOS = /iPad|iPhone|iPod/.test(UA) || (/Macintosh/.test(UA) && 'ontouchend' in document);
     const isFirefox = /Firefox\/\d+/.test(UA);
-    const isChromium = !isIOS && /(Chrome|Chromium|Edg)\//.test(UA) && !/OPR\//.test(UA);
+    const isChromium = !isIOS && /(Chrome|Chromium|Edg|Brave)\//.test(UA) && !/OPR\//.test(UA);
     const isSafari = !isChromium && (/Safari\//.test(UA) || isIOS);
 
     // --- DOM ELEMENTS ---

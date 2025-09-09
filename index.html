@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title data-i18n="page_title">🇫🇷 French Listening Study</title>
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇫🇷</text></svg>">
@@ -129,9 +129,11 @@
     #fileInfo { white-space: nowrap; text-align: right; flex-shrink: 0; }
 
     /* --- Modals --- */
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(74, 74, 74, 0.5); align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(74, 74, 74, 0.5); align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .modal.visible { display: flex; }
-    .modal-content { background-color: var(--background-color); padding: 1.5rem; border-radius: var(--border-radius); width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .modal-content { background-color: var(--background-color); padding: 1.5rem; border-radius: var(--border-radius); width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-height: 80vh; overflow-y: auto; }
+    html.is-ios .modal { align-items: flex-start; padding: 1rem; }
+    html.is-ios .modal-content { max-height: calc(100svh - 2rem); -webkit-overflow-scrolling: touch; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
     .modal-header h2 { margin: 0; }
     .modal-section { margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; }
@@ -163,6 +165,36 @@
     }
     .toast.visible {
       bottom: 20px;
+    }
+    /* iOS Safari adjustments: allow scroll and safe-area padding only on iOS */
+    html.is-ios, body.is-ios {
+      height: auto;
+      min-height: 100svh;
+      width: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    body.is-ios .container {
+      height: auto;
+      min-height: 100%;
+      padding-top: calc(0.75rem + env(safe-area-inset-top));
+      padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    }
+    /* App version tags */
+    .app-version-corner {
+      position: fixed;
+      left: 8px;
+      bottom: 6px;
+      color: #666;
+      font-size: 0.75em;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .version-inline {
+      margin-top: 0.5rem;
+      color: #666;
+      font-size: 0.85em;
     }
   </style>
 </head>
@@ -210,6 +242,10 @@
       <button class="btn btn-warning" id="voiceBtn" onclick="toggleVoice()" disabled data-i18n="btn_toggleVoice">Voice (V)</button>
       <button class="btn btn-info" id="viewListBtn" onclick="showWordList()" disabled data-i18n="btn_view_list">View List</button>
       <button class="btn btn-info" id="historyBtn" disabled data-i18n="btn_history">History</button>
+      <div id="privativeControls" style="display:none; gap:0.5rem; flex-wrap:wrap;">
+        <button class="btn btn-secondary" id="prefixUnBtn" type="button" data-i18n="btn_prefix_un">Prefix: un</button>
+        <button class="btn btn-secondary" id="prefixUneBtn" type="button" data-i18n="btn_prefix_une">Prefix: une</button>
+      </div>
     </aside>
 
     <div class="countdown-wrapper">
@@ -234,7 +270,9 @@
             <h3 style="pointer-events: none;" data-i18n="welcome_drag_drop">Drag & Drop File(s) Here</h3>
             <p style="pointer-events: none; margin: 0.5rem 0;" data-i18n="welcome_or">or</p>
             <button class="btn btn-primary" id="welcomeBrowseBtn" data-i18n="welcome_browse">Browse Files</button>
-        </div>
+
+            </div>
+            <div id="welcomeVersion" class="version-inline"></div>
     </div>
   </div>
 
@@ -251,6 +289,12 @@
       <div class="modal-section">
         <label for="voiceSelect" data-i18n="label_voice">Voice:</label>
         <select id="voiceSelect" style="width: 100%; padding: 0.5rem;"></select>
+        <div style="display:flex; gap:.5rem; align-items:center; margin-top:.5rem; flex-wrap:wrap;">
+          <button class="btn btn-secondary" id="voiceTestBtn" type="button" data-i18n="btn_test_voice">Test Voice</button>
+          <div id="iosVoiceHint" class="ios-voice-hint" data-i18n="voice_hint_ios" style="display:none; font-size: 0.85em; color: #777;">
+            Tip (iOS): After the first playback, reopen Settings to refresh French voices.
+          </div>
+        </div>
       </div>
       <div class="modal-section">
         <label data-i18n="label_studyMode">Study Mode:</label>
@@ -258,6 +302,7 @@
           <div class="mode-option"><input type="radio" id="modeSimultaneous" name="studyMode" value="simultaneous"><label for="modeSimultaneous" data-i18n="mode_simultaneous">Listen and Read simultaneously</label></div>
           <div class="mode-option"><input type="radio" id="modeDisplayFirst" name="studyMode" value="displayFirst"><label for="modeDisplayFirst" data-i18n="mode_display_first">Read first, then Listen after</label><input type="number" id="displayFirstDelay" min="0" max="10" value="0" style="width: 50px;"><span data-i18n="label_seconds">seconds</span></div>
           <div class="mode-option"><input type="radio" id="modeSpeakFirst" name="studyMode" value="speakFirst" checked><label for="modeSpeakFirst" data-i18n="mode_speak_first">Listen first, then Read after</label><input type="number" id="speakFirstDelay" min="0" max="10" value="0" style="width: 50px;"><span data-i18n="label_seconds">seconds</span></div>
+          <div class="mode-option" id="modePrivativeRow"><input type="radio" id="modePrivative" name="studyMode" value="privativePrefix"><label for="modePrivative" data-i18n="mode_privative_prefix">Privative Prefix Quiz (un/une)</label></div>
           <div class="mode-option"><input type="checkbox" id="shuffleToggle"><label for="shuffleToggle" data-i18n="label_shuffle">Shuffle words</label></div>
         </div>
       </div>
@@ -280,8 +325,12 @@
             </ul>
         </div>
         <div class="modal-section">
+            <h4 data-i18n="help_privative_title">🧩 Privative Prefix Quiz</h4>
+            <p data-i18n="help_privative_body">When your list has words that begin with <b>un</b> or <b>une</b>, enable the Privative Prefix mode in Settings. You will see the base word like “<b>…</b> ami”. Choose the correct prefix with the buttons. If you skip, the answer is recorded as “<b>…</b> ami” in Answers.</p>
+        </div>
+        <div class="modal-section">
             <h4 data-i18n="help_settings">⚙️ Settings</h4>
-            <p data-i18n="help_settings_body">Click the gear icon to manage settings. You can choose from different study modes, select voices, and enable/disable your loaded word lists for the current session.</p>
+            <p data-i18n="help_settings_body">Click the gear icon to manage settings. You can choose from different study modes, select voices, and enable/disable your loaded word lists for the current session. Use “Test Voice” to preview the current voice.</p>
         </div>
         <div class="modal-section">
             <h4 data-i18n="help_panels">↔️ Panels</h4>
@@ -316,6 +365,7 @@
   </div>
 
   <div id="toastNotification" class="toast"></div>
+  <div id="appVersionCorner" class="app-version-corner"></div>
 
 <script>
     const i18n = {
@@ -338,12 +388,18 @@
         settings_title: "Settings",
         label_active_word_lists: "Active Word Lists",
         btn_next: "Next (Space)", btn_repeat: "Repeat (R)", btn_show: "Show (S)", btn_toggleVoice: "Voice (V)",
-        status_ready: "Ready to start a new session", history_title: "Revealed Words",
+        status_ready: "Ready to start a new session", history_title: "Answers",
         label_voice: "Voice:", opt_systemVoice: "System Voice", label_studyMode: "Study Mode:",
         label_shuffle: "Shuffle words", label_seconds: "seconds",
         mode_simultaneous: "Listen and Read simultaneously",
         mode_display_first: "Read first, then Listen after",
         mode_speak_first: "Listen first, then Read after",
+        mode_privative_prefix: "Privative Prefix Quiz (un/une)",
+        btn_prefix_un: "Prefix: un",
+        btn_prefix_une: "Prefix: une",
+        prefix_prompt: "Choose the correct prefix (un/une)",
+        toast_correct_prefix: "✅ Correct! {prefix} + {base}",
+        toast_wrong_prefix: "❌ Not quite. It was {prefix} + {base}",
         help_title: "Help",
         word_list_modal_title: "Current Word List",
         help_getting_started: "🚀 Getting Started",
@@ -352,10 +408,15 @@
         help_main_controls_next: "<b>Next (Space):</b> Proceeds to the next word.",
         help_main_controls_repeat: "<b>Repeat (R):</b> Repeats the audio for the current word.",
         help_main_controls_show: "<b>Show (S):</b> Instantly reveals the text of the current word.",
+        help_privative_title: "🧩 Privative Prefix Quiz",
+        help_privative_body: "When your list has words that begin with <b>un</b> or <b>une</b>, enable the Privative Prefix mode in Settings. You will see the base word like “<b>…</b> ami”. Choose the correct prefix with the buttons. If you skip, the answer is recorded as “<b>…</b> ami” in Answers.",
         help_settings: "⚙️ Settings",
         help_settings_body: "Click the gear icon to manage settings. You can choose from different study modes, select voices, and enable/disable your loaded word lists for the current session.",
         help_panels: "↔️ Panels",
-        help_panels_body: "On desktop, you can click the <b>‹</b> icon on the \"Revealed Words\" panel to collapse and expand it.",
+        help_panels_body: "On desktop, you can click the <b>‹</b> icon on the \"Answers\" panel to collapse and expand it.",
+        btn_test_voice: "Test Voice",
+        test_phrase: "Bonjour !",
+        voice_hint_ios: "Tip (iOS): After first playback, reopen Settings to refresh French voices.",
         confirm_title: "Reset Study Progress",
         confirm_yes_continue: "Yes, Continue",
         confirm_cancel: "Cancel",
@@ -394,12 +455,18 @@
         settings_title: "Paramètres",
         label_active_word_lists: "Listes de mots actives",
         btn_next: "Suivant (Espace)", btn_repeat: "Répéter (R)", btn_show: "Afficher (S)", btn_toggleVoice: "Voix (V)",
-        status_ready: "Prêt à commencer une nouvelle session", history_title: "Mots révélés",
+        status_ready: "Prêt à commencer une nouvelle session", history_title: "Réponses",
         label_voice: "Voix :", opt_systemVoice: "Voix Système", label_studyMode: "Mode d'étude :",
         label_shuffle: "Mélanger les mots", label_seconds: "secondes",
         mode_simultaneous: "Écouter et lire simultanément",
         mode_display_first: "Lire d'abord, puis écouter après",
         mode_speak_first: "Écouter d'abord, puis lire après",
+        mode_privative_prefix: "Préfixe privatif (un/une)",
+        btn_prefix_un: "Préfixe : un",
+        btn_prefix_une: "Préfixe : une",
+        prefix_prompt: "Choisissez le bon préfixe (un/une)",
+        toast_correct_prefix: "✅ Correct ! {prefix} + {base}",
+        toast_wrong_prefix: "❌ Pas tout à fait. C'était {prefix} + {base}",
         help_title: "Aide",
         word_list_modal_title: "Liste de mots actuelle",
         help_getting_started: "🚀 Pour commencer",
@@ -408,10 +475,15 @@
         help_main_controls_next: "<b>Suivant (Espace):</b> Passe au mot suivant.",
         help_main_controls_repeat: "<b>Répéter (R):</b> Répète l'audio du mot actuel.",
         help_main_controls_show: "<b>Afficher (S):</b> Révèle instantanément le texte du mot actuel.",
+        help_privative_title: "🧩 Préfixe privatif",
+        help_privative_body: "Lorsque votre liste contient des mots commençant par <b>un</b> ou <b>une</b>, activez le mode Préfixe privatif dans les Paramètres. Vous verrez le mot de base comme « <b>…</b> ami ». Choisissez le bon préfixe avec les boutons. Si vous passez, la réponse est enregistrée comme « <b>…</b> ami » dans Réponses.",
         help_settings: "⚙️ Paramètres",
         help_settings_body: "Cliquez sur l'icône d'engrenage pour gérer les paramètres. Vous pouvez choisir différents modes d'étude, sélectionner des voix et activer/désactiver vos listes de mots chargées pour la session en cours.",
         help_panels: "↔️ Panneaux",
-        help_panels_body: "Sur ordinateur, vous pouvez cliquer sur l'icône <b>‹</b> du panneau \"Mots révélés\" pour le réduire ou l'agrandir.",
+        help_panels_body: "Sur ordinateur, vous pouvez cliquer sur l'icône <b>‹</b> du panneau \"Réponses\" pour le réduire ou l'agrandir.",
+        btn_test_voice: "Tester la voix",
+        test_phrase: "Bonjour !",
+        voice_hint_ios: "Astuce (iOS) : Après la première lecture, rouvrez Paramètres pour actualiser les voix françaises.",
         confirm_title: "Réinitialiser la progression d'étude",
         confirm_yes_continue: "Oui, continuer",
         confirm_cancel: "Annuler",
@@ -443,9 +515,23 @@
     let isInSpeakFirstMode = false;
     let shuffleEnabled = false;
     let isSessionComplete = false;
+    const APP_VERSION = 'v1.0.0';
+    // Privative prefix mode state
+    let prefixWords = [];
+    let prefixIndex = 0;
+    let currentBaseWord = "";
+    let currentExpectedPrefix = ""; // 'un' or 'une'
+    let privativeAnswered = true;
     const synth = window.speechSynthesis;
     let curLang = "en";
     let confirmationCallback = null;
+
+    // --- ENV / BROWSER DETECTION ---
+    const UA = navigator.userAgent || '';
+    const isIOS = /iPad|iPhone|iPod/.test(UA) || (/Macintosh/.test(UA) && 'ontouchend' in document);
+    const isFirefox = /Firefox\/\d+/.test(UA);
+    const isChromium = !isIOS && /(Chrome|Chromium|Edg|Brave)\//.test(UA) && !/OPR\//.test(UA);
+    const isSafari = !isChromium && (/Safari\//.test(UA) || isIOS);
 
     // --- DOM ELEMENTS ---
     const progressCircle = document.querySelector('.progress-ring__circle');
@@ -498,7 +584,6 @@
       updateAllIndicators();
     }
     
-    // NEW: Robust voice loading function for all browsers
     function populateVoiceList() {
         const voices = synth.getVoices();
         if (voices.length > 0) {
@@ -511,6 +596,40 @@
         }
     }
 
+    function scoreFrenchVoice(voice) {
+      const name = (voice.name || '').toLowerCase();
+      const lang = (voice.lang || '').toLowerCase();
+      const uri = (voice.voiceURI || '').toLowerCase();
+      let score = 0;
+      // Language match priority
+      if (lang.startsWith('fr-fr')) score += 40;
+      else if (lang.startsWith('fr-ca')) score += 30;
+      else if (lang.startsWith('fr')) score += 20; // fr-be, fr-ch, etc.
+      // Prefer local installed voices
+      if (voice.localService) score += 10;
+      // Prefer high quality indicators in name/URI (Safari often encodes in URI)
+      if (name.includes('siri') || uri.includes('siri')) score += 60;
+      if (name.includes('premium') || uri.includes('premium')) score += 50;
+      if (name.includes('enhanced') || uri.includes('enhanced')) score += 40;
+      if (name.includes('neural') || uri.includes('neural') || name.includes('hq') || uri.includes('hq')) score += 30;
+      if (uri.includes('compact')) score -= 20; // penalize compact quality
+      if (voice.default) score += 10;
+      return score;
+    }
+
+    function bestFrenchVoice() {
+      if (!availableVoices || availableVoices.length === 0) return null;
+      const fr = availableVoices.filter(v => (v.lang || '').toLowerCase().startsWith('fr'));
+      if (fr.length === 0) return null;
+      // Safari preference: Thomas if available
+      if (isSafari) {
+        const thomas = fr.filter(v => (v.name || '').toLowerCase().includes('thomas'))
+                         .sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+        if (thomas.length) return thomas[0];
+      }
+      return fr.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a))[0] || null;
+    }
+
     function loadVoices(voices) {
       availableVoices = voices;
       const vs = document.getElementById("voiceSelect");
@@ -521,46 +640,116 @@
       defaultOption.value = "system";
       defaultOption.textContent = i18n[curLang].opt_system_french_voice;
       vs.appendChild(defaultOption);
+      const allFrench = availableVoices
+        .filter(v => (v.lang || '').toLowerCase().startsWith('fr'));
+      const qualityKeywords = ['siri', 'enhanced', 'premium', 'neural', 'hq', 'audrey', 'amelie', 'thomas'];
 
-      const qualityKeywords = ["premium", "enhanced", "siri"];
+      let toShow = [];
+      if (isFirefox) {
+        // Firefox: prefer high-quality filtered list; fallback to all FR
+        const high = allFrench.filter(v => qualityKeywords.some(k => (v.name || '').toLowerCase().includes(k)));
+        toShow = (high.length ? high : allFrench).sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+      } else if (isChromium) {
+        // Chromium: previous behavior was better—if we can't positively identify HQ voices,
+        // don't list potentially poor ones. Only list if we find HQ matches; otherwise keep only System.
+        const high = allFrench.filter(v => qualityKeywords.some(k => (v.name || '').toLowerCase().includes(k)));
+        toShow = high.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+      } else if (isSafari) {
+        // Safari (incl. iOS): list all FR voices, sorted by quality (Siri/Enhanced first)
+        toShow = allFrench.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+      } else {
+        // Default: show all FR voices
+        toShow = allFrench.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+      }
 
-      availableVoices
-        .filter(voice => {
-          const lang = voice.lang.toLowerCase();
-          const name = voice.name.toLowerCase();
-          return lang.startsWith("fr") && qualityKeywords.some(keyword => name.includes(keyword));
-        })
-        .forEach(voice => {
-          const opt = document.createElement("option");
-          opt.value = voice.name;
-          opt.textContent = `${voice.name} (${voice.lang})`;
-          vs.appendChild(opt);
-        });
-        
+      toShow.forEach(voice => {
+        const opt = document.createElement("option");
+        opt.value = voice.name;
+        opt.textContent = `${voice.name} (${voice.lang})`;
+        vs.appendChild(opt);
+      });
+
+      // Preserve current selection if possible
+      let existingIndex = Array.from(vs.options).findIndex(o => o.value === currentVoice);
+      if (existingIndex >= 0) {
+        vs.selectedIndex = existingIndex;
+      } else if (isSafari) {
+        // Make Thomas default for Safari if present
+        const thomasIndex = Array.from(vs.options).findIndex(o => (o.value || '').toLowerCase().includes('thomas'));
+        if (thomasIndex > 0) {
+          vs.selectedIndex = thomasIndex;
+          currentVoice = vs.options[thomasIndex].value;
+        } else {
+          vs.selectedIndex = 0;
+        }
+      } else {
+        vs.selectedIndex = 0;
+      }
+
       updateVoiceIndicator();
     }
 
+    // --- START: MODIFIED FUNCTION FOR DEBUGGING ---
     async function handleFileLoad(files) {
+        console.log('--- handleFileLoad CALLED ---');
+        console.log('Number of files received:', files.length);
+        console.log('Files object:', files); // This will show us the array of file objects
+
         let totalWords = 0;
+
+        const readFile = (file) => {
+            console.log('Attempting to read file:', file.name, 'Size:', file.size, 'Type:', file.type);
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    console.log('FileReader onload event fired for:', file.name);
+                    resolve(event.target.result);
+                };
+                reader.onerror = (error) => {
+                    console.error('FileReader onerror event fired for:', file.name, error);
+                    reject(error);
+                };
+                reader.readAsText(file);
+            });
+        };
+
         for (const file of files) {
-            const content = await file.text();
-            const fileWords = content.split("\n").filter(w => w.trim());
-            wordLists[file.name] = { words: fileWords, enabled: true };
-            totalWords += fileWords.length;
+            try {
+                const content = await readFile(file);
+                console.log(`Successfully read content from ${file.name}. Content length: ${content.length}`);
+                const fileWords = content.split("\n").filter(w => w.trim());
+                if (fileWords.length > 0) {
+                  wordLists[file.name] = { words: fileWords, enabled: true };
+                  totalWords += fileWords.length;
+                }
+            } catch (err) {
+                console.error(`Failed to process file ${file.name}:`, err);
+                showToast(`Error: Could not load ${file.name}.`);
+            }
         }
 
-        generateWordListsUI();
-        rebuildActiveWordsList();
-        welcomeModal.classList.remove('visible');
-        
-        let toastMessage;
-        if (files.length === 1) {
-            toastMessage = i18n[curLang].toast_single_file.replace('{count}', totalWords);
+        console.log('File processing loop finished. Total words found:', totalWords);
+
+        if (totalWords > 0) {
+            console.log('Updating UI with new words.');
+            generateWordListsUI();
+            rebuildActiveWordsList();
+            welcomeModal.classList.remove('visible');
+
+            let toastMessage;
+            const fileCount = Object.keys(wordLists).length;
+
+            if (fileCount === 1) {
+                toastMessage = i18n[curLang].toast_single_file.replace('{count}', totalWords);
+            } else {
+                toastMessage = i18n[curLang].toast_multi_file.replace('{wordCount}', totalWords).replace('{fileCount}', fileCount);
+            }
+            showToast(toastMessage);
         } else {
-            toastMessage = i18n[curLang].toast_multi_file.replace('{wordCount}', totalWords).replace('{fileCount}', files.length);
+            console.log('No words were loaded, UI will not be updated.');
         }
-        showToast(toastMessage);
     }
+    // --- END: MODIFIED FUNCTION FOR DEBUGGING ---
     
     function shuffleArray(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } }
 
@@ -568,6 +757,10 @@
       isSessionComplete = false;
       currentIndex = 0;
       currentWord = "";
+      prefixIndex = 0;
+      currentBaseWord = "";
+      currentExpectedPrefix = "";
+      privativeAnswered = true;
       displayHistory = [];
       ['nextBtn', 'repeatBtn', 'showBtn', 'voiceBtn', 'historyBtn'].forEach(id => document.getElementById(id).disabled = words.length === 0);
       document.getElementById('viewListBtn').disabled = words.length === 0;
@@ -577,17 +770,50 @@
       updateHistoryList();
       updateProgressBar();
       document.getElementById('countdownText').textContent = '--';
+      // Toggle privative controls visibility
+      document.getElementById('privativeControls').style.display = (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') ? 'flex' : 'none';
+      // Shuffle questions for privative mode according to shuffleEnabled
+      if (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix' && prefixWords.length > 0) {
+        if (shuffleEnabled) shuffleArray(prefixWords);
+        else if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
+      }
     }
 
     function speakWord(w) {
       if (synth.speaking) synth.cancel();
       const u = new SpeechSynthesisUtterance(w);
-      if (currentVoice !== "system") {
-        const sv = availableVoices.find(v => v.name === currentVoice);
-        if (sv) u.voice = sv;
+      let selectedVoice = null;
+      if (currentVoice && currentVoice !== 'system') {
+        selectedVoice = availableVoices.find(v => v.name === currentVoice) || null;
       }
-      u.lang = "fr-FR"; u.rate = 0.9;
-      return new Promise(resolve => { u.onend = resolve; synth.speak(u); });
+      if (!selectedVoice) {
+        if (isChromium) {
+          // On Chromium, letting the platform pick often yields a high‑quality FR voice; avoid overriding.
+          u.lang = 'fr-FR';
+        } else {
+          // On Safari/Firefox, resolve best French voice explicitly to ensure quality.
+          const best = bestFrenchVoice();
+          if (best) {
+            selectedVoice = best;
+            u.voice = best;
+            u.lang = best.lang || 'fr-FR';
+          } else {
+            u.lang = 'fr-FR';
+          }
+        }
+      } else {
+        u.voice = selectedVoice;
+        u.lang = selectedVoice.lang || 'fr-FR';
+      }
+      u.rate = 0.9;
+      return new Promise(resolve => { 
+        u.onend = resolve; 
+        synth.speak(u); 
+        // After first synthesis, some browsers populate voices; try to refresh list lazily
+        if (!availableVoices || availableVoices.length === 0 || document.getElementById('voiceSelect').options.length <= 1) {
+          setTimeout(populateVoiceList, 0);
+        }
+      });
     }
 
     function startCountdown(seconds) {
@@ -633,7 +859,9 @@
     }
 
     function addToHistory(word) {
-      const historyEntry = `${currentIndex}/${words.length}: ${word}`;
+      const isPriv = document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix';
+      const indexNum = isPriv ? prefixIndex : currentIndex;
+      const historyEntry = `${indexNum}: ${word}`;
       if (!displayHistory.includes(historyEntry)) {
         displayHistory.push(historyEntry);
         updateHistoryList();
@@ -642,6 +870,38 @@
 
     async function nextWord() {
       if (!words.length) return;
+      // Privative prefix mode branch
+      if (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') {
+        if (prefixWords.length === 0) return;
+        // If previous question existed and was not answered, record as unanswered
+        if (currentBaseWord && !privativeAnswered) {
+          addToHistory(`… ${currentBaseWord}`);
+        }
+        if (prefixIndex >= prefixWords.length) {
+          // Restart automatically for privative quiz
+          showToast(i18n[curLang].restart_message);
+          // Clear Answers modal/history on restart
+          displayHistory = [];
+          updateHistoryList();
+          prefixIndex = 0;
+          if (shuffleEnabled) shuffleArray(prefixWords); else if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
+          setTimeout(() => nextWord(), 0);
+          return;
+        }
+        const item = prefixWords[prefixIndex];
+        currentWord = item.full;
+        currentBaseWord = item.base;
+        currentExpectedPrefix = item.prefix;
+        privativeAnswered = false;
+        prefixIndex++;
+        updateProgressBar();
+        // Display placeholder for prefix
+        updateDisplayUpper(`… ${currentBaseWord}`);
+        // Speak base word only
+        await speakWord(currentBaseWord);
+        updateStatusInfo(i18n[curLang].status_word_progress.replace('{current}', prefixIndex).replace('{total}', prefixWords.length));
+        return;
+      }
       if (isSessionComplete) {
         if (shuffleEnabled) shuffleArray(words);
         initializeStudy();
@@ -693,10 +953,23 @@
       updateStatusInfo(i18n[curLang].status_word_progress.replace('{current}', currentIndex).replace('{total}', words.length));
     }
 
-    async function repeatWord() { if (currentWord) await speakWord(currentWord); }
+    async function repeatWord() { 
+      if (!currentWord) return; 
+      if (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix' && currentBaseWord) {
+        await speakWord(currentBaseWord);
+      } else {
+        await speakWord(currentWord);
+      }
+    }
 
     function showCurrentWord() {
       if (currentWord) {
+        if (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix' && currentBaseWord) {
+          updateDisplayUpper(`${currentExpectedPrefix} ${currentBaseWord}`);
+          addToHistory(`${currentExpectedPrefix} ${currentBaseWord}`);
+          privativeAnswered = true;
+          return;
+        }
         updateDisplayUpper(currentWord);
         if (countdownInterval) {
             clearInterval(countdownInterval);
@@ -718,13 +991,27 @@
     
     // --- UI UPDATE & MANAGEMENT FUNCTIONS ---
     function updateProgressBar() {
-        const progress = words.length > 0 ? (currentIndex / words.length) * 100 : 0;
+        let progress = 0;
+        if (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') {
+          progress = prefixWords.length > 0 ? (prefixIndex / prefixWords.length) * 100 : 0;
+        } else {
+          progress = words.length > 0 ? (currentIndex / words.length) * 100 : 0;
+        }
         progressBarFill.style.width = `${progress}%`;
     }
 
     function updateVoiceIndicator() {
-        const selectedOption = document.getElementById('voiceSelect').selectedOptions[0];
+        const vs = document.getElementById('voiceSelect');
+        const selectedOption = vs.selectedOptions[0];
         if (!selectedOption) { document.getElementById('activeVoiceDisplay').textContent = i18n[curLang].no_voices; return; }
+        // If "system" is selected, try to show the resolved best French voice name
+        if (selectedOption.value === 'system') {
+          const resolved = bestFrenchVoice();
+          if (resolved) {
+            document.getElementById('activeVoiceDisplay').textContent = `🗣️ ${resolved.name} (${resolved.lang})`;
+            return;
+          }
+        }
         document.getElementById('activeVoiceDisplay').textContent = `🗣️ ${selectedOption.text}`;
     }
 
@@ -791,6 +1078,28 @@
         words = newWordList;
         originalWordOrder = [...words]; // Update original order for unshuffling
         document.getElementById('fileInfo').textContent = i18n[curLang].file_info.replace('{wordCount}', words.length).replace('{fileCount}', fileCount);
+        // Build privative prefix pool
+        const pattern = /^(un|une)[\s-]+(.+)$/i;
+        prefixWords = words
+          .map(w => w.trim())
+          .filter(Boolean)
+          .filter(w => pattern.test(w))
+          .map(w => {
+            const m = w.match(pattern);
+            return { full: w, prefix: m[1].toLowerCase(), base: m[2].trim() };
+          });
+        window.prefixOriginalOrder = [...prefixWords];
+        // Enable/disable privative mode option (do not hide)
+        const privRadio = document.getElementById('modePrivative');
+        if (privRadio) {
+          const hasPool = prefixWords.length > 0;
+          privRadio.disabled = !hasPool;
+          // If currently selected but no pool, switch back to speakFirst
+          if (!hasPool && privRadio.checked) {
+            const fallback = document.getElementById('modeSpeakFirst');
+            if (fallback) fallback.checked = true;
+          }
+        }
         initializeStudy();
     }
 
@@ -811,7 +1120,22 @@
     
     // --- EVENT LISTENERS ---
     // Modals
-    document.getElementById('settingsBtn').addEventListener('click', () => settingsModal.classList.add('visible'));
+    function primeVoices() {
+      try {
+        const u = new SpeechSynthesisUtterance(' ');
+        u.lang = 'fr-FR';
+        u.volume = 0; // silent
+        u.rate = 0.1;
+        u.onend = () => setTimeout(populateVoiceList, 0);
+        synth.speak(u);
+      } catch (_) { /* no-op */ }
+    }
+
+    document.getElementById('settingsBtn').addEventListener('click', () => { 
+      settingsModal.classList.add('visible'); 
+      if (isSafari) primeVoices();
+      populateVoiceList(); 
+    });
     document.getElementById('helpBtn').addEventListener('click', () => helpModal.classList.add('visible'));
     
     historyBtn.addEventListener('click', () => {
@@ -848,8 +1172,13 @@
         confirmationCallback = () => {
             shuffleEnabled = !shuffleEnabled; 
             document.getElementById('shuffleToggle').checked = shuffleEnabled;
-            if (shuffleEnabled) shuffleArray(words);
-            else words = [...originalWordOrder];
+            if (shuffleEnabled) {
+              shuffleArray(words);
+              if (prefixWords.length > 0) shuffleArray(prefixWords);
+            } else {
+              words = [...originalWordOrder];
+              if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
+            }
             updateShuffleIndicator();
             initializeStudy();
         };
@@ -873,13 +1202,34 @@
     // File Loading
     const fileInput = document.createElement('input');
     fileInput.type = 'file'; fileInput.accept = '.txt'; fileInput.multiple = true;
+    
+    // --- START: MODIFIED EVENT LISTENER FOR DEBUGGING ---
     fileInput.addEventListener('change', e => {
-      if (e.target.files.length > 0) handleFileLoad(Array.from(e.target.files));
+      console.log('--- HIDDEN <input> "change" EVENT FIRED ---');
+      if (e.target.files && e.target.files.length > 0) {
+        console.log('Files detected in event. Calling handleFileLoad.');
+        handleFileLoad(Array.from(e.target.files));
+      } else {
+        console.warn('Change event fired, but no files were found in e.target.files.');
+      }
     });
+    // --- END: MODIFIED EVENT LISTENER FOR DEBUGGING ---
+
     document.getElementById('welcomeBrowseBtn').addEventListener('click', () => fileInput.click());
     document.getElementById('welcomeUploadArea').addEventListener('click', () => fileInput.click());
-    document.body.addEventListener("dragover", e => { e.preventDefault(); e.stopPropagation(); });
+    function isFileDrag(e) {
+      try {
+        if (!e.dataTransfer) return false;
+        if (e.dataTransfer.files && e.dataTransfer.files.length) return true;
+        if (e.dataTransfer.types && typeof e.dataTransfer.types.includes === 'function') {
+          return e.dataTransfer.types.includes('Files');
+        }
+      } catch (_) { }
+      return false;
+    }
+    document.body.addEventListener("dragover", e => { if (isFileDrag(e)) { e.preventDefault(); e.stopPropagation(); } });
     document.body.addEventListener("drop", e => {
+      if (!isFileDrag(e)) return;
       e.preventDefault(); e.stopPropagation();
       const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.txt'));
       if (files.length > 0) handleFileLoad(files);
@@ -904,9 +1254,41 @@
         const closeBtn = modal.querySelector('.close-btn');
         if(closeBtn) closeBtn.addEventListener('click', () => modal.classList.remove('visible'));
     });
+    // Privative controls handlers
+    const unBtn = document.getElementById('prefixUnBtn');
+    const uneBtn = document.getElementById('prefixUneBtn');
+    if (unBtn) unBtn.addEventListener('click', () => {
+      if (!currentBaseWord) return;
+      const correct = currentExpectedPrefix === 'un';
+      const msg = (correct ? i18n[curLang].toast_correct_prefix : i18n[curLang].toast_wrong_prefix)
+        .replace('{prefix}', currentExpectedPrefix)
+        .replace('{base}', currentBaseWord);
+      showToast(msg);
+      updateDisplayUpper(`${currentExpectedPrefix} ${currentBaseWord}`);
+      addToHistory(`${currentExpectedPrefix} ${currentBaseWord}`);
+      privativeAnswered = true;
+    });
+    if (uneBtn) uneBtn.addEventListener('click', () => {
+      if (!currentBaseWord) return;
+      const correct = currentExpectedPrefix === 'une';
+      const msg = (correct ? i18n[curLang].toast_correct_prefix : i18n[curLang].toast_wrong_prefix)
+        .replace('{prefix}', currentExpectedPrefix)
+        .replace('{base}', currentBaseWord);
+      showToast(msg);
+      updateDisplayUpper(`${currentExpectedPrefix} ${currentBaseWord}`);
+      addToHistory(`${currentExpectedPrefix} ${currentBaseWord}`);
+      privativeAnswered = true;
+    });
     
     document.getElementById('voiceSelect').addEventListener('change', e => { currentVoice = e.target.value; updateVoiceIndicator(); });
-    document.querySelectorAll('input[name="studyMode"]').forEach(radio => radio.addEventListener('change', updateStudyModeIndicator));
+    document.getElementById('voiceSelect').addEventListener('focus', populateVoiceList);
+    const voiceTestBtn = document.getElementById('voiceTestBtn');
+    if (voiceTestBtn) voiceTestBtn.addEventListener('click', () => { speakWord(i18n[curLang].test_phrase); });
+    document.querySelectorAll('input[name="studyMode"]').forEach(radio => radio.addEventListener('change', () => {
+      updateStudyModeIndicator();
+      document.getElementById('privativeControls').style.display = (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') ? 'flex' : 'none';
+      updateProgressBar();
+    }));
 
     // --- INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', () => {
@@ -914,6 +1296,23 @@
         setLanguage("en");
         updateAllIndicators();
         welcomeModal.classList.add('visible');
+        // Apply iOS-only layout tweaks
+        if (isIOS) { document.body.classList.add('is-ios'); document.documentElement.classList.add('is-ios'); }
+        // Initialize privative controls visibility on load
+        document.getElementById('privativeControls').style.display = (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') ? 'flex' : 'none';
+        // Show iOS-specific voice hint
+        try {
+          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && 'ontouchend' in document);
+          const hint = document.getElementById('iosVoiceHint');
+          if (hint && isIOS) hint.style.display = 'block';
+        } catch (_) {}
+        
+        // Version labels
+        // Set version displays
+        const verCorner = document.getElementById('appVersionCorner');
+        const verWelcome = document.getElementById('welcomeVersion');
+        if (verCorner) verCorner.textContent = APP_VERSION;
+        if (verWelcome) verWelcome.textContent = APP_VERSION;
     });
   </script>
 </body>

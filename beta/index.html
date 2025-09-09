@@ -147,9 +147,6 @@
     #welcomeUploadArea:hover { background-color: #eaf2fa; }
     
     .word-list { max-height: 60vh; overflow-y: auto; }
-    /* Styled iOS file picker */
-    .file-input-hidden { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
-    .file-picker-btn { display: inline-block; margin: 0.25rem auto 0; }
 
     /* --- Toast Notification --- */
     .toast {
@@ -273,9 +270,10 @@
             <h3 style="pointer-events: none;" data-i18n="welcome_drag_drop">Drag & Drop File(s) Here</h3>
             <p style="pointer-events: none; margin: 0.5rem 0;" data-i18n="welcome_or">or</p>
             <button class="btn btn-primary" id="welcomeBrowseBtn" data-i18n="welcome_browse">Browse Files</button>
-
-            <input type="file" id="iosTestInput" accept=".txt" multiple style="display: none; margin: 1rem auto;">
+            <div id="iosFilePickerRow" style="display:none; margin-top: 0.75rem;">
+              <input type="file" id="iosFileInput" accept=".txt" multiple style="display:block; margin: 0 auto;" />
             </div>
+        </div>
             <div id="welcomeVersion" class="version-inline"></div>
     </div>
   </div>
@@ -439,7 +437,6 @@
         toast_multi_file: "✅ {wordCount} words from {fileCount} files loaded – ready to study!",
         confirm_shuffle: "Changing shuffle mode will reset your progress. Are you sure?",
         confirm_word_list: "Changing active word lists will reset your progress. Are you sure?"
-        , ios_choose_files: "Choose .txt Files"
       },
       fr: {
         page_title: "🇫🇷 Étude d'écoute en français",
@@ -507,7 +504,6 @@
         toast_multi_file: "✅ {wordCount} mots de {fileCount} fichiers chargés – prêt à étudier !",
         confirm_shuffle: "Changer le mode de mélange réinitialisera votre progression. C'est certain ?",
         confirm_word_list: "Changer les listes de mots actives réinitialisera votre progression. C'est certain ?"
-        , ios_choose_files: "Choisir des fichiers .txt"
       }
     };
 
@@ -521,7 +517,7 @@
     let isInSpeakFirstMode = false;
     let shuffleEnabled = false;
     let isSessionComplete = false;
-    const APP_VERSION = 'v0.9.6-beta';
+    const APP_VERSION = 'v1.1.0-beta';
     // Privative prefix mode state
     let prefixWords = [];
     let prefixIndex = 0;
@@ -1221,8 +1217,21 @@
     });
     // --- END: MODIFIED EVENT LISTENER FOR DEBUGGING ---
 
-    document.getElementById('welcomeBrowseBtn').addEventListener('click', () => fileInput.click());
-    document.getElementById('welcomeUploadArea').addEventListener('click', () => fileInput.click());
+    if (!isIOS) {
+      document.getElementById('welcomeBrowseBtn').addEventListener('click', () => fileInput.click());
+      document.getElementById('welcomeUploadArea').addEventListener('click', () => fileInput.click());
+    } else {
+      const iosPickerRow = document.getElementById('iosFilePickerRow');
+      const iosFileInput = document.getElementById('iosFileInput');
+      if (iosPickerRow) iosPickerRow.style.display = 'block';
+      if (iosFileInput) {
+        iosFileInput.addEventListener('change', e => {
+          if (e.target.files && e.target.files.length > 0) {
+            handleFileLoad(Array.from(e.target.files));
+          }
+        });
+      }
+    }
     function isFileDrag(e) {
       try {
         if (!e.dataTransfer) return false;
@@ -1304,6 +1313,15 @@
         welcomeModal.classList.add('visible');
         // Apply iOS-only layout tweaks
         if (isIOS) { document.body.classList.add('is-ios'); document.documentElement.classList.add('is-ios'); }
+        // Adjust welcome area text for iOS
+        if (isIOS) {
+          const dd = document.querySelector('#welcomeUploadArea h3');
+          const orP = document.querySelector('#welcomeUploadArea p');
+          const browseBtn = document.getElementById('welcomeBrowseBtn');
+          if (dd) dd.textContent = 'Select .txt files';
+          if (orP) orP.style.display = 'none';
+          if (browseBtn) browseBtn.style.display = 'none';
+        }
         // Initialize privative controls visibility on load
         document.getElementById('privativeControls').style.display = (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') ? 'flex' : 'none';
         // Show iOS-specific voice hint
@@ -1313,20 +1331,7 @@
           if (hint && isIOS) hint.style.display = 'block';
         } catch (_) {}
         
-        // iOS: show plain input (reliable) and wire handler
-        try {
-          if (isIOS) {
-            const iosInput = document.getElementById('iosTestInput');
-            if (iosInput) {
-              iosInput.style.display = 'block';
-              iosInput.addEventListener('change', e => {
-                if (e.target.files && e.target.files.length > 0) {
-                  handleFileLoad(Array.from(e.target.files));
-                }
-              });
-            }
-          }
-        } catch(_) {}
+        // Version labels
         // Set version displays
         const verCorner = document.getElementById('appVersionCorner');
         const verWelcome = document.getElementById('welcomeVersion');

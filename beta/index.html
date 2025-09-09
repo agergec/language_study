@@ -147,6 +147,9 @@
     #welcomeUploadArea:hover { background-color: #eaf2fa; }
     
     .word-list { max-height: 60vh; overflow-y: auto; }
+    /* Styled iOS file picker */
+    .file-input-hidden { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+    .file-picker-btn { display: inline-block; margin: 0.25rem auto 0; }
 
     /* --- Toast Notification --- */
     .toast {
@@ -271,8 +274,10 @@
             <p style="pointer-events: none; margin: 0.5rem 0;" data-i18n="welcome_or">or</p>
             <button class="btn btn-primary" id="welcomeBrowseBtn" data-i18n="welcome_browse">Browse Files</button>
 
-            <p style="margin-top: 1rem; color: red; font-weight: bold;">-- IOS TEST --</p>
-            <input type="file" id="iosTestInput" accept=".txt" multiple style="display: block; margin: 1rem auto;">
+            <div id="iosFilePickerRow" style="display:none; margin-top: 0.75rem;">
+              <input type="file" id="iosFileInput" accept=".txt" multiple class="file-input-hidden">
+              <label for="iosFileInput" class="btn btn-primary file-picker-btn" data-i18n="ios_choose_files">Choose .txt Files</label>
+            </div>
             </div>
             <div id="welcomeVersion" class="version-inline"></div>
     </div>
@@ -437,6 +442,7 @@
         toast_multi_file: "✅ {wordCount} words from {fileCount} files loaded – ready to study!",
         confirm_shuffle: "Changing shuffle mode will reset your progress. Are you sure?",
         confirm_word_list: "Changing active word lists will reset your progress. Are you sure?"
+        , ios_choose_files: "Choose .txt Files"
       },
       fr: {
         page_title: "🇫🇷 Étude d'écoute en français",
@@ -504,6 +510,7 @@
         toast_multi_file: "✅ {wordCount} mots de {fileCount} fichiers chargés – prêt à étudier !",
         confirm_shuffle: "Changer le mode de mélange réinitialisera votre progression. C'est certain ?",
         confirm_word_list: "Changer les listes de mots actives réinitialisera votre progression. C'est certain ?"
+        , ios_choose_files: "Choisir des fichiers .txt"
       }
     };
 
@@ -517,7 +524,7 @@
     let isInSpeakFirstMode = false;
     let shuffleEnabled = false;
     let isSessionComplete = false;
-    const APP_VERSION = 'v0.9.4-beta';
+    const APP_VERSION = 'v0.9.5-beta';
     // Privative prefix mode state
     let prefixWords = [];
     let prefixIndex = 0;
@@ -1309,17 +1316,21 @@
           if (hint && isIOS) hint.style.display = 'block';
         } catch (_) {}
         
-        // --- START: EVENT LISTENER FOR VISIBLE TEST INPUT ---
-        document.getElementById('iosTestInput').addEventListener('change', e => {
-          console.log('--- VISIBLE <input> "change" EVENT FIRED ---');
-          if (e.target.files && e.target.files.length > 0) {
-            console.log('Visible input has files. Calling handleFileLoad.');
-            handleFileLoad(Array.from(e.target.files));
-          } else {
-            console.warn('Visible input change event fired, but no files were found.');
+        // iOS: show styled file picker and wire handler
+        try {
+          if (isIOS) {
+            const row = document.getElementById('iosFilePickerRow');
+            const input = document.getElementById('iosFileInput');
+            if (row) row.style.display = 'block';
+            if (input) {
+              input.addEventListener('change', e => {
+                if (e.target.files && e.target.files.length > 0) {
+                  handleFileLoad(Array.from(e.target.files));
+                }
+              });
+            }
           }
-        });
-        // --- END: EVENT LISTENER FOR VISIBLE TEST INPUT ---
+        } catch(_) {}
         // Set version displays
         const verCorner = document.getElementById('appVersionCorner');
         const verWelcome = document.getElementById('welcomeVersion');

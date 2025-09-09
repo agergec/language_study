@@ -164,6 +164,21 @@
     .toast.visible {
       bottom: 20px;
     }
+    /* App version tags */
+    .app-version-corner {
+      position: fixed;
+      left: 8px;
+      bottom: 6px;
+      color: #666;
+      font-size: 0.75em;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .version-inline {
+      margin-top: 0.5rem;
+      color: #666;
+      font-size: 0.85em;
+    }
   </style>
 </head>
 <body>
@@ -238,10 +253,11 @@
             <h3 style="pointer-events: none;" data-i18n="welcome_drag_drop">Drag & Drop File(s) Here</h3>
             <p style="pointer-events: none; margin: 0.5rem 0;" data-i18n="welcome_or">or</p>
             <button class="btn btn-primary" id="welcomeBrowseBtn" data-i18n="welcome_browse">Browse Files</button>
-            
+
             <p style="margin-top: 1rem; color: red; font-weight: bold;">-- IOS TEST --</p>
             <input type="file" id="iosTestInput" accept=".txt" multiple style="display: block; margin: 1rem auto;">
             </div>
+            <div id="welcomeVersion" class="version-inline"></div>
     </div>
   </div>
 
@@ -294,8 +310,12 @@
             </ul>
         </div>
         <div class="modal-section">
+            <h4 data-i18n="help_privative_title">🧩 Privative Prefix Quiz</h4>
+            <p data-i18n="help_privative_body">When your list has words that begin with <b>un</b> or <b>une</b>, enable the Privative Prefix mode in Settings. You will see the base word like “<b>…</b> ami”. Choose the correct prefix with the buttons. If you skip, the answer is recorded as “<b>…</b> ami” in Answers.</p>
+        </div>
+        <div class="modal-section">
             <h4 data-i18n="help_settings">⚙️ Settings</h4>
-            <p data-i18n="help_settings_body">Click the gear icon to manage settings. You can choose from different study modes, select voices, and enable/disable your loaded word lists for the current session.</p>
+            <p data-i18n="help_settings_body">Click the gear icon to manage settings. You can choose from different study modes, select voices, and enable/disable your loaded word lists for the current session. Use “Test Voice” to preview the current voice.</p>
         </div>
         <div class="modal-section">
             <h4 data-i18n="help_panels">↔️ Panels</h4>
@@ -330,6 +350,7 @@
   </div>
 
   <div id="toastNotification" class="toast"></div>
+  <div id="appVersionCorner" class="app-version-corner"></div>
 
 <script>
     const i18n = {
@@ -372,10 +393,12 @@
         help_main_controls_next: "<b>Next (Space):</b> Proceeds to the next word.",
         help_main_controls_repeat: "<b>Repeat (R):</b> Repeats the audio for the current word.",
         help_main_controls_show: "<b>Show (S):</b> Instantly reveals the text of the current word.",
+        help_privative_title: "🧩 Privative Prefix Quiz",
+        help_privative_body: "When your list has words that begin with <b>un</b> or <b>une</b>, enable the Privative Prefix mode in Settings. You will see the base word like “<b>…</b> ami”. Choose the correct prefix with the buttons. If you skip, the answer is recorded as “<b>…</b> ami” in Answers.",
         help_settings: "⚙️ Settings",
         help_settings_body: "Click the gear icon to manage settings. You can choose from different study modes, select voices, and enable/disable your loaded word lists for the current session.",
         help_panels: "↔️ Panels",
-        help_panels_body: "On desktop, you can click the <b>‹</b> icon on the \"Revealed Words\" panel to collapse and expand it.",
+        help_panels_body: "On desktop, you can click the <b>‹</b> icon on the \"Answers\" panel to collapse and expand it.",
         btn_test_voice: "Test Voice",
         test_phrase: "Bonjour !",
         voice_hint_ios: "Tip (iOS): After first playback, reopen Settings to refresh French voices.",
@@ -437,10 +460,12 @@
         help_main_controls_next: "<b>Suivant (Espace):</b> Passe au mot suivant.",
         help_main_controls_repeat: "<b>Répéter (R):</b> Répète l'audio du mot actuel.",
         help_main_controls_show: "<b>Afficher (S):</b> Révèle instantanément le texte du mot actuel.",
+        help_privative_title: "🧩 Préfixe privatif",
+        help_privative_body: "Lorsque votre liste contient des mots commençant par <b>un</b> ou <b>une</b>, activez le mode Préfixe privatif dans les Paramètres. Vous verrez le mot de base comme « <b>…</b> ami ». Choisissez le bon préfixe avec les boutons. Si vous passez, la réponse est enregistrée comme « <b>…</b> ami » dans Réponses.",
         help_settings: "⚙️ Paramètres",
         help_settings_body: "Cliquez sur l'icône d'engrenage pour gérer les paramètres. Vous pouvez choisir différents modes d'étude, sélectionner des voix et activer/désactiver vos listes de mots chargées pour la session en cours.",
         help_panels: "↔️ Panneaux",
-        help_panels_body: "Sur ordinateur, vous pouvez cliquer sur l'icône <b>‹</b> du panneau \"Mots révélés\" pour le réduire ou l'agrandir.",
+        help_panels_body: "Sur ordinateur, vous pouvez cliquer sur l'icône <b>‹</b> du panneau \"Réponses\" pour le réduire ou l'agrandir.",
         btn_test_voice: "Tester la voix",
         test_phrase: "Bonjour !",
         voice_hint_ios: "Astuce (iOS) : Après la première lecture, rouvrez Paramètres pour actualiser les voix françaises.",
@@ -475,11 +500,13 @@
     let isInSpeakFirstMode = false;
     let shuffleEnabled = false;
     let isSessionComplete = false;
+    const APP_VERSION = 'v0.9.0-beta';
     // Privative prefix mode state
     let prefixWords = [];
     let prefixIndex = 0;
     let currentBaseWord = "";
     let currentExpectedPrefix = ""; // 'un' or 'une'
+    let privativeAnswered = true;
     const synth = window.speechSynthesis;
     let curLang = "en";
     let confirmationCallback = null;
@@ -718,6 +745,7 @@
       prefixIndex = 0;
       currentBaseWord = "";
       currentExpectedPrefix = "";
+      privativeAnswered = true;
       displayHistory = [];
       ['nextBtn', 'repeatBtn', 'showBtn', 'voiceBtn', 'historyBtn'].forEach(id => document.getElementById(id).disabled = words.length === 0);
       document.getElementById('viewListBtn').disabled = words.length === 0;
@@ -829,6 +857,10 @@
       // Privative prefix mode branch
       if (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') {
         if (prefixWords.length === 0) return;
+        // If previous question existed and was not answered, record as unanswered
+        if (currentBaseWord && !privativeAnswered) {
+          addToHistory(`… ${currentBaseWord}`);
+        }
         if (prefixIndex >= prefixWords.length) {
           // Restart automatically for privative quiz
           showToast(i18n[curLang].restart_message);
@@ -841,6 +873,7 @@
         currentWord = item.full;
         currentBaseWord = item.base;
         currentExpectedPrefix = item.prefix;
+        privativeAnswered = false;
         prefixIndex++;
         updateProgressBar();
         // Display placeholder for prefix
@@ -915,6 +948,7 @@
         if (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix' && currentBaseWord) {
           updateDisplayUpper(`${currentExpectedPrefix} ${currentBaseWord}`);
           addToHistory(`${currentExpectedPrefix} ${currentBaseWord}`);
+          privativeAnswered = true;
           return;
         }
         updateDisplayUpper(currentWord);
@@ -1196,6 +1230,7 @@
       showToast(msg);
       updateDisplayUpper(`${currentExpectedPrefix} ${currentBaseWord}`);
       addToHistory(`${currentExpectedPrefix} ${currentBaseWord}`);
+      privativeAnswered = true;
     });
     if (uneBtn) uneBtn.addEventListener('click', () => {
       if (!currentBaseWord) return;
@@ -1206,6 +1241,7 @@
       showToast(msg);
       updateDisplayUpper(`${currentExpectedPrefix} ${currentBaseWord}`);
       addToHistory(`${currentExpectedPrefix} ${currentBaseWord}`);
+      privativeAnswered = true;
     });
     
     document.getElementById('voiceSelect').addEventListener('change', e => { currentVoice = e.target.value; updateVoiceIndicator(); });
@@ -1244,6 +1280,11 @@
           }
         });
         // --- END: EVENT LISTENER FOR VISIBLE TEST INPUT ---
+        // Set version displays
+        const verCorner = document.getElementById('appVersionCorner');
+        const verWelcome = document.getElementById('welcomeVersion');
+        if (verCorner) verCorner.textContent = APP_VERSION;
+        if (verWelcome) verWelcome.textContent = APP_VERSION;
     });
   </script>
 </body>

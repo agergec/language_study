@@ -271,7 +271,7 @@
           <div class="mode-option"><input type="radio" id="modeSimultaneous" name="studyMode" value="simultaneous"><label for="modeSimultaneous" data-i18n="mode_simultaneous">Listen and Read simultaneously</label></div>
           <div class="mode-option"><input type="radio" id="modeDisplayFirst" name="studyMode" value="displayFirst"><label for="modeDisplayFirst" data-i18n="mode_display_first">Read first, then Listen after</label><input type="number" id="displayFirstDelay" min="0" max="10" value="0" style="width: 50px;"><span data-i18n="label_seconds">seconds</span></div>
           <div class="mode-option"><input type="radio" id="modeSpeakFirst" name="studyMode" value="speakFirst" checked><label for="modeSpeakFirst" data-i18n="mode_speak_first">Listen first, then Read after</label><input type="number" id="speakFirstDelay" min="0" max="10" value="0" style="width: 50px;"><span data-i18n="label_seconds">seconds</span></div>
-          <div class="mode-option" id="modePrivativeRow" style="display:none;"><input type="radio" id="modePrivative" name="studyMode" value="privativePrefix"><label for="modePrivative" data-i18n="mode_privative_prefix">Privative Prefix Quiz (un/une)</label></div>
+          <div class="mode-option" id="modePrivativeRow"><input type="radio" id="modePrivative" name="studyMode" value="privativePrefix"><label for="modePrivative" data-i18n="mode_privative_prefix">Privative Prefix Quiz (un/une)</label></div>
           <div class="mode-option"><input type="checkbox" id="shuffleToggle"><label for="shuffleToggle" data-i18n="label_shuffle">Shuffle words</label></div>
         </div>
       </div>
@@ -352,7 +352,7 @@
         settings_title: "Settings",
         label_active_word_lists: "Active Word Lists",
         btn_next: "Next (Space)", btn_repeat: "Repeat (R)", btn_show: "Show (S)", btn_toggleVoice: "Voice (V)",
-        status_ready: "Ready to start a new session", history_title: "Revealed Words",
+        status_ready: "Ready to start a new session", history_title: "Answers",
         label_voice: "Voice:", opt_systemVoice: "System Voice", label_studyMode: "Study Mode:",
         label_shuffle: "Shuffle words", label_seconds: "seconds",
         mode_simultaneous: "Listen and Read simultaneously",
@@ -417,7 +417,7 @@
         settings_title: "Paramètres",
         label_active_word_lists: "Listes de mots actives",
         btn_next: "Suivant (Espace)", btn_repeat: "Répéter (R)", btn_show: "Afficher (S)", btn_toggleVoice: "Voix (V)",
-        status_ready: "Prêt à commencer une nouvelle session", history_title: "Mots révélés",
+        status_ready: "Prêt à commencer une nouvelle session", history_title: "Réponses",
         label_voice: "Voix :", opt_systemVoice: "Voix Système", label_studyMode: "Mode d'étude :",
         label_shuffle: "Mélanger les mots", label_seconds: "secondes",
         mode_simultaneous: "Écouter et lire simultanément",
@@ -729,6 +729,10 @@
       document.getElementById('countdownText').textContent = '--';
       // Toggle privative controls visibility
       document.getElementById('privativeControls').style.display = (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') ? 'flex' : 'none';
+      // Shuffle questions for privative mode
+      if (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix' && prefixWords.length > 0) {
+        shuffleArray(prefixWords);
+      }
     }
 
     function speakWord(w) {
@@ -811,7 +815,9 @@
     }
 
     function addToHistory(word) {
-      const historyEntry = `${currentIndex}/${words.length}: ${word}`;
+      const isPriv = document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix';
+      const indexNum = isPriv ? prefixIndex : currentIndex;
+      const historyEntry = `${indexNum}: ${word}`;
       if (!displayHistory.includes(historyEntry)) {
         displayHistory.push(historyEntry);
         updateHistoryList();
@@ -824,11 +830,11 @@
       if (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') {
         if (prefixWords.length === 0) return;
         if (prefixIndex >= prefixWords.length) {
-          isSessionComplete = true;
-          updateDisplayUpper(i18n[curLang].session_complete, true);
-          nextBtn.textContent = i18n[curLang].start_next_session;
-          updateProgressBar();
-          ['repeatBtn', 'showBtn', 'voiceBtn'].forEach(id => document.getElementById(id).disabled = true);
+          // Restart automatically for privative quiz
+          showToast(i18n[curLang].restart_message);
+          prefixIndex = 0;
+          shuffleArray(prefixWords);
+          setTimeout(() => nextWord(), 0);
           return;
         }
         const item = prefixWords[prefixIndex];
@@ -837,7 +843,8 @@
         currentExpectedPrefix = item.prefix;
         prefixIndex++;
         updateProgressBar();
-        updateDisplayUpper(`${currentBaseWord} — ${i18n[curLang].prefix_prompt}`);
+        // Display placeholder for prefix
+        updateDisplayUpper(`… ${currentBaseWord}`);
         // Speak base word only
         await speakWord(currentBaseWord);
         updateStatusInfo(i18n[curLang].status_word_progress.replace('{current}', prefixIndex).replace('{total}', prefixWords.length));
@@ -1028,9 +1035,17 @@
             const m = w.match(pattern);
             return { full: w, prefix: m[1].toLowerCase(), base: m[2].trim() };
           });
-        // Toggle visibility of privative mode option
-        const privRow = document.getElementById('modePrivativeRow');
-        if (privRow) privRow.style.display = prefixWords.length > 0 ? 'flex' : 'none';
+        // Enable/disable privative mode option (do not hide)
+        const privRadio = document.getElementById('modePrivative');
+        if (privRadio) {
+          const hasPool = prefixWords.length > 0;
+          privRadio.disabled = !hasPool;
+          // If currently selected but no pool, switch back to speakFirst
+          if (!hasPool && privRadio.checked) {
+            const fallback = document.getElementById('modeSpeakFirst');
+            if (fallback) fallback.checked = true;
+          }
+        }
         initializeStudy();
     }
 

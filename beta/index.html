@@ -210,6 +210,10 @@
       <button class="btn btn-warning" id="voiceBtn" onclick="toggleVoice()" disabled data-i18n="btn_toggleVoice">Voice (V)</button>
       <button class="btn btn-info" id="viewListBtn" onclick="showWordList()" disabled data-i18n="btn_view_list">View List</button>
       <button class="btn btn-info" id="historyBtn" disabled data-i18n="btn_history">History</button>
+      <div id="privativeControls" style="display:none; gap:0.5rem; flex-wrap:wrap;">
+        <button class="btn btn-secondary" id="prefixUnBtn" type="button" data-i18n="btn_prefix_un">Prefix: un</button>
+        <button class="btn btn-secondary" id="prefixUneBtn" type="button" data-i18n="btn_prefix_une">Prefix: une</button>
+      </div>
     </aside>
 
     <div class="countdown-wrapper">
@@ -267,6 +271,7 @@
           <div class="mode-option"><input type="radio" id="modeSimultaneous" name="studyMode" value="simultaneous"><label for="modeSimultaneous" data-i18n="mode_simultaneous">Listen and Read simultaneously</label></div>
           <div class="mode-option"><input type="radio" id="modeDisplayFirst" name="studyMode" value="displayFirst"><label for="modeDisplayFirst" data-i18n="mode_display_first">Read first, then Listen after</label><input type="number" id="displayFirstDelay" min="0" max="10" value="0" style="width: 50px;"><span data-i18n="label_seconds">seconds</span></div>
           <div class="mode-option"><input type="radio" id="modeSpeakFirst" name="studyMode" value="speakFirst" checked><label for="modeSpeakFirst" data-i18n="mode_speak_first">Listen first, then Read after</label><input type="number" id="speakFirstDelay" min="0" max="10" value="0" style="width: 50px;"><span data-i18n="label_seconds">seconds</span></div>
+          <div class="mode-option" id="modePrivativeRow" style="display:none;"><input type="radio" id="modePrivative" name="studyMode" value="privativePrefix"><label for="modePrivative" data-i18n="mode_privative_prefix">Privative Prefix Quiz (un/une)</label></div>
           <div class="mode-option"><input type="checkbox" id="shuffleToggle"><label for="shuffleToggle" data-i18n="label_shuffle">Shuffle words</label></div>
         </div>
       </div>
@@ -353,6 +358,12 @@
         mode_simultaneous: "Listen and Read simultaneously",
         mode_display_first: "Read first, then Listen after",
         mode_speak_first: "Listen first, then Read after",
+        mode_privative_prefix: "Privative Prefix Quiz (un/une)",
+        btn_prefix_un: "Prefix: un",
+        btn_prefix_une: "Prefix: une",
+        prefix_prompt: "Choose the correct prefix (un/une)",
+        toast_correct_prefix: "✅ Correct! {prefix} + {base}",
+        toast_wrong_prefix: "❌ Not quite. It was {prefix} + {base}",
         help_title: "Help",
         word_list_modal_title: "Current Word List",
         help_getting_started: "🚀 Getting Started",
@@ -412,6 +423,12 @@
         mode_simultaneous: "Écouter et lire simultanément",
         mode_display_first: "Lire d'abord, puis écouter après",
         mode_speak_first: "Écouter d'abord, puis lire après",
+        mode_privative_prefix: "Préfixe privatif (un/une)",
+        btn_prefix_un: "Préfixe : un",
+        btn_prefix_une: "Préfixe : une",
+        prefix_prompt: "Choisissez le bon préfixe (un/une)",
+        toast_correct_prefix: "✅ Correct ! {prefix} + {base}",
+        toast_wrong_prefix: "❌ Pas tout à fait. C'était {prefix} + {base}",
         help_title: "Aide",
         word_list_modal_title: "Liste de mots actuelle",
         help_getting_started: "🚀 Pour commencer",
@@ -458,6 +475,11 @@
     let isInSpeakFirstMode = false;
     let shuffleEnabled = false;
     let isSessionComplete = false;
+    // Privative prefix mode state
+    let prefixWords = [];
+    let prefixIndex = 0;
+    let currentBaseWord = "";
+    let currentExpectedPrefix = ""; // 'un' or 'une'
     const synth = window.speechSynthesis;
     let curLang = "en";
     let confirmationCallback = null;
@@ -693,6 +715,9 @@
       isSessionComplete = false;
       currentIndex = 0;
       currentWord = "";
+      prefixIndex = 0;
+      currentBaseWord = "";
+      currentExpectedPrefix = "";
       displayHistory = [];
       ['nextBtn', 'repeatBtn', 'showBtn', 'voiceBtn', 'historyBtn'].forEach(id => document.getElementById(id).disabled = words.length === 0);
       document.getElementById('viewListBtn').disabled = words.length === 0;
@@ -702,6 +727,8 @@
       updateHistoryList();
       updateProgressBar();
       document.getElementById('countdownText').textContent = '--';
+      // Toggle privative controls visibility
+      document.getElementById('privativeControls').style.display = (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') ? 'flex' : 'none';
     }
 
     function speakWord(w) {
@@ -793,6 +820,29 @@
 
     async function nextWord() {
       if (!words.length) return;
+      // Privative prefix mode branch
+      if (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') {
+        if (prefixWords.length === 0) return;
+        if (prefixIndex >= prefixWords.length) {
+          isSessionComplete = true;
+          updateDisplayUpper(i18n[curLang].session_complete, true);
+          nextBtn.textContent = i18n[curLang].start_next_session;
+          updateProgressBar();
+          ['repeatBtn', 'showBtn', 'voiceBtn'].forEach(id => document.getElementById(id).disabled = true);
+          return;
+        }
+        const item = prefixWords[prefixIndex];
+        currentWord = item.full;
+        currentBaseWord = item.base;
+        currentExpectedPrefix = item.prefix;
+        prefixIndex++;
+        updateProgressBar();
+        updateDisplayUpper(`${currentBaseWord} — ${i18n[curLang].prefix_prompt}`);
+        // Speak base word only
+        await speakWord(currentBaseWord);
+        updateStatusInfo(i18n[curLang].status_word_progress.replace('{current}', prefixIndex).replace('{total}', prefixWords.length));
+        return;
+      }
       if (isSessionComplete) {
         if (shuffleEnabled) shuffleArray(words);
         initializeStudy();
@@ -844,10 +894,22 @@
       updateStatusInfo(i18n[curLang].status_word_progress.replace('{current}', currentIndex).replace('{total}', words.length));
     }
 
-    async function repeatWord() { if (currentWord) await speakWord(currentWord); }
+    async function repeatWord() { 
+      if (!currentWord) return; 
+      if (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix' && currentBaseWord) {
+        await speakWord(currentBaseWord);
+      } else {
+        await speakWord(currentWord);
+      }
+    }
 
     function showCurrentWord() {
       if (currentWord) {
+        if (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix' && currentBaseWord) {
+          updateDisplayUpper(`${currentExpectedPrefix} ${currentBaseWord}`);
+          addToHistory(`${currentExpectedPrefix} ${currentBaseWord}`);
+          return;
+        }
         updateDisplayUpper(currentWord);
         if (countdownInterval) {
             clearInterval(countdownInterval);
@@ -869,7 +931,12 @@
     
     // --- UI UPDATE & MANAGEMENT FUNCTIONS ---
     function updateProgressBar() {
-        const progress = words.length > 0 ? (currentIndex / words.length) * 100 : 0;
+        let progress = 0;
+        if (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') {
+          progress = prefixWords.length > 0 ? (prefixIndex / prefixWords.length) * 100 : 0;
+        } else {
+          progress = words.length > 0 ? (currentIndex / words.length) * 100 : 0;
+        }
         progressBarFill.style.width = `${progress}%`;
     }
 
@@ -951,6 +1018,19 @@
         words = newWordList;
         originalWordOrder = [...words]; // Update original order for unshuffling
         document.getElementById('fileInfo').textContent = i18n[curLang].file_info.replace('{wordCount}', words.length).replace('{fileCount}', fileCount);
+        // Build privative prefix pool
+        const pattern = /^(un|une)[\s-]+(.+)$/i;
+        prefixWords = words
+          .map(w => w.trim())
+          .filter(Boolean)
+          .filter(w => pattern.test(w))
+          .map(w => {
+            const m = w.match(pattern);
+            return { full: w, prefix: m[1].toLowerCase(), base: m[2].trim() };
+          });
+        // Toggle visibility of privative mode option
+        const privRow = document.getElementById('modePrivativeRow');
+        if (privRow) privRow.style.display = prefixWords.length > 0 ? 'flex' : 'none';
         initializeStudy();
     }
 
@@ -1089,12 +1169,39 @@
         const closeBtn = modal.querySelector('.close-btn');
         if(closeBtn) closeBtn.addEventListener('click', () => modal.classList.remove('visible'));
     });
+    // Privative controls handlers
+    const unBtn = document.getElementById('prefixUnBtn');
+    const uneBtn = document.getElementById('prefixUneBtn');
+    if (unBtn) unBtn.addEventListener('click', () => {
+      if (!currentBaseWord) return;
+      const correct = currentExpectedPrefix === 'un';
+      const msg = (correct ? i18n[curLang].toast_correct_prefix : i18n[curLang].toast_wrong_prefix)
+        .replace('{prefix}', currentExpectedPrefix)
+        .replace('{base}', currentBaseWord);
+      showToast(msg);
+      updateDisplayUpper(`${currentExpectedPrefix} ${currentBaseWord}`);
+      addToHistory(`${currentExpectedPrefix} ${currentBaseWord}`);
+    });
+    if (uneBtn) uneBtn.addEventListener('click', () => {
+      if (!currentBaseWord) return;
+      const correct = currentExpectedPrefix === 'une';
+      const msg = (correct ? i18n[curLang].toast_correct_prefix : i18n[curLang].toast_wrong_prefix)
+        .replace('{prefix}', currentExpectedPrefix)
+        .replace('{base}', currentBaseWord);
+      showToast(msg);
+      updateDisplayUpper(`${currentExpectedPrefix} ${currentBaseWord}`);
+      addToHistory(`${currentExpectedPrefix} ${currentBaseWord}`);
+    });
     
     document.getElementById('voiceSelect').addEventListener('change', e => { currentVoice = e.target.value; updateVoiceIndicator(); });
     document.getElementById('voiceSelect').addEventListener('focus', populateVoiceList);
     const voiceTestBtn = document.getElementById('voiceTestBtn');
     if (voiceTestBtn) voiceTestBtn.addEventListener('click', () => { speakWord(i18n[curLang].test_phrase); });
-    document.querySelectorAll('input[name="studyMode"]').forEach(radio => radio.addEventListener('change', updateStudyModeIndicator));
+    document.querySelectorAll('input[name="studyMode"]').forEach(radio => radio.addEventListener('change', () => {
+      updateStudyModeIndicator();
+      document.getElementById('privativeControls').style.display = (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') ? 'flex' : 'none';
+      updateProgressBar();
+    }));
 
     // --- INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', () => {
@@ -1102,6 +1209,8 @@
         setLanguage("en");
         updateAllIndicators();
         welcomeModal.classList.add('visible');
+        // Initialize privative controls visibility on load
+        document.getElementById('privativeControls').style.display = (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') ? 'flex' : 'none';
         // Show iOS-specific voice hint
         try {
           const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && 'ontouchend' in document);

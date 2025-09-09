@@ -455,6 +455,13 @@
     let curLang = "en";
     let confirmationCallback = null;
 
+    // --- ENV / BROWSER DETECTION ---
+    const UA = navigator.userAgent || '';
+    const isIOS = /iPad|iPhone|iPod/.test(UA) || (/Macintosh/.test(UA) && 'ontouchend' in document);
+    const isFirefox = /Firefox\/\d+/.test(UA);
+    const isChromium = !isIOS && /(Chrome|Chromium|Edg)\//.test(UA) && !/OPR\//.test(UA);
+    const isSafari = !isChromium && (/Safari\//.test(UA) || isIOS);
+
     // --- DOM ELEMENTS ---
     const progressCircle = document.querySelector('.progress-ring__circle');
     const radius = progressCircle.r.baseVal.value;
@@ -548,12 +555,29 @@
       defaultOption.value = "system";
       defaultOption.textContent = i18n[curLang].opt_system_french_voice;
       vs.appendChild(defaultOption);
+      const allFrench = availableVoices
+        .filter(v => (v.lang || '').toLowerCase().startsWith('fr'));
+      const qualityKeywords = ['siri', 'enhanced', 'premium', 'neural', 'hq'];
 
-      const frenchVoices = availableVoices
-        .filter(v => (v.lang || '').toLowerCase().startsWith('fr'))
-        .sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+      let toShow = [];
+      if (isFirefox) {
+        // Firefox: prefer high-quality filtered list; fallback to all FR
+        const high = allFrench.filter(v => qualityKeywords.some(k => (v.name || '').toLowerCase().includes(k)));
+        toShow = (high.length ? high : allFrench).sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+      } else if (isChromium) {
+        // Chromium: previous behavior was better—if we can't positively identify HQ voices,
+        // don't list potentially poor ones. Only list if we find HQ matches; otherwise keep only System.
+        const high = allFrench.filter(v => qualityKeywords.some(k => (v.name || '').toLowerCase().includes(k)));
+        toShow = high.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+      } else if (isSafari) {
+        // Safari (incl. iOS): list all FR voices, sorted by quality (Siri/Enhanced first)
+        toShow = allFrench.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+      } else {
+        // Default: show all FR voices
+        toShow = allFrench.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+      }
 
-      frenchVoices.forEach(voice => {
+      toShow.forEach(voice => {
         const opt = document.createElement("option");
         opt.value = voice.name;
         opt.textContent = `${voice.name} (${voice.lang})`;
@@ -654,14 +678,23 @@
         selectedVoice = availableVoices.find(v => v.name === currentVoice) || null;
       }
       if (!selectedVoice) {
-        // Force a best-match French voice for "system" selection to avoid device default non-French voice
-        selectedVoice = bestFrenchVoice();
-      }
-      if (selectedVoice) {
+        if (isChromium) {
+          // On Chromium, letting the platform pick often yields a high‑quality FR voice; avoid overriding.
+          u.lang = 'fr-FR';
+        } else {
+          // On Safari/Firefox, resolve best French voice explicitly to ensure quality.
+          const best = bestFrenchVoice();
+          if (best) {
+            selectedVoice = best;
+            u.voice = best;
+            u.lang = best.lang || 'fr-FR';
+          } else {
+            u.lang = 'fr-FR';
+          }
+        }
+      } else {
         u.voice = selectedVoice;
         u.lang = selectedVoice.lang || 'fr-FR';
-      } else {
-        u.lang = 'fr-FR';
       }
       u.rate = 0.9;
       return new Promise(resolve => { 

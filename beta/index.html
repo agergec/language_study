@@ -274,10 +274,7 @@
             <p style="pointer-events: none; margin: 0.5rem 0;" data-i18n="welcome_or">or</p>
             <button class="btn btn-primary" id="welcomeBrowseBtn" data-i18n="welcome_browse">Browse Files</button>
 
-            <div id="iosFilePickerRow" style="display:none; margin-top: 0.75rem;">
-              <input type="file" id="iosFileInput" accept=".txt" multiple class="file-input-hidden">
-              <label for="iosFileInput" class="btn btn-primary file-picker-btn" data-i18n="ios_choose_files">Choose .txt Files</label>
-            </div>
+            <input type="file" id="iosTestInput" accept=".txt" multiple style="display: none; margin: 1rem auto;">
             </div>
             <div id="welcomeVersion" class="version-inline"></div>
     </div>
@@ -524,7 +521,7 @@
     let isInSpeakFirstMode = false;
     let shuffleEnabled = false;
     let isSessionComplete = false;
-    const APP_VERSION = 'v0.9.5-beta';
+    const APP_VERSION = 'v0.9.6-beta';
     // Privative prefix mode state
     let prefixWords = [];
     let prefixIndex = 0;
@@ -1316,14 +1313,13 @@
           if (hint && isIOS) hint.style.display = 'block';
         } catch (_) {}
         
-        // iOS: show styled file picker and wire handler
+        // iOS: show plain input (reliable) and wire handler
         try {
           if (isIOS) {
-            const row = document.getElementById('iosFilePickerRow');
-            const input = document.getElementById('iosFileInput');
-            if (row) row.style.display = 'block';
-            if (input) {
-              input.addEventListener('change', e => {
+            const iosInput = document.getElementById('iosTestInput');
+            if (iosInput) {
+              iosInput.style.display = 'block';
+              iosInput.addEventListener('change', e => {
                 if (e.target.files && e.target.files.length > 0) {
                   handleFileLoad(Array.from(e.target.files));
                 }

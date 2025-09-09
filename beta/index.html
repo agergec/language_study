@@ -254,8 +254,11 @@
       <div class="modal-section">
         <label for="voiceSelect" data-i18n="label_voice">Voice:</label>
         <select id="voiceSelect" style="width: 100%; padding: 0.5rem;"></select>
-        <div id="iosVoiceHint" class="ios-voice-hint" data-i18n="voice_hint_ios" style="display:none; margin-top: 0.5rem; font-size: 0.85em; color: #777;">
-          Tip (iOS): After the first playback, reopen Settings to refresh French voices.
+        <div style="display:flex; gap:.5rem; align-items:center; margin-top:.5rem; flex-wrap:wrap;">
+          <button class="btn btn-secondary" id="voiceTestBtn" type="button" data-i18n="btn_test_voice">Test Voice</button>
+          <div id="iosVoiceHint" class="ios-voice-hint" data-i18n="voice_hint_ios" style="display:none; font-size: 0.85em; color: #777;">
+            Tip (iOS): After the first playback, reopen Settings to refresh French voices.
+          </div>
         </div>
       </div>
       <div class="modal-section">
@@ -362,6 +365,8 @@
         help_settings_body: "Click the gear icon to manage settings. You can choose from different study modes, select voices, and enable/disable your loaded word lists for the current session.",
         help_panels: "↔️ Panels",
         help_panels_body: "On desktop, you can click the <b>‹</b> icon on the \"Revealed Words\" panel to collapse and expand it.",
+        btn_test_voice: "Test Voice",
+        test_phrase: "Bonjour !",
         voice_hint_ios: "Tip (iOS): After first playback, reopen Settings to refresh French voices.",
         confirm_title: "Reset Study Progress",
         confirm_yes_continue: "Yes, Continue",
@@ -419,6 +424,8 @@
         help_settings_body: "Cliquez sur l'icône d'engrenage pour gérer les paramètres. Vous pouvez choisir différents modes d'étude, sélectionner des voix et activer/désactiver vos listes de mots chargées pour la session en cours.",
         help_panels: "↔️ Panneaux",
         help_panels_body: "Sur ordinateur, vous pouvez cliquer sur l'icône <b>‹</b> du panneau \"Mots révélés\" pour le réduire ou l'agrandir.",
+        btn_test_voice: "Tester la voix",
+        test_phrase: "Bonjour !",
         voice_hint_ios: "Astuce (iOS) : Après la première lecture, rouvrez Paramètres pour actualiser les voix françaises.",
         confirm_title: "Réinitialiser la progression d'étude",
         confirm_yes_continue: "Oui, continuer",
@@ -528,12 +535,20 @@
     function scoreFrenchVoice(voice) {
       const name = (voice.name || '').toLowerCase();
       const lang = (voice.lang || '').toLowerCase();
+      const uri = (voice.voiceURI || '').toLowerCase();
       let score = 0;
-      if (lang.startsWith('fr-fr')) score += 30;
-      else if (lang.startsWith('fr')) score += 20; // include fr-ca, fr-be, etc.
-      // Prefer high quality indicators in name when present
-      if (name.includes('siri')) score += 50;
-      if (name.includes('enhanced') || name.includes('premium') || name.includes('neural') || name.includes('hq')) score += 40;
+      // Language match priority
+      if (lang.startsWith('fr-fr')) score += 40;
+      else if (lang.startsWith('fr-ca')) score += 30;
+      else if (lang.startsWith('fr')) score += 20; // fr-be, fr-ch, etc.
+      // Prefer local installed voices
+      if (voice.localService) score += 10;
+      // Prefer high quality indicators in name/URI (Safari often encodes in URI)
+      if (name.includes('siri') || uri.includes('siri')) score += 60;
+      if (name.includes('premium') || uri.includes('premium')) score += 50;
+      if (name.includes('enhanced') || uri.includes('enhanced')) score += 40;
+      if (name.includes('neural') || uri.includes('neural') || name.includes('hq') || uri.includes('hq')) score += 30;
+      if (uri.includes('compact')) score -= 20; // penalize compact quality
       if (voice.default) score += 10;
       return score;
     }
@@ -542,6 +557,12 @@
       if (!availableVoices || availableVoices.length === 0) return null;
       const fr = availableVoices.filter(v => (v.lang || '').toLowerCase().startsWith('fr'));
       if (fr.length === 0) return null;
+      // Safari preference: Thomas if available
+      if (isSafari) {
+        const thomas = fr.filter(v => (v.name || '').toLowerCase().includes('thomas'))
+                         .sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+        if (thomas.length) return thomas[0];
+      }
       return fr.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a))[0] || null;
     }
 
@@ -585,8 +606,21 @@
       });
 
       // Preserve current selection if possible
-      const existingIndex = Array.from(vs.options).findIndex(o => o.value === currentVoice);
-      vs.selectedIndex = existingIndex >= 0 ? existingIndex : 0;
+      let existingIndex = Array.from(vs.options).findIndex(o => o.value === currentVoice);
+      if (existingIndex >= 0) {
+        vs.selectedIndex = existingIndex;
+      } else if (isSafari) {
+        // Make Thomas default for Safari if present
+        const thomasIndex = Array.from(vs.options).findIndex(o => (o.value || '').toLowerCase().includes('thomas'));
+        if (thomasIndex > 0) {
+          vs.selectedIndex = thomasIndex;
+          currentVoice = vs.options[thomasIndex].value;
+        } else {
+          vs.selectedIndex = 0;
+        }
+      } else {
+        vs.selectedIndex = 0;
+      }
 
       updateVoiceIndicator();
     }
@@ -937,7 +971,22 @@
     
     // --- EVENT LISTENERS ---
     // Modals
-    document.getElementById('settingsBtn').addEventListener('click', () => { settingsModal.classList.add('visible'); populateVoiceList(); });
+    function primeVoices() {
+      try {
+        const u = new SpeechSynthesisUtterance(' ');
+        u.lang = 'fr-FR';
+        u.volume = 0; // silent
+        u.rate = 0.1;
+        u.onend = () => setTimeout(populateVoiceList, 0);
+        synth.speak(u);
+      } catch (_) { /* no-op */ }
+    }
+
+    document.getElementById('settingsBtn').addEventListener('click', () => { 
+      settingsModal.classList.add('visible'); 
+      if (isSafari) primeVoices();
+      populateVoiceList(); 
+    });
     document.getElementById('helpBtn').addEventListener('click', () => helpModal.classList.add('visible'));
     
     historyBtn.addEventListener('click', () => {
@@ -1043,6 +1092,8 @@
     
     document.getElementById('voiceSelect').addEventListener('change', e => { currentVoice = e.target.value; updateVoiceIndicator(); });
     document.getElementById('voiceSelect').addEventListener('focus', populateVoiceList);
+    const voiceTestBtn = document.getElementById('voiceTestBtn');
+    if (voiceTestBtn) voiceTestBtn.addEventListener('click', () => { speakWord(i18n[curLang].test_phrase); });
     document.querySelectorAll('input[name="studyMode"]').forEach(radio => radio.addEventListener('change', updateStudyModeIndicator));
 
     // --- INITIALIZATION ---

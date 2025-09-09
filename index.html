@@ -270,8 +270,10 @@
             <h3 style="pointer-events: none;" data-i18n="welcome_drag_drop">Drag & Drop File(s) Here</h3>
             <p style="pointer-events: none; margin: 0.5rem 0;" data-i18n="welcome_or">or</p>
             <button class="btn btn-primary" id="welcomeBrowseBtn" data-i18n="welcome_browse">Browse Files</button>
-
+            <div id="iosFilePickerRow" style="display:none; margin-top: 0.75rem;">
+              <input type="file" id="iosFileInput" accept=".txt" multiple style="display:block; margin: 0 auto;" />
             </div>
+        </div>
             <div id="welcomeVersion" class="version-inline"></div>
     </div>
   </div>
@@ -515,7 +517,7 @@
     let isInSpeakFirstMode = false;
     let shuffleEnabled = false;
     let isSessionComplete = false;
-    const APP_VERSION = 'v1.0.0';
+    const APP_VERSION = 'v1.0.1';
     // Privative prefix mode state
     let prefixWords = [];
     let prefixIndex = 0;
@@ -1215,8 +1217,21 @@
     });
     // --- END: MODIFIED EVENT LISTENER FOR DEBUGGING ---
 
-    document.getElementById('welcomeBrowseBtn').addEventListener('click', () => fileInput.click());
-    document.getElementById('welcomeUploadArea').addEventListener('click', () => fileInput.click());
+    if (!isIOS) {
+      document.getElementById('welcomeBrowseBtn').addEventListener('click', () => fileInput.click());
+      document.getElementById('welcomeUploadArea').addEventListener('click', () => fileInput.click());
+    } else {
+      const iosPickerRow = document.getElementById('iosFilePickerRow');
+      const iosFileInput = document.getElementById('iosFileInput');
+      if (iosPickerRow) iosPickerRow.style.display = 'block';
+      if (iosFileInput) {
+        iosFileInput.addEventListener('change', e => {
+          if (e.target.files && e.target.files.length > 0) {
+            handleFileLoad(Array.from(e.target.files));
+          }
+        });
+      }
+    }
     function isFileDrag(e) {
       try {
         if (!e.dataTransfer) return false;
@@ -1298,6 +1313,15 @@
         welcomeModal.classList.add('visible');
         // Apply iOS-only layout tweaks
         if (isIOS) { document.body.classList.add('is-ios'); document.documentElement.classList.add('is-ios'); }
+        // Adjust welcome area text for iOS
+        if (isIOS) {
+          const dd = document.querySelector('#welcomeUploadArea h3');
+          const orP = document.querySelector('#welcomeUploadArea p');
+          const browseBtn = document.getElementById('welcomeBrowseBtn');
+          if (dd) dd.textContent = 'Select .txt files';
+          if (orP) orP.style.display = 'none';
+          if (browseBtn) browseBtn.style.display = 'none';
+        }
         // Initialize privative controls visibility on load
         document.getElementById('privativeControls').style.display = (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') ? 'flex' : 'none';
         // Show iOS-specific voice hint

@@ -10,5 +10,11 @@
     "body": "Ensure \u0060<meta charset=\"utf-8\">\u0060 is the first metadata in \u003chead\u003e to avoid encoding issues.",
     "labels": ["frontend"],
     "assignees": []
+  },
+  {
+    "title": "Repeat button: match font color and behavior",
+    "body": "The Repeat button appears with a darker font color compared to other buttons. Align its text color and interaction states with the rest of the button set.\n\nScope:\n- View: `beta/index.html` (controls column)\n- Styles: verify classes for `.btn` and `.btn-secondary`\n\nAcceptance criteria:\n- Repeat button text color matches other buttons in default theme.\n- Hover, focus, and disabled styles consistent with other control buttons.\n- Keyboard + click behavior matches: \"Repeat (R)\" triggers the same action as clicking, no extra side effects.\n- No regressions to i18n labels or tooltips.\n\nNotes:\n- If a custom style overrides `.btn-secondary`, adjust or add a specific rule for the Repeat button to inherit the same color tokens as `.btn` buttons.",
+    "labels": ["frontend", "ui"],
+    "assignees": []
   }
 ]

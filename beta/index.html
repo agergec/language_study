@@ -74,7 +74,7 @@
     .icon-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-color); transition: transform 0.2s; }
     .icon-btn:hover { transform: scale(1.1); }
     .language-flags { display: flex; gap: 0.5rem; }
-    .language-flag { font-size: 1.5rem; cursor: pointer; opacity: 0.5; transition: all 0.2s ease; }
+    .language-flag { font-size: 1.5rem; cursor: pointer; opacity: 0.5; transition: all 0.2s ease; background: none; border: none; padding: 0; line-height: 1; }
     .language-flag.active { opacity: 1; transform: scale(1.15); }
     
     .progress-bar { width: 100%; height: 5px; background-color: var(--border-color); border-radius: 5px; overflow: hidden; }
@@ -207,8 +207,8 @@
           <button id="helpBtn" class="icon-btn" title="Help" data-i18n-title="title_help">?</button>
           <button id="settingsBtn" class="icon-btn" title="Settings" data-i18n-title="title_settings">⚙️</button>
           <div class="language-flags">
-            <div class="language-flag active" id="langEn">🇺🇸</div>
-            <div class="language-flag" id="langFr">🇫🇷</div>
+            <button type="button" class="language-flag active" id="langEn" aria-label="English" title="English">🇺🇸</button>
+            <button type="button" class="language-flag" id="langFr" aria-label="Français" title="Français">🇫🇷</button>
           </div>
         </div>
       </div>
@@ -232,7 +232,7 @@
     </aside>
 
     <main class="display-container">
-      <div class="display-area-upper" id="displayAreaUpper" data-i18n="welcome_message">Welcome!</div>
+      <div class="display-area-upper" id="displayAreaUpper" data-i18n="welcome_message" aria-live="polite" aria-atomic="true">Welcome!</div>
     </main>
 
     <aside class="controls-vertical">
@@ -257,13 +257,13 @@
     </div>
 
     <footer class="footer">
-      <div id="statusInfo" data-i18n="status_load_prompt">Load a word list to start.</div>
+      <div id="statusInfo" data-i18n="status_load_prompt" aria-live="polite" aria-atomic="true">Load a word list to start.</div>
       <div id="fileInfo" data-i18n="file_info_none">No file loaded.</div>
     </footer>
   </div>
 
   <div id="welcomeModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
         <h2 data-i18n="welcome_title">Welcome to the French Study App!</h2>
         <p style="margin: 1rem 0;" data-i18n="welcome_instructions">To begin, please load one or more `.txt` files containing your words.</p>
         <div id="welcomeUploadArea">
@@ -279,10 +279,10 @@
   </div>
 
   <div id="settingsModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
       <div class="modal-header">
         <h2 data-i18n="settings_title">Settings</h2>
-        <button class="icon-btn close-btn">&times;</button>
+        <button class="icon-btn close-btn" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">&times;</button>
       </div>
       <div id="wordListsSection" class="modal-section" style="display: none;">
         <label data-i18n="label_active_word_lists">Active Word Lists</label>
@@ -312,8 +312,8 @@
   </div>
 
   <div id="helpModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header"><h2 data-i18n="help_title">Help</h2><button class="icon-btn close-btn">&times;</button></div>
+    <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
+        <div class="modal-header"><h2 data-i18n="help_title">Help</h2><button class="icon-btn close-btn" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">&times;</button></div>
         <div class="modal-section">
             <h4 data-i18n="help_getting_started">🚀 Getting Started</h4>
             <p data-i18n="help_getting_started_body">Load a word list by dragging one or more <code>.txt</code> files onto the page, or by clicking the welcome screen to browse your files.</p>
@@ -342,21 +342,21 @@
   </div>
 
   <div id="wordListModal" class="modal">
-     <div class="modal-content">
-      <div class="modal-header"><h2 data-i18n="word_list_modal_title">Current Word List</h2><button class="icon-btn close-btn">&times;</button></div>
+     <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-header"><h2 data-i18n="word_list_modal_title">Current Word List</h2><button class="icon-btn close-btn" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">&times;</button></div>
       <div class="word-list" id="wordListContent"></div>
     </div>
   </div>
   
   <div id="historyModal" class="modal">
-     <div class="modal-content">
-      <div class="modal-header"><h2 data-i18n="history_title">Answers</h2><button class="icon-btn close-btn">&times;</button></div>
+     <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-header"><h2 data-i18n="history_title">Answers</h2><button class="icon-btn close-btn" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">&times;</button></div>
       <div id="historyModalContent" class="word-list"></div>
     </div>
   </div>
 
   <div id="confirmationDialog" class="modal">
-    <div class="modal-content" style="text-align: center;">
+    <div class="modal-content" style="text-align: center;" role="dialog" aria-modal="true" tabindex="-1">
       <h3 data-i18n="confirm_title">Reset Study Progress</h3>
       <p id="confirmationDialogText"></p>
       <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem;">
@@ -417,6 +417,7 @@
         help_panels: "↔️ Panels",
         help_panels_body: "On desktop, you can click the <b>‹</b> icon on the \"Answers\" panel to collapse and expand it.",
         btn_test_voice: "Test Voice",
+        label_close: "Close",
         test_phrase: "Bonjour !",
         voice_hint_ios: "Tip (iOS): After first playback, reopen Settings to refresh French voices.",
         confirm_title: "Reset Study Progress",
@@ -484,6 +485,7 @@
         help_panels: "↔️ Panneaux",
         help_panels_body: "Sur ordinateur, vous pouvez cliquer sur l'icône <b>‹</b> du panneau \"Réponses\" pour le réduire ou l'agrandir.",
         btn_test_voice: "Tester la voix",
+        label_close: "Fermer",
         test_phrase: "Bonjour !",
         voice_hint_ios: "Astuce (iOS) : Après la première lecture, rouvrez Paramètres pour actualiser les voix françaises.",
         confirm_title: "Réinitialiser la progression d'étude",
@@ -579,6 +581,12 @@
         const key = el.getAttribute('data-i18n-title');
         if (i18n[lang] && i18n[lang][key]) {
           el.setAttribute('title', i18n[lang][key]);
+        }
+      });
+      document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+        const key = el.getAttribute('data-i18n-aria-label');
+        if (i18n[lang] && i18n[lang][key]) {
+          el.setAttribute('aria-label', i18n[lang][key]);
         }
       });
       if (words.length > 0) {
@@ -1119,6 +1127,7 @@
       settingsModal.classList.add('visible'); 
       if (isSafari) primeVoices();
       populateVoiceList(); 
+      const mc = settingsModal.querySelector('.modal-content'); if (mc) mc.focus();
     });
     // Language flags
     const langEnEl = document.getElementById('langEn');
@@ -1131,7 +1140,7 @@
     if (repeatBtn) repeatBtn.addEventListener('click', () => { if (!repeatBtn.disabled) repeatWord(); });
     if (showBtn) showBtn.addEventListener('click', () => { if (!showBtn.disabled) showCurrentWord(); });
     if (voiceBtn) voiceBtn.addEventListener('click', () => { if (!voiceBtn.disabled) toggleVoice(); });
-    document.getElementById('helpBtn').addEventListener('click', () => helpModal.classList.add('visible'));
+    document.getElementById('helpBtn').addEventListener('click', () => { helpModal.classList.add('visible'); const mc = helpModal.querySelector('.modal-content'); if (mc) mc.focus(); });
     
     historyBtn.addEventListener('click', () => {
         historyModalContent.innerHTML = ""; // Clear previous content
@@ -1146,6 +1155,7 @@
             });
         }
         historyModal.classList.add('visible');
+        const mc = historyModal.querySelector('.modal-content'); if (mc) mc.focus();
     });
 
     const wordListContent = document.getElementById("wordListContent");
@@ -1159,6 +1169,7 @@
             wordListContent.appendChild(wordItem);
         });
         wordListModal.classList.add('visible');
+        const mc2 = wordListModal.querySelector('.modal-content'); if (mc2) mc2.focus();
     });
     
     // Confirmation Dialog & Shuffle Logic

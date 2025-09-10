@@ -92,6 +92,7 @@
     /* --- Main Display --- */
     .display-container { grid-area: display; background: var(--primary-color); color: white; border-radius: var(--border-radius); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem; position: relative; overflow: hidden; box-shadow: var(--shadow); }
     .display-area-upper { font-size: clamp(2rem, 8vw, 4.5rem); font-weight: 800; text-align: center; }
+    .display-instruction { margin-top: 0.5rem; font-size: clamp(0.9rem, 2.5vw, 1rem); opacity: 0.9; text-align: center; }
     .session-complete-message { font-size: clamp(1.5rem, 5vw, 2.5rem); opacity: 0.9; }
 
     /* --- Controls --- */
@@ -276,6 +277,7 @@
     <main class="display-container">
       <div class="countdown-topbar"><div id="countdownTopbarFill" class="countdown-topbar-fill"></div></div>
       <div class="display-area-upper" id="displayAreaUpper" data-i18n="welcome_message" aria-live="polite" aria-atomic="true">Welcome!</div>
+      <div id="displayInstruction" class="display-instruction"></div>
       <div class="countdown-wrapper">
         <svg class="progress-ring" viewBox="0 0 100 100">
           <circle class="progress-ring__track" cx="50" cy="50" r="45" fill="transparent" />
@@ -522,6 +524,9 @@
         file_info: "{wordCount} words from {fileCount} file(s)",
         history_empty: "No words have been revealed yet in this session.",
         restart_message: "🎉 Starting over from the beginning.", listening: "Listening...", reveal_prompt: "???", ready_to_start: "Ready to start!",
+        instr_listen: "Listen please.",
+        instr_repeat: "Repeat what you did hear.",
+        instr_read_say: "Say what you read.",
         session_complete: "🎉 Session Complete!", start_next_session: "Start Next (Space)",
         toast_single_file: "✅ {count} words loaded – ready to study!",
         toast_multi_file: "✅ {wordCount} words from {fileCount} files loaded – ready to study!",
@@ -594,6 +599,9 @@
         file_info: "{wordCount} mots de {fileCount} fichier(s)",
         history_empty: "Aucun mot n'a encore été révélé dans cette session.",
         restart_message: "🎉 Reprise depuis le début.", listening: "Écoute...", reveal_prompt: "???", ready_to_start: "Prêt à commencer !",
+        instr_listen: "Veuillez écouter.",
+        instr_repeat: "Répétez ce que vous avez entendu.",
+        instr_read_say: "Dites ce que vous lisez.",
         session_complete: "🎉 Session terminée !", start_next_session: "Commencer (Espace)",
         toast_single_file: "✅ {count} mots chargés – prêt à étudier !",
         toast_multi_file: "✅ {wordCount} mots de {fileCount} fichiers chargés – prêt à étudier !",
@@ -611,6 +619,7 @@
     let countdownInterval = null;
     let isInSpeakFirstMode = false; // legacy; no longer used for timers
     let readSayStage = 0; // 0=new word, 1=shown, 2=spoken (advance next)
+    let listenRepeatStage = 0; // 0=new word, 1=awaiting user after speak, 2=word shown awaiting next
     let shuffleEnabled = false;
     let originalWordOrder = [];
     let isSessionComplete = false;
@@ -859,6 +868,7 @@
       currentIndex = 0;
       currentWord = "";
       readSayStage = 0;
+      listenRepeatStage = 0;
       prefixIndex = 0;
       currentBaseWord = "";
       currentExpectedPrefix = "";
@@ -869,6 +879,7 @@
       nextBtn.textContent = i18n[curLang].btn_next;
       updateStatusInfo('');
       updateDisplayUpper(i18n[curLang].ready_to_start);
+      updateInstruction('');
       updateHistoryList();
       updateProgressBar();
       document.getElementById('countdownText').textContent = '--';
@@ -1033,6 +1044,7 @@
       if (currentIndex >= words.length) {
         isSessionComplete = true;
         updateDisplayUpper(i18n[curLang].session_complete, true);
+        updateInstruction('');
         nextBtn.textContent = i18n[curLang].start_next_session;
         updateProgressBar();
         ['repeatBtn', 'showBtn', 'voiceBtn'].forEach(id => document.getElementById(id).disabled = true);
@@ -1051,6 +1063,21 @@
         }
       }
 
+      // Handle staged flow for Listen then Repeat
+      if (getSelectedStudyMode() === 'listenThenRepeat' && currentWord) {
+        if (listenRepeatStage === 1) {
+          // Reveal the word after the student repeats and speak it once more
+          updateDisplayUpper(currentWord);
+          updateInstruction('');
+          await speakWord(currentWord);
+          listenRepeatStage = 2; // wait for next press to advance (pre-add will log previous)
+          return;
+        } else if (listenRepeatStage === 2) {
+          // proceed to pick the next word
+          listenRepeatStage = 0;
+        }
+      }
+
       currentWord = words[currentIndex];
       currentIndex++;
       updateProgressBar();
@@ -1060,17 +1087,23 @@
       if (studyMode === "listenRead") {
         updateDisplayUpper(currentWord);
         addToHistory(currentWord);
+        updateInstruction('');
         await speakWord(currentWord);
       } else if (studyMode === "readThenSay") {
         // Stage 1: show the word, wait for student to say it
         updateDisplayUpper(currentWord);
         addToHistory(currentWord);
+        updateInstruction(i18n[curLang].instr_read_say);
         readSayStage = 1; // next press will speak
         updateStatusInfo(i18n[curLang].status_word_progress.replace('{current}', currentIndex).replace('{total}', words.length));
         return;
       } else if (studyMode === "listenThenRepeat") {
         updateDisplayUpper(i18n[curLang].reveal_prompt);
-        await speakWord(currentWord); // after speaking, just wait; next press advances
+        updateInstruction(i18n[curLang].instr_listen);
+        await speakWord(currentWord); // speak first
+        updateInstruction(i18n[curLang].instr_repeat);
+        listenRepeatStage = 1; // now wait for user to reveal
+        return;
       }
       updateStatusInfo(i18n[curLang].status_word_progress.replace('{current}', currentIndex).replace('{total}', words.length));
     }
@@ -1332,6 +1365,10 @@
         const el = document.getElementById("displayAreaUpper");
         el.textContent = t;
         el.classList.toggle('session-complete-message', isComplete);
+    }
+    function updateInstruction(t='') {
+        const el = document.getElementById('displayInstruction');
+        if (el) el.textContent = t || '';
     }
     function updateStatusInfo(m) { 
         const el = document.getElementById("statusInfo");

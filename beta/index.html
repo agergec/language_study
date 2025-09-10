@@ -97,6 +97,8 @@
     .btn:disabled { background-color: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
     .btn-primary { background-color: var(--primary-color); }
     .btn-secondary { background-color: var(--secondary-color); color: var(--text-color); }
+    /* Ensure Repeat button matches other buttons' text color */
+    #repeatBtn { color: #fff; }
     .btn-success { background-color: var(--success-color); }
     .btn-warning { background-color: var(--warning-color); }
     .btn-info { background-color: #90b8de; }
@@ -521,7 +523,7 @@
     let shuffleEnabled = false;
     let originalWordOrder = [];
     let isSessionComplete = false;
-    const APP_VERSION = 'v1.1.4-beta';
+    const APP_VERSION = 'v1.1.5-beta';
     // Privative prefix mode state
     let prefixWords = [];
     let prefixIndex = 0;

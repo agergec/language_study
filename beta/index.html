@@ -419,7 +419,6 @@
         <section id="menuPanel" class="panel" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="menuPanelTitle">
           <div class="panel-header">
             <h2 id="menuPanelTitle" style="margin:0">Menu</h2>
-            <button class="icon-btn close-btn" aria-label="Close" title="Close">✕</button>
           </div>
           <div class="panel-body">
       <div class="modal-section">
@@ -1487,6 +1486,8 @@
       menuModal.classList.remove('visible'); 
       menuBtn.setAttribute('aria-expanded','false'); 
       menuCloseOverlay.style.display = 'none';
+      const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
+      bodyScrollLock(false);
     });
     const menuLangEn = document.getElementById('menuLangEn');
     const menuLangFr = document.getElementById('menuLangFr');

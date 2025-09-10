@@ -76,6 +76,10 @@
     .language-flags { display: flex; gap: 0.5rem; }
     .language-flag { font-size: 1.5rem; cursor: pointer; opacity: 0.5; transition: all 0.2s ease; background: none; border: none; padding: 0; line-height: 1; }
     .language-flag.active { opacity: 1; transform: scale(1.15); }
+    /* Mobile: use hamburger; hide individual icons/flags */
+    @media (max-width: 1023px) {
+      .header-actions .icon-btn:not(#menuBtn), .language-flags { display: none; }
+    }
     
     .progress-bar { width: 100%; height: 5px; background-color: var(--border-color); border-radius: 5px; overflow: hidden; }
     .progress-bar-fill { height: 100%; width: 0%; background-color: var(--success-color); transition: width 0.3s ease-in-out; border-radius: 5px; }
@@ -119,8 +123,8 @@
     .container.history-hidden #historyToggleBtn { transform: rotate(180deg); }
 
     /* --- Countdown --- */
-    .countdown-wrapper { grid-area: countdown; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; min-height: 60px; }
-    .progress-ring { position: absolute; width: 60px; height: 60px; }
+    .countdown-wrapper { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60px; pointer-events: none; }
+    .progress-ring { position: relative; width: 60px; height: 60px; }
     .progress-ring__circle { transition: stroke-dashoffset 0.1s linear; transform: rotate(-90deg); transform-origin: 50% 50%; stroke-width: 6; stroke: var(--success-color); stroke-linecap: round; }
     .progress-ring__track { stroke-width: 6; stroke: var(--border-color); }
     .countdown-text { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); }
@@ -193,6 +197,7 @@
       z-index: 10;
       pointer-events: none;
     }
+    @media (max-width: 1023px) { .app-version-corner { display: none; } }
     .version-inline {
       margin-top: 0.5rem;
       color: #666;
@@ -212,6 +217,7 @@
             <button type="button" class="language-flag active" id="langEn" aria-label="English" title="English">🇺🇸</button>
             <button type="button" class="language-flag" id="langFr" aria-label="Français" title="Français">🇫🇷</button>
           </div>
+          <button id="menuBtn" class="icon-btn" aria-label="Menu" title="Menu" aria-controls="menuModal" aria-expanded="false">☰</button>
         </div>
       </div>
       <div class="progress-bar">
@@ -235,6 +241,13 @@
 
     <main class="display-container">
       <div class="display-area-upper" id="displayAreaUpper" data-i18n="welcome_message" aria-live="polite" aria-atomic="true">Welcome!</div>
+      <div class="countdown-wrapper">
+        <svg class="progress-ring" viewBox="0 0 100 100">
+          <circle class="progress-ring__track" cx="50" cy="50" r="45" fill="transparent" />
+          <circle class="progress-ring__circle" cx="50" cy="50" r="45" fill="transparent" />
+        </svg>
+        <span id="countdownText" class="countdown-text">--</span>
+      </div>
     </main>
 
     <aside class="controls-vertical">
@@ -250,13 +263,7 @@
       </div>
     </aside>
 
-    <div class="countdown-wrapper">
-      <svg class="progress-ring" viewBox="0 0 100 100">
-        <circle class="progress-ring__track" cx="50" cy="50" r="45" fill="transparent" />
-        <circle class="progress-ring__circle" cx="50" cy="50" r="45" fill="transparent" />
-      </svg>
-      <span id="countdownText" class="countdown-text">--</span>
-    </div>
+    <!-- countdown moved into display container -->
 
     <footer class="footer">
       <div id="statusInfo" data-i18n="status_load_prompt" aria-live="polite" aria-atomic="true">Load a word list to start.</div>
@@ -354,6 +361,31 @@
      <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
       <div class="modal-header"><h2 data-i18n="history_title">Answers</h2><button class="icon-btn close-btn" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">&times;</button></div>
       <div id="historyModalContent" class="word-list"></div>
+    </div>
+  </div>
+
+  <!-- App Menu: mobile-friendly hamburger contents -->
+  <div id="menuModal" class="modal">
+    <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-header">
+        <h2>Menu</h2>
+        <button class="icon-btn close-btn" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">&times;</button>
+      </div>
+      <div class="modal-section">
+        <label>Language</label>
+        <div class="language-flags">
+          <button type="button" class="language-flag" id="menuLangEn" aria-label="English" title="English">🇺🇸</button>
+          <button type="button" class="language-flag" id="menuLangFr" aria-label="Français" title="Français">🇫🇷</button>
+        </div>
+      </div>
+      <div class="modal-section">
+        <button class="btn btn-info" id="menuHelpBtn">Help</button>
+        <button class="btn btn-info" id="menuSettingsBtn">Settings</button>
+      </div>
+      <div class="modal-section">
+        <label>About</label>
+        <div id="menuVersion" class="version-inline"></div>
+      </div>
     </div>
   </div>
 
@@ -523,7 +555,7 @@
     let shuffleEnabled = false;
     let originalWordOrder = [];
     let isSessionComplete = false;
-    const APP_VERSION = 'v1.1.5-beta';
+    const APP_VERSION = 'v1.1.6-beta';
     // Privative prefix mode state
     let prefixWords = [];
     let prefixIndex = 0;
@@ -1213,6 +1245,20 @@
     if (showBtn) showBtn.addEventListener('click', () => { if (!showBtn.disabled) showCurrentWord(); });
     if (voiceBtn) voiceBtn.addEventListener('click', () => { if (!voiceBtn.disabled) toggleVoice(); });
     document.getElementById('helpBtn').addEventListener('click', () => { helpModal.classList.add('visible'); const mc = helpModal.querySelector('.modal-content'); if (mc) mc.focus(); });
+    // Hamburger menu
+    const menuModal = document.getElementById('menuModal');
+    const menuBtn = document.getElementById('menuBtn');
+    if (menuBtn) menuBtn.addEventListener('click', () => { 
+      if (menuModal) { menuModal.classList.add('visible'); menuBtn.setAttribute('aria-expanded','true'); const mc = menuModal.querySelector('.modal-content'); if (mc) mc.focus(); }
+    });
+    const menuLangEn = document.getElementById('menuLangEn');
+    const menuLangFr = document.getElementById('menuLangFr');
+    if (menuLangEn) menuLangEn.addEventListener('click', () => { setLanguage('en'); });
+    if (menuLangFr) menuLangFr.addEventListener('click', () => { setLanguage('fr'); });
+    const menuHelpBtn = document.getElementById('menuHelpBtn');
+    if (menuHelpBtn) menuHelpBtn.addEventListener('click', () => { menuModal.classList.remove('visible'); helpModal.classList.add('visible'); const mc = helpModal.querySelector('.modal-content'); if (mc) mc.focus(); });
+    const menuSettingsBtn = document.getElementById('menuSettingsBtn');
+    if (menuSettingsBtn) menuSettingsBtn.addEventListener('click', () => { menuModal.classList.remove('visible'); settingsModal.classList.add('visible'); if (isSafari) primeVoices(); populateVoiceList(); const mc = settingsModal.querySelector('.modal-content'); if (mc) mc.focus(); });
     
     historyBtn.addEventListener('click', () => {
         historyModalContent.innerHTML = ""; // Clear previous content
@@ -1337,7 +1383,7 @@
     allModals.forEach(modal => {
         modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('visible'); });
         const closeBtn = modal.querySelector('.close-btn');
-        if(closeBtn) closeBtn.addEventListener('click', () => modal.classList.remove('visible'));
+        if(closeBtn) closeBtn.addEventListener('click', () => { modal.classList.remove('visible'); if (modal.id === 'menuModal') document.getElementById('menuBtn')?.setAttribute('aria-expanded','false'); });
     });
     // Privative controls handlers
     const unBtn = document.getElementById('prefixUnBtn');
@@ -1428,8 +1474,10 @@
         // Set version displays
         const verCorner = document.getElementById('appVersionCorner');
         const verWelcome = document.getElementById('welcomeVersion');
+        const verMenu = document.getElementById('menuVersion');
         if (verCorner) verCorner.textContent = APP_VERSION;
         if (verWelcome) verWelcome.textContent = APP_VERSION;
+        if (verMenu) verMenu.textContent = APP_VERSION;
 
         // Inline handlers are used for control buttons and language flags
     });

@@ -1124,8 +1124,11 @@
     function showCurrentWord() {
       if (currentWord) {
         if ((getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef') && currentBaseWord) {
-          updateDisplayUpper(`${currentExpectedPrefix} ${currentBaseWord}`);
-          addToHistory(`${currentExpectedPrefix} ${currentBaseWord}`);
+          const full = `${currentExpectedPrefix} ${currentBaseWord}`;
+          updateDisplayUpper(full);
+          addToHistory(full);
+          // Speak the full phrase when revealed via Show
+          speakWord(full);
           privativeAnswered = true;
           return;
         }
@@ -1608,6 +1611,8 @@
       showToast(msg);
       updateDisplayUpper(`${currentExpectedPrefix} ${currentBaseWord}`);
       addToHistory(`${currentExpectedPrefix} ${currentBaseWord}`);
+      // Speak the full phrase after answer provided
+      speakWord(`${currentExpectedPrefix} ${currentBaseWord}`);
       privativeAnswered = true;
     });
     if (uneBtn) uneBtn.addEventListener('click', () => {
@@ -1621,6 +1626,8 @@
       showToast(msg);
       updateDisplayUpper(`${currentExpectedPrefix} ${currentBaseWord}`);
       addToHistory(`${currentExpectedPrefix} ${currentBaseWord}`);
+      // Speak the full phrase after answer provided
+      speakWord(`${currentExpectedPrefix} ${currentBaseWord}`);
       privativeAnswered = true;
     });
     

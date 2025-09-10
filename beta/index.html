@@ -520,7 +520,7 @@
     let shuffleEnabled = false;
     let originalWordOrder = [];
     let isSessionComplete = false;
-    const APP_VERSION = 'v1.1.2-beta';
+    const APP_VERSION = 'v1.1.3-beta';
     // Privative prefix mode state
     let prefixWords = [];
     let prefixIndex = 0;
@@ -708,6 +708,7 @@
       }
 
       updateVoiceIndicator();
+      renderVoiceDebug();
     }
 
     async function handleFileLoad(files) {
@@ -987,6 +988,7 @@
       currentVoice = vs.value;
       try { localStorage.setItem('selectedVoice', currentVoice); } catch (_) {}
       updateVoiceIndicator();
+      renderVoiceDebug();
     }
     
     // --- UI UPDATE & MANAGEMENT FUNCTIONS ---
@@ -1030,6 +1032,55 @@
       updateStudyModeIndicator();
       updateShuffleIndicator();
     }
+    
+    // --- Voice Debug Helper (feature-flagged) ---
+    function isVoiceDebugEnabled() {
+      try { if ((location.hash || '').toLowerCase().includes('voicedebug')) return true; } catch (_) {}
+      try { return localStorage.getItem('voiceDebug') === '1'; } catch (_) { return false; }
+    }
+
+    function ensureVoiceDebugEl() {
+      let el = document.getElementById('voiceDebug');
+      if (!el) {
+        const host = document.querySelector('.sub-header') || document.body;
+        el = document.createElement('div');
+        el.id = 'voiceDebug';
+        el.className = 'status-indicator';
+        el.style.opacity = '0.7';
+        el.style.fontSize = '0.85em';
+        host.appendChild(el);
+      }
+      return el;
+    }
+
+    function renderVoiceDebug() {
+      const enabled = isVoiceDebugEnabled();
+      const el = ensureVoiceDebugEl();
+      if (!enabled) { el.style.display = 'none'; return; }
+
+      // Gather info
+      const all = Array.isArray(availableVoices) ? availableVoices : [];
+      const fr = all.filter(v => (v.lang || '').toLowerCase().startsWith('fr'));
+      const engine = isSafari ? 'Safari' : (isChromium ? 'Chromium' : (isFirefox ? 'Firefox' : 'Other'));
+      const vs = document.getElementById('voiceSelect');
+      const selectedVal = (vs && vs.value) ? vs.value : currentVoice || 'system';
+      let selectedText = 'System';
+      if (vs && vs.selectedOptions && vs.selectedOptions[0]) {
+        selectedText = vs.selectedOptions[0].value === 'system' ? 'System' : vs.selectedOptions[0].text;
+      } else if (selectedVal && selectedVal !== 'system') {
+        const vo = fr.find(v => v.name === selectedVal);
+        selectedText = vo ? `${vo.name} (${vo.lang})` : selectedVal;
+      }
+      const best = bestFrenchVoice();
+      const resolvedText = best ? `${best.name} (${best.lang})` : '—';
+
+      el.textContent = `🧩 Voice Debug — Selected: ${selectedText} | Resolved: ${resolvedText} | Engine: ${engine} | FR: ${fr.length}/${all.length}`;
+      el.style.display = 'block';
+    }
+
+    // Expose toggles for convenience during testing
+    window.enableVoiceDebug = function() { try { localStorage.setItem('voiceDebug', '1'); } catch (_) {} renderVoiceDebug(); };
+    window.disableVoiceDebug = function() { try { localStorage.removeItem('voiceDebug'); } catch (_) {} renderVoiceDebug(); };
     
     function generateWordListsUI() {
         const container = document.getElementById('wordListsOptions');
@@ -1305,6 +1356,7 @@
       currentVoice = e.target.value; 
       try { localStorage.setItem('selectedVoice', currentVoice); } catch (_) {}
       updateVoiceIndicator(); 
+      renderVoiceDebug();
     });
     document.getElementById('voiceSelect').addEventListener('focus', populateVoiceList);
     const voiceTestBtn = document.getElementById('voiceTestBtn');
@@ -1337,6 +1389,8 @@
         setLanguage("en");
         updateAllIndicators();
         welcomeModal.classList.add('visible');
+        // Initialize voice debug if enabled
+        renderVoiceDebug();
         // Apply iOS-only layout tweaks
         if (isIOS) { document.body.classList.add('is-ios'); document.documentElement.classList.add('is-ios'); }
         // Adjust welcome area text for iOS

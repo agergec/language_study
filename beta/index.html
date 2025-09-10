@@ -123,7 +123,7 @@
     .container.history-hidden #historyToggleBtn { transform: rotate(180deg); }
 
     /* --- Countdown --- */
-    .countdown-wrapper { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60px; pointer-events: none; top: auto; }
+    .countdown-wrapper { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 60px; pointer-events: none; top: auto; }
     .progress-ring { position: relative; width: 60px; height: 60px; }
     .progress-ring__circle { transition: stroke-dashoffset 0.1s linear; transform: rotate(-90deg); transform-origin: 50% 50%; stroke-width: 6; stroke: var(--success-color); stroke-linecap: round; }
     .progress-ring__track { stroke-width: 6; stroke: var(--border-color); }
@@ -199,8 +199,8 @@
     }
     @media (max-width: 1023px) { .app-version-corner { display: none; } }
 
-    /* iOS adjustments: ensure space for countdown at bottom inside display container */
-    html.is-ios .display-container { padding-bottom: 84px; }
+    /* iOS adjustments: (countdown circle removed) restore default padding */
+    html.is-ios .display-container { padding-bottom: 1rem; }
     html.is-ios .countdown-wrapper { bottom: calc(12px + env(safe-area-inset-bottom)); }
 
     /* Mobile Menu (drawer from right) */
@@ -591,7 +591,7 @@
     let shuffleEnabled = false;
     let originalWordOrder = [];
     let isSessionComplete = false;
-    const APP_VERSION = 'v1.1.7-beta';
+    const APP_VERSION = 'v1.1.8-beta';
     // Privative prefix mode state
     let prefixWords = [];
     let prefixIndex = 0;

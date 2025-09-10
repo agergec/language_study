@@ -472,6 +472,18 @@
         </div>
       </div>
       <div class="modal-section menu-field">
+        <label>OpenAI Voice (optional)</label>
+        <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+          <input id="openaiKeyInput" type="password" placeholder="sk-..." style="flex:1; min-width:220px;"/>
+          <button class="btn btn-secondary" id="openaiSaveBtn" type="button">Save</button>
+          <input type="file" id="openaiKeyFile" accept=".key,.txt" style="display:none;"/>
+          <button class="btn btn-secondary" id="openaiLoadFileBtn" type="button">Load from File</button>
+          <button class="btn btn-secondary" id="openaiClearBtn" type="button">Clear</button>
+        </div>
+        <div id="openaiKeyMasked" style="font-size:0.85em; color:#777; margin-top:0.25rem;"></div>
+        <div style="font-size:0.85em; color:#777; margin-top:0.25rem;">Adds OpenAI voices “Alloy” and “Nova” to the selector using a low‑latency model.</div>
+      </div>
+      <div class="modal-section menu-field">
         <details id="menuFiles" style="width:100%;">
           <summary style="cursor:pointer; font-weight:700;">Files</summary>
           <div id="menuWordListsSection" class="menu-field" style="margin-top:0.5rem;">
@@ -695,6 +707,10 @@
     const synth = window.speechSynthesis;
     let curLang = "en";
     let confirmationCallback = null;
+    // OpenAI TTS integration
+    let openaiKey = null; // stored locally
+    const OPENAI_TTS_MODEL = 'gpt-4o-mini-tts';
+    let openaiAudio = null;
 
     // --- ENV / BROWSER DETECTION ---
     const UA = navigator.userAgent || '';
@@ -858,6 +874,16 @@
         vs.appendChild(opt);
       });
 
+      // Append OpenAI voices when API key is set
+      if (openaiKey) {
+        const group = document.createElement('optgroup');
+        group.label = 'OpenAI TTS';
+        const alloy = document.createElement('option'); alloy.value = 'openai:alloy'; alloy.textContent = 'Alloy (OpenAI)';
+        const nova = document.createElement('option'); nova.value = 'openai:nova'; nova.textContent = 'Nova (OpenAI)';
+        group.appendChild(alloy); group.appendChild(nova);
+        vs.appendChild(group);
+      }
+
       // Preserve current selection if possible
       let existingIndex = Array.from(vs.options).findIndex(o => o.value === currentVoice);
       if (existingIndex >= 0) {
@@ -964,6 +990,10 @@
 
     function speakWord(w) {
       if (synth.speaking) synth.cancel();
+      if (openaiKey && typeof currentVoice === 'string' && currentVoice.startsWith('openai:')) {
+        const voice = (currentVoice.split(':')[1] || 'alloy');
+        return speakWithOpenAITTS(w, voice);
+      }
       const u = new SpeechSynthesisUtterance(w);
       let selectedVoice = null;
       if (currentVoice && currentVoice !== 'system') {
@@ -997,6 +1027,27 @@
           setTimeout(populateVoiceList, 0);
         }
       });
+    }
+
+    async function speakWithOpenAITTS(text, voice) {
+      try {
+        if (openaiAudio) { try { openaiAudio.pause(); } catch(_){} }
+        const resp = await fetch('https://api.openai.com/v1/audio/speech', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${openaiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: OPENAI_TTS_MODEL, voice, input: text, format: 'mp3' })
+        });
+        if (!resp.ok) throw new Error('TTS request failed');
+        const buf = await resp.arrayBuffer();
+        const blob = new Blob([buf], { type: 'audio/mpeg' });
+        const url = URL.createObjectURL(blob);
+        openaiAudio = new Audio(url);
+        await openaiAudio.play();
+        return new Promise(resolve => { openaiAudio.onended = resolve; });
+      } catch (e) {
+        showToast('OpenAI TTS error (possibly CORS). Falling back.');
+        const u = new SpeechSynthesisUtterance(text); synth.speak(u); return new Promise(r=>u.onend=r);
+      }
     }
 
     function startCountdown(seconds) {
@@ -1754,6 +1805,14 @@
     document.getElementById('voiceSelect').addEventListener('focus', populateVoiceList);
     const voiceTestBtn = document.getElementById('voiceTestBtn');
     if (voiceTestBtn) voiceTestBtn.addEventListener('click', () => { speakWord(i18n[curLang].test_phrase); });
+    // OpenAI API key handlers
+    function maskKey(k){ if(!k) return ''; return k.length>16 ? (k.slice(0,10)+'…'+k.slice(-6)) : k.replace(/.(?=.{4})/g,'•'); }
+    function setOpenAIKey(k){ openaiKey = (k||'').trim(); try{ if(openaiKey) localStorage.setItem('openai_api_key', openaiKey); else localStorage.removeItem('openai_api_key'); }catch(_){}; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent = openaiKey? ('Key: '+maskKey(openaiKey)) : 'No key set'; populateVoiceList(); }
+    try{ const saved=localStorage.getItem('openai_api_key'); if(saved){ openaiKey=saved; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent='Key: '+maskKey(openaiKey);} }catch(_){}
+    const openaiSaveBtn=document.getElementById('openaiSaveBtn'); if(openaiSaveBtn) openaiSaveBtn.addEventListener('click',()=>{ const inp=document.getElementById('openaiKeyInput'); if(inp && inp.value.trim()) { setOpenAIKey(inp.value); inp.value=''; showToast('OpenAI key saved'); }});
+    const openaiClearBtn=document.getElementById('openaiClearBtn'); if(openaiClearBtn) openaiClearBtn.addEventListener('click',()=>{ setOpenAIKey(''); showToast('OpenAI key cleared'); });
+    const openaiLoadFileBtn=document.getElementById('openaiLoadFileBtn'); const openaiKeyFile=document.getElementById('openaiKeyFile');
+    if(openaiLoadFileBtn && openaiKeyFile){ openaiLoadFileBtn.addEventListener('click',()=>openaiKeyFile.click()); openaiKeyFile.addEventListener('change',()=>{ const f=openaiKeyFile.files&&openaiKeyFile.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ setOpenAIKey(String(r.result||'').trim()); showToast('Key loaded from file'); openaiKeyFile.value=''; }; r.readAsText(f); }); }
     const studyModeSelect = document.getElementById('studyModeSelect');
     if (studyModeSelect) studyModeSelect.addEventListener('change', () => {
       updateStudyModeIndicator();

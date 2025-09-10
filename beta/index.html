@@ -170,6 +170,8 @@
     .modal-content { background-color: var(--background-color); padding: 1.5rem; border-radius: var(--border-radius); width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-height: 80vh; overflow-y: auto; }
     html.is-ios .modal { align-items: flex-start; padding: 1rem; }
     html.is-ios .modal-content { max-height: calc(100svh - 2rem); -webkit-overflow-scrolling: touch; }
+    html.is-standalone .modal { align-items: flex-start; padding: 1rem; padding-top: calc(1rem + env(safe-area-inset-top)); }
+    html.is-standalone .modal-content { max-height: calc(100svh - (1rem + env(safe-area-inset-top)) - 1rem); }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
     .modal-header h2 { margin: 0; }
     .modal-section { margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; }
@@ -1845,7 +1847,7 @@
           const FR_FLAG_SVG = 'data:image/svg+xml;utf8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2"%3E%3Crect width="1" height="2" x="0" y="0" fill="%230055A4"/%3E%3Crect width="1" height="2" x="1" y="0" fill="%23FFFFFF"/%3E%3Crect width="1" height="2" x="2" y="0" fill="%23EF4135"/%3E%3C/svg%3E';
           const manifestJson = {
             name: 'French Study',
-            short_name: 'Study',
+            short_name: 'French Study',
             start_url: './?source=pwa',
             display: 'standalone',
             background_color: '#F7F7F7',

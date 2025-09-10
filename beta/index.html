@@ -208,9 +208,18 @@
     html.is-ios .countdown-wrapper { bottom: calc(12px + env(safe-area-inset-bottom)); }
 
     /* Mobile Menu (drawer from right) */
-    #menuModal .modal-content { width: min(95%, 420px); max-width: 420px; height: 100vh; margin-left: auto; border-radius: 0; transform: translateX(100%); transition: transform 0.25s ease; display: flex; flex-direction: column; border-left: 1px solid var(--border-color); box-shadow: -12px 0 28px rgba(0,0,0,.15); }
-    #menuModal.visible .modal-content { transform: translateX(0); }
-    #menuModal .modal-header { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    /* Menu shell turns right-drawer into left-rail + expanding panel */
+    #menuModal .modal-content { width: 100vw; max-width: none; height: 100vh; margin: 0; border-radius: 0; background: transparent; box-shadow: none; border: 0; transform: none; display: block; }
+    #menuModal.visible .modal-content { transform: none; }
+    #menuModal .menu-shell { position: relative; height: 100%; }
+    /* Panel animates from right->left to full-screen */
+    #menuModal .panel { position: fixed; inset: 0; background: var(--background-color); transform-origin: right center; transform: translateX(8px) scaleX(0.07); opacity: 0; transition: transform 220ms cubic-bezier(.2,.8,.2,1), opacity 180ms ease; }
+    #menuModal .panel[aria-hidden="true"] { pointer-events: none; }
+    #menuModal .panel[aria-hidden="false"] { transform: translateX(0) scaleX(1); opacity: 1; }
+    @media (prefers-reduced-motion: reduce) { #menuModal .panel { transition-duration: 1ms; } }
+    #menuModal .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); }
+    #menuModal .panel-body { padding: 1rem; height: calc(100% - 56px); overflow: auto; }
+    #menuModal .modal-header { display:none; }
     #menuModal .modal-section { border: none; padding-bottom: 0; margin-bottom: 0.75rem; }
     #menuModal .menu-list button { display: block; width: 100%; text-align: left; padding: 0.75rem 0; background: none; border: none; font-size: 1rem; font-weight: 700; color: var(--text-color); }
     #menuModal hr { border: 0; border-top: 1px solid var(--border-color); margin: 0.5rem 0; }
@@ -406,10 +415,13 @@
     <!-- floating close aligned to hamburger -->
     <button id="menuCloseOverlay" aria-label="Close" title="Close">✕</button>
     <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
-      <div class="modal-header">
-        <h2 style="margin:0">Menu</h2>
-        <button class="icon-btn close-btn" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">✕</button>
-      </div>
+      <div class="menu-shell">
+        <section id="menuPanel" class="panel" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="menuPanelTitle">
+          <div class="panel-header">
+            <h2 id="menuPanelTitle" style="margin:0">Menu</h2>
+            <button class="icon-btn close-btn" aria-label="Close" title="Close">✕</button>
+          </div>
+          <div class="panel-body">
       <div class="modal-section">
         <label style="display:block; font-weight:600; margin-bottom:0.25rem;">Language</label>
         <div class="language-flags" style="display:flex; gap:0.75rem;">
@@ -1455,7 +1467,8 @@
     if (menuBtn) menuBtn.addEventListener('click', () => { 
       if (menuModal) { 
         menuModal.classList.add('visible'); 
-        menuBtn.setAttribute('aria-expanded','true');
+        menuBtn.setAttribute('aria-expanded','true'); 
+        bodyScrollLock(true);
         const closeOverlay = document.getElementById('menuCloseOverlay');
         if (closeOverlay) {
           const rect = menuBtn.getBoundingClientRect();
@@ -1465,6 +1478,7 @@
           closeOverlay.style.height = `${rect.height}px`;
           closeOverlay.style.display = 'block';
         }
+        openMenuPanel({ target: menuBtn });
         const mc = menuModal.querySelector('.modal-content'); if (mc) mc.focus(); 
       }
     });
@@ -1482,6 +1496,36 @@
     if (menuHelpBtn) menuHelpBtn.addEventListener('click', () => { menuModal.classList.remove('visible'); helpModal.classList.add('visible'); const mc = helpModal.querySelector('.modal-content'); if (mc) mc.focus(); });
     const menuSettingsBtn = document.getElementById('menuSettingsBtn');
     if (menuSettingsBtn) menuSettingsBtn.addEventListener('click', () => { menuModal.classList.remove('visible'); settingsModal.classList.add('visible'); if (isSafari) primeVoices(); populateVoiceList(); const mc = settingsModal.querySelector('.modal-content'); if (mc) mc.focus(); });
+    // Left-rail expanding panel behavior
+    const menuPanel = document.getElementById('menuPanel');
+    let menuLastTrigger = null;
+    function isReducedMotion() { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+    function bodyScrollLock(on) { document.body.style.overflow = on ? 'hidden' : ''; }
+    function getFocusableElements(root) { return Array.from(root.querySelectorAll('a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])')).filter(el => !el.disabled && el.offsetParent !== null); }
+    function openMenuPanel(trigger) {
+      if (!menuPanel) return;
+      if (trigger && trigger.target) menuLastTrigger = trigger.target;
+      menuPanel.setAttribute('aria-hidden','false');
+      const els = getFocusableElements(menuPanel);
+      if (els[0]) els[0].focus();
+    }
+    function closeMenuPanel() {
+      if (!menuPanel) return;
+      menuPanel.setAttribute('aria-hidden','true');
+      if (menuLastTrigger && typeof menuLastTrigger.focus === 'function') menuLastTrigger.focus();
+    }
+    function toggleMenuPanel() {
+      if (!menuPanel) return;
+      const open = menuPanel.getAttribute('aria-hidden') === 'false';
+      if (open) closeMenuPanel(); else openMenuPanel();
+    }
+    // Directly open the panel (no rail)
+    const menuPanelClose = menuPanel ? menuPanel.querySelector('.close-btn') : null;
+    if (menuPanelClose) menuPanelClose.addEventListener('click', closeMenuPanel);
+    // Alt+M shortcut
+    document.addEventListener('keydown', e => {
+      if (e.altKey && (e.key === 'm' || e.key === 'M')) { e.preventDefault(); if (!menuModal.classList.contains('visible')) { menuModal.classList.add('visible'); menuBtn?.setAttribute('aria-expanded','true'); bodyScrollLock(true); openMenuPanel(); } else { toggleMenuPanel(); } }
+    });
     
     historyBtn.addEventListener('click', () => {
         historyModalContent.innerHTML = ""; // Clear previous content
@@ -1606,6 +1650,8 @@
         allModals.forEach(modal => modal.classList.remove('visible'));
         document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
         const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'none';
+        const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
+        bodyScrollLock(false);
       }
       if (e.target.tagName.toLowerCase() === 'input' || document.querySelector('.modal.visible')) return;
       const btnId = { ' ': 'nextBtn', 'r': 'repeatBtn', 's': 'showBtn', 'v': 'voiceBtn' }[e.key.toLowerCase()];
@@ -1623,6 +1669,9 @@
             if (modal.id === 'menuModal') { 
               document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
               const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'none';
+              // Ensure panel is reset and scrolling unlocked
+              const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
+              bodyScrollLock(false);
             }
           }
         });
@@ -1632,6 +1681,8 @@
           if (modal.id === 'menuModal') { 
             document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
             const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'none';
+            const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
+            bodyScrollLock(false);
           }
         });
     });

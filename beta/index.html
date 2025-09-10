@@ -8,9 +8,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="French Study">
   <meta name="theme-color" content="#4A90E2">
-  <link rel="manifest" href="manifest.webmanifest">
-  <!-- iOS home-screen icon (placeholder) -->
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png" sizes="180x180">
+  <!-- Manifest will be injected from inline JSON via Blob at runtime -->
+  <link rel="manifest" id="manifestLink">
+  <!-- iOS home-screen icon (embedded data URI placeholder) -->
+  <link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAABl2tWbAAAACXBIWXMAAAsSAAALEgHS3X78AAAAB3RJTUUH5AkaD0gQy7rZPwAAAB1pVFh0Q29tbWVudAAAQ3JlYXRlZCBieSBBSSBQbGFjZWhvbGRlcgAAABZ0RVh0U29mdHdhcmUAcG5nY3JlYXRlLm9yZ5vuPBoAAABQSURBVHjaY2AYBaNgFIwCo2AUjAKjYBQwQAEiQGgAA0wEwz///4+BGQYGBgYGBgYGxgYwGA0GhgYGBgZGBgaGQbEwMDAG0QwMxgYGAQbA0GAABs9wM0hHf7UAAAAASUVORK5CYII=">
   <title data-i18n="page_title">🇫🇷 French Listening Study</title>
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇫🇷</text></svg>">
@@ -211,6 +212,8 @@
       padding-top: calc(0.75rem + env(safe-area-inset-top));
       padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
     }
+    /* Standalone (PWA) safe-area padding */
+    html.is-standalone .container { padding-top: calc(0.75rem + env(safe-area-inset-top)); padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
     /* App version tags */
     .app-version-corner { display: none; }
 
@@ -369,6 +372,10 @@
       </div>
       <div class="modal-section">
         <p style="margin:0; color:#666;">Controls have moved to the Menu (☰).</p>
+      </div>
+      <div class="modal-section">
+        <label style="display:block; font-weight:600; margin-bottom:0.5rem;">System</label>
+        <button class="btn btn-secondary" id="resetAppBtn" type="button">Reset App (Reload)</button>
       </div>
       <div id="wordListsSection" class="modal-section" style="display: none;">
         <label data-i18n="label_active_word_lists">Active Word Lists</label>
@@ -1817,8 +1824,55 @@
           const isLocal = ['localhost','127.0.0.1'].includes(location.hostname);
           const isSecure = location.protocol === 'https:' || isLocal;
           if ('serviceWorker' in navigator && isSecure) {
-            navigator.serviceWorker.register('./sw.js');
+            const SW_CODE = `const CACHE='study-app-v1';const CORE=['./','./index.html'];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()))});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.map(k=>k===CACHE?null:caches.delete(k)))).then(()=>self.clients.claim()))});self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET'||!r.url.startsWith(self.location.origin))return;e.respondWith(caches.match(r).then(c=>c||fetch(r).then(resp=>{const cp=resp.clone();caches.open(CACHE).then(cc=>cc.put(r,cp));return resp}).catch(()=>c)))})`;
+            const swBlob = new Blob([SW_CODE], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(swBlob);
+            navigator.serviceWorker.register(swUrl);
           }
+        } catch (_) {}
+
+        // Inject manifest from inline JSON (with data-URI icons)
+        try {
+          const manifestJson = {
+            name: 'French Study',
+            short_name: 'Study',
+            start_url: './?source=pwa',
+            display: 'standalone',
+            background_color: '#F7F7F7',
+            theme_color: '#4A90E2',
+            icons: [
+              { src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAAAwCAYAAAA8t7K+AAAACXBIWXMAAAsSAAALEgHS3X78AAAAB3RJTUUH5AkaDy0VqkVd9QAAAB1pVFh0Q29tbWVudAAAQ3JlYXRlZCBieSBBSSBQbGFjZWhvbGRlcgAAABZ0RVh0U29mdHdhcmUAcG5nY3JlYXRlLm9yZ5vuPBoAAABQSURBVHjaY2AYBaNgFIwCo2AUjAKjYBQwQAEiQGgAA0wEwz///4+BGQYGBgYGBgYGxgYwGA0GhgYGBgZGBgaGQbEwMDAG0QwMxgYGAQbA0GAABs9wM0hHf7UAAAAASUVORK5CYII=', sizes: '192x192', type: 'image/png' },
+              { src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAAsSAAALEgHS3X78AAAAB3RJTUUH5AkaDzYgJ1eFfAAAAA1pVFh0Q29tbWVudABQbGFjZWhvbGRlcgAAABZ0RVh0U29mdHdhcmUAcG5nY3JlYXRlLm9yZ5vuPBoAAABQSURBVHjaY2AYBaNgFIwCo2AUjAKjYBQwQAEiQGgAA0wEwz///4+BGQYGBgYGBgYGxgYwGA0GhgYGBgZGBgaGQbEwMDAG0QwMxgYGAQbA0GAABs9wM0hHf7UAAAAASUVORK5CYII=', sizes: '512x512', type: 'image/png' }
+            ]
+          };
+          const manifestBlob = new Blob([JSON.stringify(manifestJson)], { type: 'application/manifest+json' });
+          const manifestUrl = URL.createObjectURL(manifestBlob);
+          const link = document.getElementById('manifestLink');
+          if (link) link.setAttribute('href', manifestUrl);
+        } catch (_) {}
+
+        // Standalone detection for safe-area padding
+        try {
+          const standalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+          if (standalone) { document.documentElement.classList.add('is-standalone'); document.body.classList.add('is-standalone'); }
+        } catch (_) {}
+
+        // Settings: reset app button
+        try {
+          const resetBtn = document.getElementById('resetAppBtn');
+          if (resetBtn) resetBtn.addEventListener('click', async () => {
+            try {
+              if ('serviceWorker' in navigator) {
+                const regs = await navigator.serviceWorker.getRegistrations();
+                await Promise.all(regs.map(r => r.unregister()));
+                const keys = await caches.keys();
+                await Promise.all(keys.map(k => caches.delete(k)));
+              }
+              localStorage.clear();
+              sessionStorage.clear();
+            } catch (_) {}
+            location.reload();
+          });
         } catch (_) {}
     });
   </script>

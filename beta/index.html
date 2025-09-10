@@ -84,7 +84,8 @@
     .progress-bar { width: 100%; height: 5px; background-color: var(--border-color); border-radius: 5px; overflow: hidden; }
     .progress-bar-fill { height: 100%; width: 0%; background-color: var(--success-color); transition: width 0.3s ease-in-out; border-radius: 5px; }
 
-    .sub-header { grid-area: sub-header; display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); font-size: 0.8em; }
+    /* Hide old top status strip; we move indicators to footer */
+    .sub-header { display: none; }
     .status-indicator { background-color: var(--light-gray); padding: 0.25rem 0.75rem; border-radius: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 
     /* --- Main Display --- */
@@ -130,9 +131,12 @@
     .countdown-text { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); }
 
     /* --- Footer / Status Bar --- */
-    .footer { grid-area: footer; display: flex; justify-content: space-between; align-items: center; padding-top: 0.5rem; border-top: 1px solid var(--border-color); font-size: 0.8em; gap: 1rem; }
+    .footer { grid-area: footer; display: flex; flex-direction: column; gap: 0.35rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color); font-size: 0.8em; }
+    .footer-meta { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
     #statusInfo { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #fileInfo { white-space: nowrap; text-align: right; flex-shrink: 0; }
+    .bottom-status { display: flex; align-items: center; gap: 0.75rem; color: #666; }
+    .bottom-status span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     /* --- Modals --- */
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(74, 74, 74, 0.5); align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
@@ -298,8 +302,15 @@
     <!-- countdown moved into display container -->
 
     <footer class="footer">
-      <div id="statusInfo" data-i18n="status_load_prompt" aria-live="polite" aria-atomic="true">Load a word list to start.</div>
-      <div id="fileInfo" data-i18n="file_info_none">No file loaded.</div>
+      <div id="bottomStatus" class="bottom-status">
+        <span id="bottomVoice"></span>
+        <span id="bottomMode"></span>
+        <span id="bottomShuffle" aria-hidden="true"></span>
+      </div>
+      <div class="footer-meta">
+        <div id="statusInfo" data-i18n="status_load_prompt" aria-live="polite" aria-atomic="true">Load a word list to start.</div>
+        <div id="fileInfo" data-i18n="file_info_none">No file loaded.</div>
+      </div>
     </footer>
   </div>
 
@@ -1086,16 +1097,23 @@
     function updateVoiceIndicator() {
         const vs = document.getElementById('voiceSelect');
         const selectedOption = vs.selectedOptions[0];
-        if (!selectedOption) { document.getElementById('activeVoiceDisplay').textContent = i18n[curLang].no_voices; return; }
+        const bottomVoice = document.getElementById('bottomVoice');
+        if (!selectedOption) { 
+          document.getElementById('activeVoiceDisplay').textContent = i18n[curLang].no_voices; 
+          if (bottomVoice) bottomVoice.textContent = i18n[curLang].no_voices; 
+          return; 
+        }
         // If "system" is selected, try to show the resolved best French voice name
         if (selectedOption.value === 'system') {
           const resolved = bestFrenchVoice();
           if (resolved) {
             document.getElementById('activeVoiceDisplay').textContent = `🗣️ ${resolved.name} (${resolved.lang})`;
+            if (bottomVoice) bottomVoice.textContent = `${resolved.name} (${resolved.lang})`;
             return;
           }
         }
         document.getElementById('activeVoiceDisplay').textContent = `🗣️ ${selectedOption.text}`;
+        if (bottomVoice) bottomVoice.textContent = selectedOption.text;
     }
 
     function getSelectedStudyMode() {
@@ -1108,18 +1126,14 @@
 
     function updateStudyModeIndicator() {
       const sel = document.getElementById('studyModeSelect');
-      if (sel && sel.selectedOptions && sel.selectedOptions[0]) {
-        const text = sel.selectedOptions[0].text;
-        document.getElementById('activeStudyModeDisplay').textContent = `${i18n[curLang].indicator_mode_prefix} ${text}`;
-      } else {
-        const mode = document.querySelector('input[name="studyMode"]:checked');
-        const label = document.querySelector(`label[for="${mode?.id}"]`);
-        document.getElementById('activeStudyModeDisplay').textContent = `${i18n[curLang].indicator_mode_prefix} ${label ? label.textContent.split(',')[0] : ''}`;
-      }
+      const text = (sel && sel.selectedOptions && sel.selectedOptions[0]) ? sel.selectedOptions[0].text : '';
+      document.getElementById('activeStudyModeDisplay').textContent = `${i18n[curLang].indicator_mode_prefix} ${text}`;
+      const bottomMode = document.getElementById('bottomMode'); if (bottomMode) bottomMode.textContent = text;
     }
 
     function updateShuffleIndicator() {
       document.getElementById('activeShuffleDisplay').textContent = shuffleEnabled ? i18n[curLang].indicator_shuffle_on : i18n[curLang].indicator_shuffle_off;
+      const bottomShuffle = document.getElementById('bottomShuffle'); if (bottomShuffle) bottomShuffle.textContent = shuffleEnabled ? '🔀' : '';
     }
 
     function updateAllIndicators() {
@@ -1147,10 +1161,10 @@
     function ensureVoiceDebugEl() {
       let el = document.getElementById('voiceDebug');
       if (!el) {
-        const host = document.querySelector('.sub-header') || document.body;
+        const host = document.getElementById('bottomStatus') || document.body;
         el = document.createElement('div');
         el.id = 'voiceDebug';
-        el.className = 'status-indicator';
+        el.className = '';
         el.style.opacity = '0.7';
         el.style.fontSize = '0.85em';
         host.appendChild(el);
@@ -1179,7 +1193,7 @@
       const best = bestFrenchVoice();
       const resolvedText = best ? `${best.name} (${best.lang})` : '—';
 
-      el.textContent = `🧩 Voice Debug — Selected: ${selectedText} | Resolved: ${resolvedText} | Engine: ${engine} | FR: ${fr.length}/${all.length}`;
+      el.textContent = `Voice Debug — Selected: ${selectedText} | Resolved: ${resolvedText} | Engine: ${engine} | FR: ${fr.length}/${all.length}`;
       el.style.display = 'block';
     }
 

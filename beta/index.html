@@ -215,6 +215,25 @@
       color: #666;
       font-size: 0.85em;
     }
+
+    /* Floating close button (aligned with hamburger) */
+    #menuCloseOverlay {
+      position: fixed;
+      z-index: 1500; /* above drawer */
+      display: none;
+      background: transparent;
+      border: none;
+      font-size: 1.75rem;
+      color: var(--text-color);
+      line-height: 1;
+      touch-action: manipulation;
+    }
+    /* Prefer floating close on mobile */
+    @media (max-width: 1023px) { #menuModal .modal-header .close-btn { display: none; } }
+
+    /* Thin red countdown bar at top of main display */
+    .countdown-topbar { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.25); }
+    .countdown-topbar-fill { height: 100%; width: 0%; background: #ff3b30; transition: width 0.1s linear; }
   </style>
 </head>
 <body>
@@ -252,6 +271,7 @@
     </aside>
 
     <main class="display-container">
+      <div class="countdown-topbar"><div id="countdownTopbarFill" class="countdown-topbar-fill"></div></div>
       <div class="display-area-upper" id="displayAreaUpper" data-i18n="welcome_message" aria-live="polite" aria-atomic="true">Welcome!</div>
       <div class="countdown-wrapper">
         <svg class="progress-ring" viewBox="0 0 100 100">
@@ -378,6 +398,8 @@
 
   <!-- App Menu: mobile-friendly hamburger contents -->
   <div id="menuModal" class="modal">
+    <!-- floating close aligned to hamburger -->
+    <button id="menuCloseOverlay" aria-label="Close" title="Close">✕</button>
     <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
       <div class="modal-header">
         <h2 style="margin:0">Menu</h2>
@@ -394,9 +416,11 @@
         <button id="menuSettingsBtn">Settings</button>
       </div>
       <hr/>
-      <div id="menuVersion" class="version-inline" style="padding-bottom:0.5rem;"></div>
-      <div class="modal-section menu-list" style="margin-top:auto;">
-        <button id="menuHelpBtn">Help</button>
+      <div class="menu-bottom" style="margin-top:auto;">
+        <div class="modal-section menu-list" style="margin-top:0;">
+          <button id="menuHelpBtn">Help</button>
+        </div>
+        <div id="menuVersion" class="version-inline" style="padding-bottom:0.5rem;"></div>
       </div>
     </div>
   </div>
@@ -593,6 +617,7 @@
     progressCircle.style.strokeDashoffset = circumference;
     const allModals = document.querySelectorAll('.modal');
     const progressBarFill = document.getElementById('progressBarFill');
+    const countdownTopbarFill = document.getElementById('countdownTopbarFill');
     const nextBtn = document.getElementById('nextBtn');
     const repeatBtn = document.getElementById('repeatBtn');
     const showBtn = document.getElementById('showBtn');
@@ -613,6 +638,10 @@
       curLang = lang;
       document.getElementById('langEn').classList.toggle('active', lang === 'en');
       document.getElementById('langFr').classList.toggle('active', lang === 'fr');
+      // mirror selection in menu flags if present
+      const mEn = document.getElementById('menuLangEn');
+      const mFr = document.getElementById('menuLangFr');
+      if (mEn && mFr) { mEn.classList.toggle('active', lang === 'en'); mFr.classList.toggle('active', lang === 'fr'); }
       document.querySelectorAll("[data-i18n]").forEach(el => {
         const key = el.getAttribute("data-i18n");
         if (i18n[lang] && i18n[lang][key]) {
@@ -817,6 +846,7 @@
       updateHistoryList();
       updateProgressBar();
       document.getElementById('countdownText').textContent = '--';
+      if (countdownTopbarFill) countdownTopbarFill.style.width = '0%';
       // Toggle privative controls visibility
       document.getElementById('privativeControls').style.display = (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') ? 'flex' : 'none';
       // Shuffle questions for privative mode according to shuffleEnabled
@@ -870,6 +900,7 @@
       const countdownTextEl = document.getElementById('countdownText');
       const totalDuration = seconds * 1000;
       let startTime = Date.now();
+      if (countdownTopbarFill) countdownTopbarFill.style.width = '100%';
 
       countdownInterval = setInterval(() => {
         const elapsedTime = Date.now() - startTime;
@@ -877,6 +908,7 @@
           clearInterval(countdownInterval);
           progressCircle.style.strokeDashoffset = circumference;
           countdownTextEl.textContent = '--';
+          if (countdownTopbarFill) countdownTopbarFill.style.width = '0%';
           if (isInSpeakFirstMode && currentWord) {
             updateDisplayUpper(currentWord);
             addToHistory(currentWord);
@@ -888,6 +920,7 @@
           progressCircle.style.strokeDashoffset = offset;
           const secondsLeft = Math.ceil((totalDuration - elapsedTime) / 1000);
           countdownTextEl.textContent = `${secondsLeft}s`;
+          if (countdownTopbarFill) countdownTopbarFill.style.width = `${Math.max(0, (1 - progress) * 100)}%`;
         }
       }, 50);
     }
@@ -1261,7 +1294,26 @@
     const menuModal = document.getElementById('menuModal');
     const menuBtn = document.getElementById('menuBtn');
     if (menuBtn) menuBtn.addEventListener('click', () => { 
-      if (menuModal) { menuModal.classList.add('visible'); menuBtn.setAttribute('aria-expanded','true'); const mc = menuModal.querySelector('.modal-content'); if (mc) mc.focus(); }
+      if (menuModal) { 
+        menuModal.classList.add('visible'); 
+        menuBtn.setAttribute('aria-expanded','true');
+        const closeOverlay = document.getElementById('menuCloseOverlay');
+        if (closeOverlay) {
+          const rect = menuBtn.getBoundingClientRect();
+          closeOverlay.style.top = `${rect.top}px`;
+          closeOverlay.style.left = `${rect.left}px`;
+          closeOverlay.style.width = `${rect.width}px`;
+          closeOverlay.style.height = `${rect.height}px`;
+          closeOverlay.style.display = 'block';
+        }
+        const mc = menuModal.querySelector('.modal-content'); if (mc) mc.focus(); 
+      }
+    });
+    const menuCloseOverlay = document.getElementById('menuCloseOverlay');
+    if (menuCloseOverlay) menuCloseOverlay.addEventListener('click', () => { 
+      menuModal.classList.remove('visible'); 
+      menuBtn.setAttribute('aria-expanded','false'); 
+      menuCloseOverlay.style.display = 'none';
     });
     const menuLangEn = document.getElementById('menuLangEn');
     const menuLangFr = document.getElementById('menuLangFr');
@@ -1382,7 +1434,11 @@
 
     // Keyboard Shortcuts & Modal Closing
     document.addEventListener("keydown", e => {
-      if (e.key === 'Escape') allModals.forEach(modal => modal.classList.remove('visible'));
+      if (e.key === 'Escape') { 
+        allModals.forEach(modal => modal.classList.remove('visible'));
+        document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
+        const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'none';
+      }
       if (e.target.tagName.toLowerCase() === 'input' || document.querySelector('.modal.visible')) return;
       const btnId = { ' ': 'nextBtn', 'r': 'repeatBtn', 's': 'showBtn', 'v': 'voiceBtn' }[e.key.toLowerCase()];
       if (btnId && !e.metaKey && !e.ctrlKey && !e.altKey) {
@@ -1393,9 +1449,23 @@
     });
     
     allModals.forEach(modal => {
-        modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('visible'); });
+        modal.addEventListener('click', e => { 
+          if (e.target === modal) { 
+            modal.classList.remove('visible'); 
+            if (modal.id === 'menuModal') { 
+              document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
+              const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'none';
+            }
+          }
+        });
         const closeBtn = modal.querySelector('.close-btn');
-        if(closeBtn) closeBtn.addEventListener('click', () => { modal.classList.remove('visible'); if (modal.id === 'menuModal') document.getElementById('menuBtn')?.setAttribute('aria-expanded','false'); });
+        if(closeBtn) closeBtn.addEventListener('click', () => { 
+          modal.classList.remove('visible'); 
+          if (modal.id === 'menuModal') { 
+            document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
+            const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'none';
+          }
+        });
     });
     // Privative controls handlers
     const unBtn = document.getElementById('prefixUnBtn');

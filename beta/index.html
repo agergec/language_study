@@ -134,7 +134,7 @@
     /* --- Footer / Status Bar --- */
     .footer { grid-area: footer; display: flex; flex-direction: column; gap: 0.35rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color); font-size: 0.85em; }
     .footer-meta { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-    #statusInfo { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #statusInfo { display: none; }
     .bottom-status { display: flex; align-items: center; gap: 0.75rem; color: #666; }
     .bottom-status .sep { opacity: 0.4; }
     .bottom-status .off { opacity: 0.3; filter: grayscale(1); }
@@ -309,12 +309,12 @@
     <footer class="footer">
       <div id="bottomStatus" class="bottom-status">
         <span id="bottomShuffle" aria-label="Shuffle" title="Shuffle">🔀</span>
+        <span id="bottomFileStatus" class="file-status-icon" aria-label="Files" title="Files">❌</span>
         <span class="sep">|</span>
         <span id="bottomVoice"></span>
         <span class="sep">|</span>
         <span id="bottomMode"></span>
-        <span class="sep">|</span>
-        <span id="statusInfo" class="status-alert" data-i18n="status_load_prompt" aria-live="polite" aria-atomic="true">Load a word list to start.</span>
+        <span id="statusInfo" class="status-alert" data-i18n="status_load_prompt" aria-live="polite" aria-atomic="true"></span>
       </div>
     </footer>
   </div>
@@ -859,7 +859,7 @@
       ['nextBtn', 'repeatBtn', 'showBtn', 'voiceBtn', 'historyBtn'].forEach(id => document.getElementById(id).disabled = words.length === 0);
       document.getElementById('viewListBtn').disabled = words.length === 0;
       nextBtn.textContent = i18n[curLang].btn_next;
-      updateStatusInfo(words.length > 0 ? i18n[curLang].ready_to_start : i18n[curLang].status_load_prompt);
+      updateStatusInfo('');
       updateDisplayUpper(i18n[curLang].ready_to_start);
       updateHistoryList();
       updateProgressBar();
@@ -1256,15 +1256,17 @@
         }
         words = newWordList;
         originalWordOrder = [...words]; // Update original order for unshuffling
-        const statusEl = document.getElementById('statusInfo');
-        if (words.length > 0) {
-          statusEl.textContent = i18n[curLang].file_info.replace('{wordCount}', words.length).replace('{fileCount}', fileCount);
-          statusEl.classList.remove('status-alert');
-          statusEl.classList.add('status-ok');
-        } else {
-          statusEl.textContent = i18n[curLang].status_load_prompt;
-          statusEl.classList.remove('status-ok');
-          statusEl.classList.add('status-alert');
+        const bottomIcon = document.getElementById('bottomFileStatus');
+        if (bottomIcon) {
+          if (words.length > 0) {
+            bottomIcon.textContent = '✅';
+            bottomIcon.classList.remove('status-alert');
+            bottomIcon.classList.add('status-ok');
+          } else {
+            bottomIcon.textContent = '❌';
+            bottomIcon.classList.remove('status-ok');
+            bottomIcon.classList.add('status-alert');
+          }
         }
         // Build privative prefix pool
         const pattern = /^(un|une)[\s-]+(.+)$/i;
@@ -1306,8 +1308,13 @@
     }
     function updateStatusInfo(m) { 
         const el = document.getElementById("statusInfo");
+        if (!el) return;
+        // Do not print the generic ready/empty prompts; keep bottom bar compact
+        if (!m || m === i18n[curLang].ready_to_start || m === i18n[curLang].status_load_prompt) {
+          el.textContent = '';
+          return;
+        }
         el.textContent = m; 
-        // neutralize color for non-load messages
         el.classList.remove('status-ok','status-alert');
     }
     

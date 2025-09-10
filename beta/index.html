@@ -10,13 +10,8 @@
   <meta name="theme-color" content="#4A90E2">
   <!-- Manifest will be injected from inline JSON via Blob at runtime -->
   <link rel="manifest" id="manifestLink">
-  <!-- iOS home-screen icon (embedded French flag SVG) -->
-  <link rel="apple-touch-icon" sizes="180x180" href='data:image/svg+xml;utf8,
-  %3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2"%3E
-    %3Crect width="1" height="2" x="0" y="0" fill="%230055A4"/%3E
-    %3Crect width="1" height="2" x="1" y="0" fill="%23FFFFFF"/%3E
-    %3Crect width="1" height="2" x="2" y="0" fill="%23EF4135"/%3E
-  %3C/svg%3E'>
+  <!-- iOS home-screen icon (set at runtime to PNG) -->
+  <link rel="apple-touch-icon" sizes="180x180" id="appleIcon">
   <title data-i18n="page_title">🇫🇷 French Listening Study</title>
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇫🇷</text></svg>">
@@ -1844,23 +1839,29 @@
 
         // Inject manifest from inline JSON (with data-URI icons)
         try {
-          const FR_FLAG_SVG = 'data:image/svg+xml;utf8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2"%3E%3Crect width="1" height="2" x="0" y="0" fill="%230055A4"/%3E%3Crect width="1" height="2" x="1" y="0" fill="%23FFFFFF"/%3E%3Crect width="1" height="2" x="2" y="0" fill="%23EF4135"/%3E%3C/svg%3E';
+          function makeFlagPng(size, circular){
+            const c=document.createElement('canvas'); c.width=size; c.height=size; const ctx=c.getContext('2d');
+            if(circular){ ctx.save(); ctx.beginPath(); ctx.arc(size/2,size/2,size/2,0,Math.PI*2); ctx.closePath(); ctx.clip(); }
+            ctx.fillStyle='#0055A4'; ctx.fillRect(0,0,size/3,size);
+            ctx.fillStyle='#FFFFFF'; ctx.fillRect(size/3,0,size/3,size);
+            ctx.fillStyle='#EF4135'; ctx.fillRect(2*size/3,0,size/3,size);
+            if(circular){ ctx.restore(); }
+            return c.toDataURL('image/png');
+          }
+          const icon180 = makeFlagPng(180,true);
+          const icon192 = makeFlagPng(192,true);
+          const icon512 = makeFlagPng(512,true);
+          // Set apple touch icon to PNG (iOS requires PNG)
+          const apple = document.getElementById('appleIcon'); if (apple) apple.setAttribute('href', icon180);
+          // Build manifest with PNG icons
           const manifestJson = {
-            name: 'French Study',
-            short_name: 'French Study',
-            start_url: './?source=pwa',
-            display: 'standalone',
-            background_color: '#F7F7F7',
-            theme_color: '#4A90E2',
-            icons: [
-              { src: FR_FLAG_SVG, sizes: '192x192', type: 'image/svg+xml', purpose: 'any' },
-              { src: FR_FLAG_SVG, sizes: '512x512', type: 'image/svg+xml', purpose: 'any' }
-            ]
+            name: 'French Study', short_name: 'Study', start_url: './?source=pwa', display: 'standalone',
+            background_color: '#F7F7F7', theme_color: '#4A90E2',
+            icons: [ { src: icon192, sizes: '192x192', type: 'image/png' }, { src: icon512, sizes: '512x512', type: 'image/png' } ]
           };
           const manifestBlob = new Blob([JSON.stringify(manifestJson)], { type: 'application/manifest+json' });
           const manifestUrl = URL.createObjectURL(manifestBlob);
-          const link = document.getElementById('manifestLink');
-          if (link) link.setAttribute('href', manifestUrl);
+          const link = document.getElementById('manifestLink'); if (link) link.setAttribute('href', manifestUrl);
         } catch (_) {}
 
         // Standalone detection for safe-area padding

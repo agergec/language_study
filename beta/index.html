@@ -668,6 +668,11 @@
         // don't list potentially poor ones. Only list if we find HQ matches; otherwise keep only System.
         const high = allFrench.filter(v => qualityKeywords.some(k => (v.name || '').toLowerCase().includes(k)));
         toShow = high.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+        // Best-effort: if user previously selected a specific FR voice and it exists, include it
+        if (toShow.length === 0 && currentVoice && currentVoice !== 'system') {
+          const saved = allFrench.find(v => v.name === currentVoice);
+          if (saved) toShow = [saved];
+        }
       } else if (isSafari) {
         // Safari (incl. iOS): list all FR voices, sorted by quality (Siri/Enhanced first)
         toShow = allFrench.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
@@ -695,9 +700,11 @@
           currentVoice = vs.options[thomasIndex].value;
         } else {
           vs.selectedIndex = 0;
+          currentVoice = 'system';
         }
       } else {
         vs.selectedIndex = 0;
+        currentVoice = 'system';
       }
 
       updateVoiceIndicator();

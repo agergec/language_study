@@ -10,8 +10,13 @@
   <meta name="theme-color" content="#4A90E2">
   <!-- Manifest will be injected from inline JSON via Blob at runtime -->
   <link rel="manifest" id="manifestLink">
-  <!-- iOS home-screen icon (embedded data URI placeholder) -->
-  <link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAABl2tWbAAAACXBIWXMAAAsSAAALEgHS3X78AAAAB3RJTUUH5AkaD0gQy7rZPwAAAB1pVFh0Q29tbWVudAAAQ3JlYXRlZCBieSBBSSBQbGFjZWhvbGRlcgAAABZ0RVh0U29mdHdhcmUAcG5nY3JlYXRlLm9yZ5vuPBoAAABQSURBVHjaY2AYBaNgFIwCo2AUjAKjYBQwQAEiQGgAA0wEwz///4+BGQYGBgYGBgYGxgYwGA0GhgYGBgZGBgaGQbEwMDAG0QwMxgYGAQbA0GAABs9wM0hHf7UAAAAASUVORK5CYII=">
+  <!-- iOS home-screen icon (embedded French flag SVG) -->
+  <link rel="apple-touch-icon" sizes="180x180" href='data:image/svg+xml;utf8,
+  %3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2"%3E
+    %3Crect width="1" height="2" x="0" y="0" fill="%230055A4"/%3E
+    %3Crect width="1" height="2" x="1" y="0" fill="%23FFFFFF"/%3E
+    %3Crect width="1" height="2" x="2" y="0" fill="%23EF4135"/%3E
+  %3C/svg%3E'>
   <title data-i18n="page_title">🇫🇷 French Listening Study</title>
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇫🇷</text></svg>">
@@ -482,6 +487,10 @@
             <div style="font-size:0.85em; color:#777; margin-top:0.25rem;">Tip: You can also drag & drop files anywhere on the page.</div>
           </div>
         </details>
+      </div>
+      <div class="modal-section" style="margin-top:0.5rem;">
+        <label style="display:block; font-weight:600; margin-bottom:0.5rem;">System</label>
+        <button class="btn btn-secondary" id="resetAppBtn" type="button">Reset App (Reload)</button>
       </div>
       <hr/>
       <div class="menu-bottom" style="margin-top:auto;">
@@ -1833,6 +1842,7 @@
 
         // Inject manifest from inline JSON (with data-URI icons)
         try {
+          const FR_FLAG_SVG = 'data:image/svg+xml;utf8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2"%3E%3Crect width="1" height="2" x="0" y="0" fill="%230055A4"/%3E%3Crect width="1" height="2" x="1" y="0" fill="%23FFFFFF"/%3E%3Crect width="1" height="2" x="2" y="0" fill="%23EF4135"/%3E%3C/svg%3E';
           const manifestJson = {
             name: 'French Study',
             short_name: 'Study',
@@ -1841,8 +1851,8 @@
             background_color: '#F7F7F7',
             theme_color: '#4A90E2',
             icons: [
-              { src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAAAwCAYAAAA8t7K+AAAACXBIWXMAAAsSAAALEgHS3X78AAAAB3RJTUUH5AkaDy0VqkVd9QAAAB1pVFh0Q29tbWVudAAAQ3JlYXRlZCBieSBBSSBQbGFjZWhvbGRlcgAAABZ0RVh0U29mdHdhcmUAcG5nY3JlYXRlLm9yZ5vuPBoAAABQSURBVHjaY2AYBaNgFIwCo2AUjAKjYBQwQAEiQGgAA0wEwz///4+BGQYGBgYGBgYGxgYwGA0GhgYGBgZGBgaGQbEwMDAG0QwMxgYGAQbA0GAABs9wM0hHf7UAAAAASUVORK5CYII=', sizes: '192x192', type: 'image/png' },
-              { src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAAsSAAALEgHS3X78AAAAB3RJTUUH5AkaDzYgJ1eFfAAAAA1pVFh0Q29tbWVudABQbGFjZWhvbGRlcgAAABZ0RVh0U29mdHdhcmUAcG5nY3JlYXRlLm9yZ5vuPBoAAABQSURBVHjaY2AYBaNgFIwCo2AUjAKjYBQwQAEiQGgAA0wEwz///4+BGQYGBgYGBgYGxgYwGA0GhgYGBgZGBgaGQbEwMDAG0QwMxgYGAQbA0GAABs9wM0hHf7UAAAAASUVORK5CYII=', sizes: '512x512', type: 'image/png' }
+              { src: FR_FLAG_SVG, sizes: '192x192', type: 'image/svg+xml', purpose: 'any' },
+              { src: FR_FLAG_SVG, sizes: '512x512', type: 'image/svg+xml', purpose: 'any' }
             ]
           };
           const manifestBlob = new Blob([JSON.stringify(manifestJson)], { type: 'application/manifest+json' });

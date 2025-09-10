@@ -472,6 +472,18 @@
         </div>
       </div>
       <div class="modal-section menu-field">
+        <label>ElevenLabs Voice (optional)</label>
+        <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+          <input id="elevenKeyInput" type="password" placeholder="elevenlabs_api_key" style="flex:1; min-width:220px;"/>
+          <button class="btn btn-secondary" id="elevenSaveBtn" type="button">Save</button>
+          <input type="file" id="elevenKeyFile" accept=".key,.txt" style="display:none;"/>
+          <button class="btn btn-secondary" id="elevenLoadFileBtn" type="button">Load from File</button>
+          <button class="btn btn-secondary" id="elevenClearBtn" type="button">Clear</button>
+        </div>
+        <div id="elevenKeyMasked" style="font-size:0.85em; color:#777; margin-top:0.25rem;"></div>
+        <div style="font-size:0.85em; color:#777; margin-top:0.25rem;">Adds ElevenLabs voices “Rachel” and “Bella” to the selector (model: turbo v2). Streaming from the browser may be limited by CORS; falls back to fast download-and-play.</div>
+      </div>
+      <div class="modal-section menu-field">
         <label>OpenAI Voice (optional)</label>
         <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
           <input id="openaiKeyInput" type="password" placeholder="sk-..." style="flex:1; min-width:220px;"/>
@@ -883,6 +895,17 @@
         group.appendChild(alloy); group.appendChild(nova);
         vs.appendChild(group);
       }
+
+      // Add ElevenLabs voices when key is present
+      try {
+        if (window._ELEVEN && window._ELEVEN.key) {
+          const group2 = document.createElement('optgroup');
+          group2.label = 'ElevenLabs';
+          const r = document.createElement('option'); r.value = 'eleven:21m00Tcm4TlvDq8ikWAM'; r.textContent = 'Rachel (ElevenLabs)';
+          const b = document.createElement('option'); b.value = 'eleven:EXAVITQu4vr4xnSDxMaL'; b.textContent = 'Bella (ElevenLabs)';
+          group2.appendChild(r); group2.appendChild(b); vs.appendChild(group2);
+        }
+      } catch (_) {}
 
       // Preserve current selection if possible
       let existingIndex = Array.from(vs.options).findIndex(o => o.value === currentVoice);

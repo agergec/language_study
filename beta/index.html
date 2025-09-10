@@ -148,7 +148,7 @@
     .status-alert { color: #c62828; }
 
     /* --- Modals --- */
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(74, 74, 74, 0.5); align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(40, 40, 40, 0.55); align-items: center; justify-content: center; backdrop-filter: blur(8px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .modal.visible { display: flex; }
     .modal-content { background-color: var(--background-color); padding: 1.5rem; border-radius: var(--border-radius); width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-height: 80vh; overflow-y: auto; }
     html.is-ios .modal { align-items: flex-start; padding: 1rem; }
@@ -208,12 +208,18 @@
     html.is-ios .countdown-wrapper { bottom: calc(12px + env(safe-area-inset-bottom)); }
 
     /* Mobile Menu (drawer from right) */
-    #menuModal .modal-content { width: 90%; max-width: 360px; height: 100vh; margin-left: auto; border-radius: 0; transform: translateX(100%); transition: transform 0.25s ease; display: flex; flex-direction: column; }
+    #menuModal .modal-content { width: min(95%, 420px); max-width: 420px; height: 100vh; margin-left: auto; border-radius: 0; transform: translateX(100%); transition: transform 0.25s ease; display: flex; flex-direction: column; border-left: 1px solid var(--border-color); box-shadow: -12px 0 28px rgba(0,0,0,.15); }
     #menuModal.visible .modal-content { transform: translateX(0); }
     #menuModal .modal-header { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-    #menuModal .modal-section { border: none; padding-bottom: 0; margin-bottom: 0.5rem; }
+    #menuModal .modal-section { border: none; padding-bottom: 0; margin-bottom: 0.75rem; }
     #menuModal .menu-list button { display: block; width: 100%; text-align: left; padding: 0.75rem 0; background: none; border: none; font-size: 1rem; font-weight: 700; color: var(--text-color); }
     #menuModal hr { border: 0; border-top: 1px solid var(--border-color); margin: 0.5rem 0; }
+    #menuModal .menu-field { display: flex; flex-direction: column; gap: 0.35rem; padding: 0.5rem 0; }
+    #menuModal .menu-field .label-row { display:flex; align-items:center; gap:.5rem; }
+    #menuModal .menu-field label { font-weight: 700; font-size: 0.9rem; }
+    #menuModal .switch-row { display: flex; align-items: center; gap: 0.5rem; }
+    #menuModal .menu-icon { width: 1.2rem; text-align:center; opacity:.7; }
+    #menuModal hr.menu-divider { border: 0; border-top: 1px solid var(--border-color); margin: 0.75rem 0; opacity: .7; }
     .version-inline {
       margin-top: 0.5rem;
       color: #666;
@@ -341,30 +347,12 @@
         <h2 data-i18n="settings_title">Settings</h2>
         <button class="icon-btn close-btn" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">&times;</button>
       </div>
+      <div class="modal-section">
+        <p style="margin:0; color:#666;">Controls have moved to the Menu (☰).</p>
+      </div>
       <div id="wordListsSection" class="modal-section" style="display: none;">
         <label data-i18n="label_active_word_lists">Active Word Lists</label>
         <div id="wordListsOptions" class="word-lists-options"></div>
-      </div>
-      <div class="modal-section">
-        <label for="voiceSelect" data-i18n="label_voice">Voice:</label>
-        <select id="voiceSelect" style="width: 100%; padding: 0.5rem;"></select>
-        <div style="display:flex; gap:.5rem; align-items:center; margin-top:.5rem; flex-wrap:wrap;">
-          <button class="btn btn-secondary" id="voiceTestBtn" type="button" data-i18n="btn_test_voice">Test Voice</button>
-          <div id="iosVoiceHint" class="ios-voice-hint" data-i18n="voice_hint_ios" style="display:none; font-size: 0.85em; color: #777;">
-            Tip (iOS): After the first playback, reopen Settings to refresh French voices.
-          </div>
-        </div>
-      </div>
-      <div class="modal-section">
-        <label for="studyModeSelect" data-i18n="label_studyMode">Study Mode:</label>
-        <select id="studyModeSelect" style="width:100%; padding:0.5rem; margin-top:0.25rem;">
-          <option value="listenRead" data-i18n="mode_listen_read">Listen and read</option>
-          <option value="readThenSay" data-i18n="mode_read_then_say">Read then say</option>
-          <option value="listenThenRepeat" data-i18n="mode_listen_then_repeat">Listen then repeat</option>
-          <option value="articlesDef" data-i18n="mode_articles_def">Articles définis (le/la)</option>
-          <option value="articlesIndef" data-i18n="mode_articles_indef">Articles indéfinis (un/une)</option>
-        </select>
-        <div class="mode-option" style="margin-top:0.75rem;"><input type="checkbox" id="shuffleToggle"><label for="shuffleToggle" data-i18n="label_shuffle">Shuffle words</label></div>
       </div>
     </div>
   </div>
@@ -429,8 +417,42 @@
           <button type="button" class="language-flag" id="menuLangFr" aria-label="Français" title="Français">🇫🇷</button>
         </div>
       </div>
-      <div class="modal-section menu-list" style="margin-top:0.5rem;">
-        <button id="menuSettingsBtn">Settings</button>
+      <div class="modal-section menu-field">
+        <div class="switch-row"><input type="checkbox" id="shuffleToggle"><label for="shuffleToggle" data-i18n="label_shuffle">Shuffle words</label></div>
+      </div>
+      <div class="modal-section menu-field">
+        <label for="studyModeSelect" data-i18n="label_studyMode">Study Mode:</label>
+        <select id="studyModeSelect" style="width:100%; padding:0.5rem;">
+          <option value="listenRead" data-i18n="mode_listen_read">Listen and read</option>
+          <option value="readThenSay" data-i18n="mode_read_then_say">Read then say</option>
+          <option value="listenThenRepeat" data-i18n="mode_listen_then_repeat">Listen then repeat</option>
+          <option value="articlesDef" data-i18n="mode_articles_def">Articles définis (le/la)</option>
+          <option value="articlesIndef" data-i18n="mode_articles_indef">Articles indéfinis (un/une)</option>
+        </select>
+      </div>
+      <div class="modal-section menu-field">
+        <label for="voiceSelect" data-i18n="label_voice">Voice:</label>
+        <select id="voiceSelect" style="width: 100%; padding: 0.5rem;"></select>
+        <div style="display:flex; gap:.5rem; align-items:center; margin-top:.5rem; flex-wrap:wrap;">
+          <button class="btn btn-secondary" id="voiceTestBtn" type="button" data-i18n="btn_test_voice">Test Voice</button>
+          <div id="iosVoiceHint" class="ios-voice-hint" data-i18n="voice_hint_ios" style="display:none; font-size: 0.85em; color: #777;">
+            Tip (iOS): After the first playback, reopen Settings to refresh French voices.
+          </div>
+        </div>
+      </div>
+      <div class="modal-section menu-field">
+        <details id="menuFiles" style="width:100%;">
+          <summary style="cursor:pointer; font-weight:700;">Files</summary>
+          <div id="menuWordListsSection" class="menu-field" style="margin-top:0.5rem;">
+            <label>Active Word Lists</label>
+            <div id="menuWordListsOptions" class="word-lists-options"></div>
+          </div>
+          <div style="margin-top:0.5rem;">
+            <label for="menuFileInput" style="display:block; font-weight:600; margin-bottom:0.25rem;">Add .txt files</label>
+            <input type="file" id="menuFileInput" accept=".txt" multiple />
+            <div style="font-size:0.85em; color:#777; margin-top:0.25rem;">Tip: You can also drag & drop files anywhere on the page.</div>
+          </div>
+        </details>
       </div>
       <hr/>
       <div class="menu-bottom" style="margin-top:auto;">
@@ -1273,38 +1295,43 @@
     window.disableVoiceDebug = function() { try { localStorage.removeItem('voiceDebug'); } catch (_) {} renderVoiceDebug(); };
     
     function generateWordListsUI() {
-        const container = document.getElementById('wordListsOptions');
-        const section = document.getElementById('wordListsSection');
-        container.innerHTML = '';
+        const containers = [
+          { container: document.getElementById('wordListsOptions'), section: document.getElementById('wordListsSection') },
+          { container: document.getElementById('menuWordListsOptions'), section: document.getElementById('menuWordListsSection') },
+        ];
+        containers.forEach(({container, section}) => { if (container) container.innerHTML = ''; });
         const filenames = Object.keys(wordLists);
-        if (filenames.length > 1) {
-            section.style.display = 'block';
-            filenames.forEach(name => {
-                const item = document.createElement('div');
-                item.className = 'mode-option';
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.checked = wordLists[name].enabled;
-                checkbox.id = `file--${name}`;
-                checkbox.dataset.filename = name;
-                checkbox.addEventListener('change', () => {
-                    confirmationCallback = () => {
-                        wordLists[name].enabled = checkbox.checked;
-                        rebuildActiveWordsList();
-                    };
-                    document.getElementById('confirmationDialogText').textContent = i18n[curLang].confirm_word_list;
-                    confirmationDialog.classList.add('visible');
-                });
-                const label = document.createElement('label');
-                label.htmlFor = `file--${name}`;
-                label.textContent = `${name} (${wordLists[name].words.length} ${i18n[curLang].words_lower})`;
-                item.appendChild(checkbox);
-                item.appendChild(label);
-                container.appendChild(item);
-            });
-        } else {
-            section.style.display = 'none';
-        }
+        containers.forEach(({container, section}) => {
+          if (!container || !section) return;
+          if (filenames.length > 1) {
+              section.style.display = 'block';
+              filenames.forEach(name => {
+                  const item = document.createElement('div');
+                  item.className = 'mode-option';
+                  const checkbox = document.createElement('input');
+                  checkbox.type = 'checkbox';
+                  checkbox.checked = wordLists[name].enabled;
+                  checkbox.id = `file--${name}`;
+                  checkbox.dataset.filename = name;
+                  checkbox.addEventListener('change', () => {
+                      confirmationCallback = () => {
+                          wordLists[name].enabled = checkbox.checked;
+                          rebuildActiveWordsList();
+                      };
+                      document.getElementById('confirmationDialogText').textContent = i18n[curLang].confirm_word_list;
+                      confirmationDialog.classList.add('visible');
+                  });
+                  const label = document.createElement('label');
+                  label.htmlFor = `file--${name}`;
+                  label.textContent = `${name} (${wordLists[name].words.length} ${i18n[curLang].words_lower})`;
+                  item.appendChild(checkbox);
+                  item.appendChild(label);
+                  container.appendChild(item);
+              });
+          } else {
+              section.style.display = 'none';
+          }
+        });
     }
 
     function rebuildActiveWordsList() {
@@ -1403,10 +1430,12 @@
     }
 
     document.getElementById('settingsBtn').addEventListener('click', () => { 
-      settingsModal.classList.add('visible'); 
+      // Open Menu for one-click access to controls
+      menuModal.classList.add('visible');
+      document.getElementById('menuBtn')?.setAttribute('aria-expanded','true');
       if (isSafari) primeVoices();
-      populateVoiceList(); 
-      const mc = settingsModal.querySelector('.modal-content'); if (mc) mc.focus();
+      populateVoiceList();
+      const mc = menuModal.querySelector('.modal-content'); if (mc) mc.focus();
     });
     // Language flags
     const langEnEl = document.getElementById('langEn');
@@ -1559,6 +1588,15 @@
       const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.txt'));
       if (files.length > 0) handleFileLoad(files);
     });
+    // Menu file input handler
+    (function(){
+      const menuFileInput = document.getElementById('menuFileInput');
+      if (menuFileInput) menuFileInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files || []).filter(f => f.name.endsWith('.txt'));
+        if (files.length > 0) handleFileLoad(files);
+        e.target.value = '';
+      });
+    })();
     
     document.getElementById('historyToggleBtn').addEventListener('click', () => document.querySelector('.container').classList.toggle('history-hidden'));
 

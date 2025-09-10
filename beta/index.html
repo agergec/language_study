@@ -306,6 +306,7 @@
       <div id="bottomStatus" class="bottom-status">
         <div class="bottom-left">
           <span id="bottomShuffle" aria-label="Shuffle" title="Shuffle">🔀</span>
+          <span class="sep">|</span>
           <span id="bottomFileStatus" class="file-status-icon" aria-label="Files" title="Files">❌</span>
           <span class="sep">|</span>
           <span id="bottomVoice"></span>
@@ -527,6 +528,7 @@
         instr_listen: "Listen please.",
         instr_repeat: "Repeat what you did hear.",
         instr_read_say: "Say what you read.",
+        instr_skip_next: "You may skip to the next word.",
         session_complete: "🎉 Session Complete!", start_next_session: "Start Next (Space)",
         toast_single_file: "✅ {count} words loaded – ready to study!",
         toast_multi_file: "✅ {wordCount} words from {fileCount} files loaded – ready to study!",
@@ -602,6 +604,7 @@
         instr_listen: "Veuillez écouter.",
         instr_repeat: "Répétez ce que vous avez entendu.",
         instr_read_say: "Dites ce que vous lisez.",
+        instr_skip_next: "Vous pouvez passer au mot suivant.",
         session_complete: "🎉 Session terminée !", start_next_session: "Commencer (Espace)",
         toast_single_file: "✅ {count} mots chargés – prêt à étudier !",
         toast_multi_file: "✅ {wordCount} mots de {fileCount} fichiers chargés – prêt à étudier !",
@@ -1055,6 +1058,7 @@
       if (getSelectedStudyMode() === 'readThenSay' && currentWord) {
         if (readSayStage === 1) {
           await speakWord(currentWord); // speak after the student reads
+          updateInstruction(i18n[curLang].instr_skip_next);
           readSayStage = 2;
           return; // wait for another Next to advance
         } else if (readSayStage === 2) {
@@ -1068,8 +1072,8 @@
         if (listenRepeatStage === 1) {
           // Reveal the word after the student repeats and speak it once more
           updateDisplayUpper(currentWord);
-          updateInstruction('');
           await speakWord(currentWord);
+          updateInstruction(i18n[curLang].instr_skip_next);
           listenRepeatStage = 2; // wait for next press to advance (pre-add will log previous)
           return;
         } else if (listenRepeatStage === 2) {

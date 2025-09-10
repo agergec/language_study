@@ -135,10 +135,13 @@
     .footer { grid-area: footer; display: flex; flex-direction: column; gap: 0.35rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color); font-size: 0.85em; }
     .footer-meta { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
     #statusInfo { display: none; }
-    .bottom-status { display: flex; align-items: center; gap: 0.75rem; color: #666; }
+    .bottom-status { display: flex; align-items: center; justify-content: space-between; color: #666; }
+    .bottom-left { display: flex; align-items: center; gap: 0.75rem; }
     .bottom-status .sep { opacity: 0.4; }
     .bottom-status .off { opacity: 0.3; filter: grayscale(1); }
     .bottom-status span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bottom-version { display: none; color: #666; }
+    @media (min-width: 1024px) { .bottom-version { display: inline; } }
     /* no spacer row; display grows naturally */
     .status-ok { color: #2e7d32; }
     .status-alert { color: #c62828; }
@@ -197,16 +200,7 @@
       padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
     }
     /* App version tags */
-    .app-version-corner {
-      position: fixed;
-      left: 8px;
-      bottom: 6px;
-      color: #666;
-      font-size: 0.75em;
-      z-index: 10;
-      pointer-events: none;
-    }
-    @media (max-width: 1023px) { .app-version-corner { display: none; } }
+    .app-version-corner { display: none; }
 
     /* iOS adjustments: (countdown circle removed) restore default padding */
     html.is-ios .display-container { padding-bottom: 1rem; }
@@ -308,13 +302,16 @@
 
     <footer class="footer">
       <div id="bottomStatus" class="bottom-status">
-        <span id="bottomShuffle" aria-label="Shuffle" title="Shuffle">🔀</span>
-        <span id="bottomFileStatus" class="file-status-icon" aria-label="Files" title="Files">❌</span>
-        <span class="sep">|</span>
-        <span id="bottomVoice"></span>
-        <span class="sep">|</span>
-        <span id="bottomMode"></span>
-        <span id="statusInfo" class="status-alert" data-i18n="status_load_prompt" aria-live="polite" aria-atomic="true"></span>
+        <div class="bottom-left">
+          <span id="bottomShuffle" aria-label="Shuffle" title="Shuffle">🔀</span>
+          <span id="bottomFileStatus" class="file-status-icon" aria-label="Files" title="Files">❌</span>
+          <span class="sep">|</span>
+          <span id="bottomVoice"></span>
+          <span class="sep">|</span>
+          <span id="bottomMode"></span>
+          <span id="statusInfo" class="status-alert" data-i18n="status_load_prompt" aria-live="polite" aria-atomic="true"></span>
+        </div>
+        <span id="bottomVersion" class="bottom-version"></span>
       </div>
     </footer>
   </div>
@@ -358,10 +355,11 @@
       <div class="modal-section">
         <label for="studyModeSelect" data-i18n="label_studyMode">Study Mode:</label>
         <select id="studyModeSelect" style="width:100%; padding:0.5rem; margin-top:0.25rem;">
-          <option value="simultaneous" data-i18n="mode_simultaneous">Listen and Read simultaneously</option>
-          <option value="readSay" data-i18n="mode_read_say">Read and Say</option>
-          <option value="listenRepeat" data-i18n="mode_listen_repeat">Listen and Repeat</option>
-          <option value="privativePrefix" data-i18n="mode_privative_prefix">Privative Prefix Quiz (un/une)</option>
+          <option value="listenRead" data-i18n="mode_listen_read">Listen and read</option>
+          <option value="readThenSay" data-i18n="mode_read_then_say">Read then say</option>
+          <option value="listenThenRepeat" data-i18n="mode_listen_then_repeat">Listen then repeat</option>
+          <option value="articlesDef" data-i18n="mode_articles_def">Articles définis (le/la)</option>
+          <option value="articlesIndef" data-i18n="mode_articles_indef">Articles indéfinis (un/une)</option>
         </select>
         <div class="mode-option" style="margin-top:0.75rem;"><input type="checkbox" id="shuffleToggle"><label for="shuffleToggle" data-i18n="label_shuffle">Shuffle words</label></div>
       </div>
@@ -481,11 +479,15 @@
         label_voice: "Voice:", label_studyMode: "Study Mode:",
         label_shuffle: "Shuffle words", label_seconds: "seconds",
         mode_simultaneous: "Listen and Read simultaneously",
-        mode_read_say: "Read and Say",
-        mode_listen_repeat: "Listen and Repeat",
-        mode_privative_prefix: "Privative Prefix Quiz (un/une)",
+        mode_listen_read: "Listen and read",
+        mode_read_then_say: "Read then say",
+        mode_listen_then_repeat: "Listen then repeat",
+        mode_articles_def: "Definite articles (le/la)",
+        mode_articles_indef: "Indefinite articles (un/une)",
         btn_prefix_un: "Prefix: un",
         btn_prefix_une: "Prefix: une",
+        btn_prefix_le: "Prefix: le",
+        btn_prefix_la: "Prefix: la",
         prefix_prompt: "Choose the correct prefix (un/une)",
         toast_correct_prefix: "✅ Correct! {prefix} + {base}",
         toast_wrong_prefix: "❌ Not quite. It was {prefix} + {base}",
@@ -549,11 +551,15 @@
         label_voice: "Voix :", label_studyMode: "Mode d'étude :",
         label_shuffle: "Mélanger les mots", label_seconds: "secondes",
         mode_simultaneous: "Écouter et lire simultanément",
-        mode_read_say: "Lire et dire",
-        mode_listen_repeat: "Écouter et répéter",
-        mode_privative_prefix: "Préfixe privatif (un/une)",
+        mode_listen_read: "Écouter et lire",
+        mode_read_then_say: "Lire puis dire",
+        mode_listen_then_repeat: "Écouter puis répéter",
+        mode_articles_def: "Articles définis (le/la)",
+        mode_articles_indef: "Articles indéfinis (un/une)",
         btn_prefix_un: "Préfixe : un",
         btn_prefix_une: "Préfixe : une",
+        btn_prefix_le: "Préfixe : le",
+        btn_prefix_la: "Préfixe : la",
         prefix_prompt: "Choisissez le bon préfixe (un/une)",
         toast_correct_prefix: "✅ Correct ! {prefix} + {base}",
         toast_wrong_prefix: "❌ Pas tout à fait. C'était {prefix} + {base}",
@@ -600,7 +606,7 @@
     let wordLists = {}; // { filename: { words: [], enabled: true } }
     let words = [], currentIndex = 0, currentWord = "";
     let availableVoices = [], currentVoice = "system", displayHistory = [];
-    let studyMode = "listenRepeat"; // default
+    let studyMode = "listenThenRepeat"; // default
     // Deprecated timer settings removed
     let countdownInterval = null;
     let isInSpeakFirstMode = false; // legacy; no longer used for timers
@@ -609,8 +615,10 @@
     let originalWordOrder = [];
     let isSessionComplete = false;
     const APP_VERSION = 'v1.1.8-beta';
-    // Privative prefix mode state
+    // Articles quiz state
     let prefixWords = [];
+    let prefixWordsIndef = [];
+    let prefixWordsDef = [];
     let prefixIndex = 0;
     let currentBaseWord = "";
     let currentExpectedPrefix = ""; // 'un' or 'une'
@@ -866,9 +874,18 @@
       document.getElementById('countdownText').textContent = '--';
       if (countdownTopbarFill) countdownTopbarFill.style.width = '0%';
       // Toggle privative controls visibility
-      document.getElementById('privativeControls').style.display = (getSelectedStudyMode() === 'privativePrefix') ? 'flex' : 'none';
-      // Shuffle questions for privative mode according to shuffleEnabled
-      if (getSelectedStudyMode() === 'privativePrefix' && prefixWords.length > 0) {
+      document.getElementById('privativeControls').style.display = (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef') ? 'flex' : 'none';
+      // Set initial labels for prefix buttons according to mode
+      (function(){
+        const unBtnLbl = document.getElementById('prefixUnBtn');
+        const uneBtnLbl = document.getElementById('prefixUneBtn');
+        if (unBtnLbl && uneBtnLbl) {
+          if (getSelectedStudyMode() === 'articlesDef') { unBtnLbl.textContent = i18n[curLang].btn_prefix_le || 'Prefix: le'; uneBtnLbl.textContent = i18n[curLang].btn_prefix_la || 'Prefix: la'; }
+          else { unBtnLbl.textContent = i18n[curLang].btn_prefix_un; uneBtnLbl.textContent = i18n[curLang].btn_prefix_une; }
+        }
+      })();
+      // Shuffle questions for articles mode according to shuffleEnabled
+      if ((getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef') && prefixWords.length > 0) {
         if (shuffleEnabled) shuffleArray(prefixWords);
         else if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
       }
@@ -957,8 +974,9 @@
     }
 
     function addToHistory(word) {
-      const isPriv = getSelectedStudyMode() === 'privativePrefix';
-      const indexNum = isPriv ? prefixIndex : currentIndex;
+      const modeNow = getSelectedStudyMode();
+      const isArticles = (modeNow === 'articlesIndef' || modeNow === 'articlesDef');
+      const indexNum = isArticles ? prefixIndex : currentIndex;
       const historyEntry = `${indexNum}: ${word}`;
       if (!displayHistory.includes(historyEntry)) {
         displayHistory.push(historyEntry);
@@ -968,8 +986,10 @@
 
     async function nextWord() {
       if (!words.length) return;
-      // Privative prefix mode branch
-      if (getSelectedStudyMode() === 'privativePrefix') {
+      // Articles mode branch (le/la or un/une)
+      if (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef') {
+        prefixWords = (getSelectedStudyMode() === 'articlesIndef') ? prefixWordsIndef : prefixWordsDef;
+        window.prefixOriginalOrder = (getSelectedStudyMode() === 'articlesIndef') ? window.prefixOriginalOrderIndef : window.prefixOriginalOrderDef;
         if (prefixWords.length === 0) return;
         // If previous question existed and was not answered, record as unanswered
         if (currentBaseWord && !privativeAnswered) {
@@ -1001,7 +1021,7 @@
         return;
       }
       // For Listen & Repeat: add the previously spoken word to Answers when advancing
-      if (!isSessionComplete && getSelectedStudyMode() === 'listenRepeat' && currentWord) {
+      if (!isSessionComplete && getSelectedStudyMode() === 'listenThenRepeat' && currentWord) {
         addToHistory(currentWord);
       }
       if (isSessionComplete) {
@@ -1020,7 +1040,7 @@
       }
 
       // Handle staged flow for Read & Say: if we are in stages 1 or 2
-      if (getSelectedStudyMode() === 'readSay' && currentWord) {
+      if (getSelectedStudyMode() === 'readThenSay' && currentWord) {
         if (readSayStage === 1) {
           await speakWord(currentWord); // speak after the student reads
           readSayStage = 2;
@@ -1037,18 +1057,18 @@
 
       studyMode = getSelectedStudyMode();
 
-      if (studyMode === "simultaneous") {
+      if (studyMode === "listenRead") {
         updateDisplayUpper(currentWord);
         addToHistory(currentWord);
         await speakWord(currentWord);
-      } else if (studyMode === "readSay") {
+      } else if (studyMode === "readThenSay") {
         // Stage 1: show the word, wait for student to say it
         updateDisplayUpper(currentWord);
         addToHistory(currentWord);
         readSayStage = 1; // next press will speak
         updateStatusInfo(i18n[curLang].status_word_progress.replace('{current}', currentIndex).replace('{total}', words.length));
         return;
-      } else if (studyMode === "listenRepeat") {
+      } else if (studyMode === "listenThenRepeat") {
         updateDisplayUpper(i18n[curLang].reveal_prompt);
         await speakWord(currentWord); // after speaking, just wait; next press advances
       }
@@ -1057,7 +1077,7 @@
 
     async function repeatWord() { 
       if (!currentWord) return; 
-      if (getSelectedStudyMode() === 'privativePrefix' && currentBaseWord) {
+      if ((getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef') && currentBaseWord) {
         await speakWord(currentBaseWord);
       } else {
         await speakWord(currentWord);
@@ -1066,7 +1086,7 @@
 
     function showCurrentWord() {
       if (currentWord) {
-        if (getSelectedStudyMode() === 'privativePrefix' && currentBaseWord) {
+        if ((getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef') && currentBaseWord) {
           updateDisplayUpper(`${currentExpectedPrefix} ${currentBaseWord}`);
           addToHistory(`${currentExpectedPrefix} ${currentBaseWord}`);
           privativeAnswered = true;
@@ -1091,8 +1111,10 @@
     // --- UI UPDATE & MANAGEMENT FUNCTIONS ---
     function updateProgressBar() {
         let progress = 0;
-        if (getSelectedStudyMode() === 'privativePrefix') {
-          progress = prefixWords.length > 0 ? (prefixIndex / prefixWords.length) * 100 : 0;
+        const modeNow = getSelectedStudyMode();
+        if (modeNow === 'articlesIndef' || modeNow === 'articlesDef') {
+          const active = (modeNow === 'articlesIndef') ? prefixWordsIndef : prefixWordsDef;
+          progress = active.length > 0 ? (prefixIndex / active.length) * 100 : 0;
         } else {
           progress = words.length > 0 ? (currentIndex / words.length) * 100 : 0;
         }
@@ -1126,7 +1148,7 @@
       if (sel) return sel.value;
       // Fallback to legacy radios if present
       const radio = document.querySelector('input[name="studyMode"]:checked');
-      return radio ? radio.value : 'listenRepeat';
+      return radio ? radio.value : 'listenThenRepeat';
     }
 
     function updateStudyModeIndicator() {
@@ -1268,27 +1290,32 @@
             bottomIcon.classList.add('status-alert');
           }
         }
-        // Build privative prefix pool
-        const pattern = /^(un|une)[\s-]+(.+)$/i;
-        prefixWords = words
+        // Build articles pools (indef: un/une, def: le/la)
+        const indepPattern = /^(un|une)[\s-]+(.+)$/i;
+        const defPattern = /^(le|la)[\s-]+(.+)$/i;
+        prefixWordsIndef = words
           .map(w => w.trim())
           .filter(Boolean)
-          .filter(w => pattern.test(w))
-          .map(w => {
-            const m = w.match(pattern);
-            return { full: w, prefix: m[1].toLowerCase(), base: m[2].trim() };
-          });
-        window.prefixOriginalOrder = [...prefixWords];
-        // Enable/disable privative mode option (do not hide)
+          .filter(w => indepPattern.test(w))
+          .map(w => { const m = w.match(indepPattern); return { full: w, prefix: m[1].toLowerCase(), base: m[2].trim() }; });
+        prefixWordsDef = words
+          .map(w => w.trim())
+          .filter(Boolean)
+          .filter(w => defPattern.test(w))
+          .map(w => { const m = w.match(defPattern); return { full: w, prefix: m[1].toLowerCase(), base: m[2].trim() }; });
+        window.prefixOriginalOrderIndef = [...prefixWordsIndef];
+        window.prefixOriginalOrderDef = [...prefixWordsDef];
+        // Enable/disable articles options in dropdown
         const sel = document.getElementById('studyModeSelect');
         if (sel) {
-          const hasPool = prefixWords.length > 0;
-          const opt = sel.querySelector('option[value="privativePrefix"]');
-          if (opt) opt.disabled = !hasPool;
-          // If currently selected but no pool, switch back to listenRepeat
-          if (!hasPool && sel.value === 'privativePrefix') {
-            sel.value = 'listenRepeat';
-          }
+          const hasIndef = prefixWordsIndef.length > 0;
+          const hasDef = prefixWordsDef.length > 0;
+          const optIndef = sel.querySelector('option[value="articlesIndef"]');
+          const optDef = sel.querySelector('option[value="articlesDef"]');
+          if (optIndef) optIndef.disabled = !hasIndef;
+          if (optDef) optDef.disabled = !hasDef;
+          if (sel.value === 'articlesIndef' && !hasIndef) sel.value = 'listenThenRepeat';
+          if (sel.value === 'articlesDef' && !hasDef) sel.value = 'listenThenRepeat';
         }
         initializeStudy();
     }
@@ -1526,12 +1553,14 @@
           }
         });
     });
-    // Privative controls handlers
+    // Articles/Privative controls handlers
     const unBtn = document.getElementById('prefixUnBtn');
     const uneBtn = document.getElementById('prefixUneBtn');
     if (unBtn) unBtn.addEventListener('click', () => {
       if (!currentBaseWord) return;
-      const correct = currentExpectedPrefix === 'un';
+      const mode = getSelectedStudyMode();
+      const choice = (mode === 'articlesDef') ? 'le' : 'un';
+      const correct = currentExpectedPrefix === choice;
       const msg = (correct ? i18n[curLang].toast_correct_prefix : i18n[curLang].toast_wrong_prefix)
         .replace('{prefix}', currentExpectedPrefix)
         .replace('{base}', currentBaseWord);
@@ -1542,7 +1571,9 @@
     });
     if (uneBtn) uneBtn.addEventListener('click', () => {
       if (!currentBaseWord) return;
-      const correct = currentExpectedPrefix === 'une';
+      const mode = getSelectedStudyMode();
+      const choice = (mode === 'articlesDef') ? 'la' : 'une';
+      const correct = currentExpectedPrefix === choice;
       const msg = (correct ? i18n[curLang].toast_correct_prefix : i18n[curLang].toast_wrong_prefix)
         .replace('{prefix}', currentExpectedPrefix)
         .replace('{base}', currentBaseWord);
@@ -1564,7 +1595,15 @@
     const studyModeSelect = document.getElementById('studyModeSelect');
     if (studyModeSelect) studyModeSelect.addEventListener('change', () => {
       updateStudyModeIndicator();
-      document.getElementById('privativeControls').style.display = (getSelectedStudyMode() === 'privativePrefix') ? 'flex' : 'none';
+      const isArticles = (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef');
+      document.getElementById('privativeControls').style.display = isArticles ? 'flex' : 'none';
+      // Update prefix buttons for selected articles mode
+      const unBtnLbl = document.getElementById('prefixUnBtn');
+      const uneBtnLbl = document.getElementById('prefixUneBtn');
+      if (unBtnLbl && uneBtnLbl) {
+        if (getSelectedStudyMode() === 'articlesDef') { unBtnLbl.textContent = i18n[curLang].btn_prefix_le || 'Prefix: le'; uneBtnLbl.textContent = i18n[curLang].btn_prefix_la || 'Prefix: la'; }
+        else { unBtnLbl.textContent = i18n[curLang].btn_prefix_un; uneBtnLbl.textContent = i18n[curLang].btn_prefix_une; }
+      }
       updateProgressBar();
       try { localStorage.setItem('studyMode', studyModeSelect.value); } catch (_) {}
     });
@@ -1578,8 +1617,8 @@
         } catch (_) {}
         try {
           const savedMode = localStorage.getItem('studyMode');
-          const validModes = new Set(['simultaneous','readSay','listenRepeat','privativePrefix']);
-          const fallback = 'listenRepeat';
+          const validModes = new Set(['listenRead','readThenSay','listenThenRepeat','articlesDef','articlesIndef']);
+          const fallback = 'listenThenRepeat';
           const modeToUse = validModes.has(savedMode) ? savedMode : fallback;
           const sel = document.getElementById('studyModeSelect');
           if (sel) sel.value = modeToUse;
@@ -1602,8 +1641,8 @@
           if (orP) orP.style.display = 'none';
           if (browseBtn) browseBtn.style.display = 'none';
         }
-        // Initialize privative controls visibility on load
-        document.getElementById('privativeControls').style.display = (getSelectedStudyMode() === 'privativePrefix') ? 'flex' : 'none';
+        // Initialize articles controls visibility on load
+        document.getElementById('privativeControls').style.display = (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef') ? 'flex' : 'none';
         // Show iOS-specific voice hint
         try {
           const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && 'ontouchend' in document);
@@ -1616,9 +1655,11 @@
         const verCorner = document.getElementById('appVersionCorner');
         const verWelcome = document.getElementById('welcomeVersion');
         const verMenu = document.getElementById('menuVersion');
+        const verBottom = document.getElementById('bottomVersion');
         if (verCorner) verCorner.textContent = APP_VERSION;
         if (verWelcome) verWelcome.textContent = APP_VERSION;
         if (verMenu) verMenu.textContent = APP_VERSION;
+        if (verBottom) verBottom.textContent = APP_VERSION;
 
         // Inline handlers are used for control buttons and language flags
     });

@@ -699,21 +699,12 @@
 
         let totalWords = 0;
 
-        const readFile = (file) => {
-            console.log('Attempting to read file:', file.name, 'Size:', file.size, 'Type:', file.type);
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    console.log('FileReader onload event fired for:', file.name);
-                    resolve(event.target.result);
-                };
-                reader.onerror = (error) => {
-                    console.error('FileReader onerror event fired for:', file.name, error);
-                    reject(error);
-                };
-                reader.readAsText(file);
-            });
-        };
+        const readFile = (file) => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => resolve(event.target.result);
+            reader.onerror = (error) => reject(error);
+            reader.readAsText(file);
+        });
 
         for (const file of files) {
             try {

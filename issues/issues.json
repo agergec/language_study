@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Example: Set <html lang> correctly",
+    "body": "Set the correct \u0060lang\u0060 attribute on the root HTML element to improve accessibility and SEO.\n\nAcceptance criteria:\n- \u0060<html lang=\"en\">\u0060 (or appropriate locale) present\n- Passes basic a11y checks\n\nNotes: Update all HTML entry points if multiple exist.",
+    "labels": ["frontend", "a11y"],
+    "assignees": []
+  },
+  {
+    "title": "Example: Add <meta charset> early in <head>",
+    "body": "Ensure \u0060<meta charset=\"utf-8\">\u0060 is the first metadata in \u003chead\u003e to avoid encoding issues.",
+    "labels": ["frontend"],
+    "assignees": []
+  }
+]

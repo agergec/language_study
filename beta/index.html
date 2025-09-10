@@ -76,9 +76,9 @@
     .language-flags { display: flex; gap: 0.5rem; }
     .language-flag { font-size: 1.5rem; cursor: pointer; opacity: 0.5; transition: all 0.2s ease; background: none; border: none; padding: 0; line-height: 1; }
     .language-flag.active { opacity: 1; transform: scale(1.15); }
-    /* Mobile: use hamburger; hide individual icons/flags */
+    /* Mobile: use hamburger; hide individual header icons/flags only */
     @media (max-width: 1023px) {
-      .header-actions .icon-btn:not(#menuBtn), .language-flags { display: none; }
+      .header-actions .icon-btn:not(#menuBtn), .header-actions .language-flags { display: none; }
     }
     
     .progress-bar { width: 100%; height: 5px; background-color: var(--border-color); border-radius: 5px; overflow: hidden; }
@@ -123,7 +123,7 @@
     .container.history-hidden #historyToggleBtn { transform: rotate(180deg); }
 
     /* --- Countdown --- */
-    .countdown-wrapper { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60px; pointer-events: none; }
+    .countdown-wrapper { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60px; pointer-events: none; top: auto; }
     .progress-ring { position: relative; width: 60px; height: 60px; }
     .progress-ring__circle { transition: stroke-dashoffset 0.1s linear; transform: rotate(-90deg); transform-origin: 50% 50%; stroke-width: 6; stroke: var(--success-color); stroke-linecap: round; }
     .progress-ring__track { stroke-width: 6; stroke: var(--border-color); }
@@ -198,6 +198,18 @@
       pointer-events: none;
     }
     @media (max-width: 1023px) { .app-version-corner { display: none; } }
+
+    /* iOS adjustments: ensure space for countdown at bottom inside display container */
+    html.is-ios .display-container { padding-bottom: 84px; }
+    html.is-ios .countdown-wrapper { bottom: calc(12px + env(safe-area-inset-bottom)); }
+
+    /* Mobile Menu (drawer from right) */
+    #menuModal .modal-content { width: 90%; max-width: 360px; height: 100vh; margin-left: auto; border-radius: 0; transform: translateX(100%); transition: transform 0.25s ease; display: flex; flex-direction: column; }
+    #menuModal.visible .modal-content { transform: translateX(0); }
+    #menuModal .modal-header { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    #menuModal .modal-section { border: none; padding-bottom: 0; margin-bottom: 0.5rem; }
+    #menuModal .menu-list button { display: block; width: 100%; text-align: left; padding: 0.75rem 0; background: none; border: none; font-size: 1rem; font-weight: 700; color: var(--text-color); }
+    #menuModal hr { border: 0; border-top: 1px solid var(--border-color); margin: 0.5rem 0; }
     .version-inline {
       margin-top: 0.5rem;
       color: #666;
@@ -368,23 +380,23 @@
   <div id="menuModal" class="modal">
     <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
       <div class="modal-header">
-        <h2>Menu</h2>
-        <button class="icon-btn close-btn" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">&times;</button>
+        <h2 style="margin:0">Menu</h2>
+        <button class="icon-btn close-btn" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">✕</button>
       </div>
       <div class="modal-section">
-        <label>Language</label>
-        <div class="language-flags">
+        <label style="display:block; font-weight:600; margin-bottom:0.25rem;">Language</label>
+        <div class="language-flags" style="display:flex; gap:0.75rem;">
           <button type="button" class="language-flag" id="menuLangEn" aria-label="English" title="English">🇺🇸</button>
           <button type="button" class="language-flag" id="menuLangFr" aria-label="Français" title="Français">🇫🇷</button>
         </div>
       </div>
-      <div class="modal-section">
-        <button class="btn btn-info" id="menuHelpBtn">Help</button>
-        <button class="btn btn-info" id="menuSettingsBtn">Settings</button>
+      <div class="modal-section menu-list" style="margin-top:0.5rem;">
+        <button id="menuSettingsBtn">Settings</button>
       </div>
-      <div class="modal-section">
-        <label>About</label>
-        <div id="menuVersion" class="version-inline"></div>
+      <hr/>
+      <div id="menuVersion" class="version-inline" style="padding-bottom:0.5rem;"></div>
+      <div class="modal-section menu-list" style="margin-top:auto;">
+        <button id="menuHelpBtn">Help</button>
       </div>
     </div>
   </div>
@@ -555,7 +567,7 @@
     let shuffleEnabled = false;
     let originalWordOrder = [];
     let isSessionComplete = false;
-    const APP_VERSION = 'v1.1.6-beta';
+    const APP_VERSION = 'v1.1.7-beta';
     // Privative prefix mode state
     let prefixWords = [];
     let prefixIndex = 0;

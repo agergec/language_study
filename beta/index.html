@@ -1035,7 +1035,17 @@
     
     // --- Voice Debug Helper (feature-flagged) ---
     function isVoiceDebugEnabled() {
-      try { if ((location.hash || '').toLowerCase().includes('voicedebug')) return true; } catch (_) {}
+      try {
+        const hash = (location.hash || '').toLowerCase();
+        if (hash.includes('voicedebug')) return true;
+      } catch (_) {}
+      try {
+        const params = new URLSearchParams(location.search || '');
+        if (params.has('voicedebug')) {
+          const val = (params.get('voicedebug') || '').toLowerCase();
+          if (val === '' || val === '1' || val === 'true' || val === 'yes') return true;
+        }
+      } catch (_) {}
       try { return localStorage.getItem('voiceDebug') === '1'; } catch (_) { return false; }
     }
 

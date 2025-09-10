@@ -520,7 +520,7 @@
     let shuffleEnabled = false;
     let originalWordOrder = [];
     let isSessionComplete = false;
-    const APP_VERSION = 'v1.1.1-beta';
+    const APP_VERSION = 'v1.1.2-beta';
     // Privative prefix mode state
     let prefixWords = [];
     let prefixIndex = 0;
@@ -978,6 +978,7 @@
       if (vs.options.length === 0) return;
       vs.selectedIndex = (vs.selectedIndex + 1) % vs.options.length;
       currentVoice = vs.value;
+      try { localStorage.setItem('selectedVoice', currentVoice); } catch (_) {}
       updateVoiceIndicator();
     }
     
@@ -1295,6 +1296,7 @@
     
     document.getElementById('voiceSelect').addEventListener('change', e => { 
       currentVoice = e.target.value; 
+      try { localStorage.setItem('selectedVoice', currentVoice); } catch (_) {}
       updateVoiceIndicator(); 
     });
     document.getElementById('voiceSelect').addEventListener('focus', populateVoiceList);
@@ -1304,11 +1306,27 @@
       updateStudyModeIndicator();
       document.getElementById('privativeControls').style.display = (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') ? 'flex' : 'none';
       updateProgressBar();
+      const sel = document.querySelector('input[name="studyMode"]:checked');
+      if (sel) { try { localStorage.setItem('studyMode', sel.value); } catch (_) {} }
     }));
 
     // --- INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', () => {
-        populateVoiceList(); // Use the new robust function
+        // Restore preferences
+        try {
+          const savedVoice = localStorage.getItem('selectedVoice');
+          if (savedVoice) currentVoice = savedVoice;
+        } catch (_) {}
+        try {
+          const savedMode = localStorage.getItem('studyMode');
+          const validModes = new Set(['simultaneous','displayFirst','speakFirst','privativePrefix']);
+          const fallback = 'speakFirst';
+          const modeToUse = validModes.has(savedMode) ? savedMode : fallback;
+          const radio = document.querySelector(`input[name="studyMode"][value="${modeToUse}"]`);
+          if (radio) radio.checked = true;
+        } catch (_) {}
+
+        populateVoiceList(); // Use the (restored) currentVoice where possible
         setLanguage("en");
         updateAllIndicators();
         welcomeModal.classList.add('visible');

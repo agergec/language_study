@@ -493,7 +493,7 @@
           <button class="btn btn-secondary" id="openaiClearBtn" type="button">Clear</button>
         </div>
         <div id="openaiKeyMasked" style="font-size:0.85em; color:#777; margin-top:0.25rem;"></div>
-        <div style="font-size:0.85em; color:#777; margin-top:0.25rem;">Adds OpenAI voices “Alloy” and “Nova” to the selector using a low‑latency model.</div>
+        <div style="font-size:0.85em; color:#777; margin-top:0.25rem;">Adds OpenAI voices “Echo” and “Nova” to the selector using a low‑latency model.</div>
       </div>
       <div class="modal-section menu-field">
         <details id="menuFiles" style="width:100%;">
@@ -891,9 +891,9 @@
       if (openaiKey) {
         const group = document.createElement('optgroup');
         group.label = 'OpenAI TTS';
-        const alloy = document.createElement('option'); alloy.value = 'openai:alloy'; alloy.textContent = 'Alloy (OpenAI)';
+        const echo = document.createElement('option'); echo.value = 'openai:echo'; echo.textContent = 'Echo (OpenAI)';
         const nova = document.createElement('option'); nova.value = 'openai:nova'; nova.textContent = 'Nova (OpenAI)';
-        group.appendChild(alloy); group.appendChild(nova);
+        group.appendChild(echo); group.appendChild(nova);
         vs.appendChild(group);
       }
 
@@ -1015,7 +1015,7 @@
     function speakWord(w) {
       if (synth.speaking) synth.cancel();
       if (openaiKey && typeof currentVoice === 'string' && currentVoice.startsWith('openai:')) {
-        const voice = (currentVoice.split(':')[1] || 'alloy');
+        const voice = (currentVoice.split(':')[1] || 'echo');
         return speakWithOpenAITTS(w, voice);
       }
       const u = new SpeechSynthesisUtterance(w);

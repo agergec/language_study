@@ -3,6 +3,14 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <!-- PWA: iOS standalone support -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="French Study">
+  <meta name="theme-color" content="#4A90E2">
+  <link rel="manifest" href="manifest.webmanifest">
+  <!-- iOS home-screen icon (placeholder) -->
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png" sizes="180x180">
   <title data-i18n="page_title">🇫🇷 French Listening Study</title>
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇫🇷</text></svg>">
@@ -77,10 +85,8 @@
     .language-flags { display: flex; gap: 0.5rem; }
     .language-flag { font-size: 1.5rem; cursor: pointer; opacity: 0.5; transition: all 0.2s ease; background: none; border: none; padding: 0; line-height: 1; }
     .language-flag.active { opacity: 1; transform: scale(1.15); }
-    /* Mobile: use hamburger; hide individual header icons/flags only */
-    @media (max-width: 1023px) {
-      .header-actions .icon-btn:not(#menuBtn), .header-actions .language-flags { display: none; }
-    }
+    /* Always use hamburger; hide individual icons/flags on main header */
+    .header-actions .icon-btn:not(#menuBtn), .header-actions .language-flags { display: none; }
     
     .progress-bar { width: 100%; height: 5px; background-color: var(--border-color); border-radius: 5px; overflow: hidden; }
     .progress-bar-fill { height: 100%; width: 0%; background-color: var(--success-color); transition: width 0.3s ease-in-out; border-radius: 5px; }
@@ -136,11 +142,16 @@
     .footer { grid-area: footer; display: flex; flex-direction: column; gap: 0.35rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color); font-size: 0.85em; }
     .footer-meta { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
     #statusInfo { display: none; }
-    .bottom-status { display: flex; align-items: center; justify-content: space-between; color: #666; }
-    .bottom-left { display: flex; align-items: center; gap: 0.75rem; }
+    .bottom-status { display: flex; align-items: center; justify-content: space-between; color: #666; overflow: hidden; }
+    .bottom-left { display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0; }
     .bottom-status .sep { opacity: 0.4; }
     .bottom-status .off { opacity: 0.3; filter: grayscale(1); }
     .bottom-status span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #bottomVoice, #bottomMode { min-width: 0; }
+    /* Allow mode to wrap on small screens to avoid horizontal scroll */
+    #bottomMode { flex: 1; white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.15; }
+    /* Slightly smaller font for wrapped mode names on narrow screens */
+    @media (max-width: 480px) { #bottomMode { font-size: 0.9em; } }
     .bottom-version { display: none; color: #666; }
     @media (min-width: 1024px) { .bottom-version { display: inline; } }
     /* no spacer row; display grows naturally */
@@ -1800,6 +1811,15 @@
         if (verBottom) verBottom.textContent = APP_VERSION;
 
         // Inline handlers are used for control buttons and language flags
+
+        // Register Service Worker for PWA (https/localhost only)
+        try {
+          const isLocal = ['localhost','127.0.0.1'].includes(location.hostname);
+          const isSecure = location.protocol === 'https:' || isLocal;
+          if ('serviceWorker' in navigator && isSecure) {
+            navigator.serviceWorker.register('./sw.js');
+          }
+        } catch (_) {}
     });
   </script>
 </body>

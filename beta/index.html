@@ -691,12 +691,7 @@
       updateVoiceIndicator();
     }
 
-    // --- START: MODIFIED FUNCTION FOR DEBUGGING ---
     async function handleFileLoad(files) {
-        console.log('--- handleFileLoad CALLED ---');
-        console.log('Number of files received:', files.length);
-        console.log('Files object:', files); // This will show us the array of file objects
-
         let totalWords = 0;
 
         const readFile = (file) => new Promise((resolve, reject) => {
@@ -709,22 +704,17 @@
         for (const file of files) {
             try {
                 const content = await readFile(file);
-                console.log(`Successfully read content from ${file.name}. Content length: ${content.length}`);
                 const fileWords = content.split("\n").filter(w => w.trim());
                 if (fileWords.length > 0) {
                   wordLists[file.name] = { words: fileWords, enabled: true };
                   totalWords += fileWords.length;
                 }
             } catch (err) {
-                console.error(`Failed to process file ${file.name}:`, err);
                 showToast(`Error: Could not load ${file.name}.`);
             }
         }
 
-        console.log('File processing loop finished. Total words found:', totalWords);
-
         if (totalWords > 0) {
-            console.log('Updating UI with new words.');
             generateWordListsUI();
             rebuildActiveWordsList();
             welcomeModal.classList.remove('visible');
@@ -738,11 +728,8 @@
                 toastMessage = i18n[curLang].toast_multi_file.replace('{wordCount}', totalWords).replace('{fileCount}', fileCount);
             }
             showToast(toastMessage);
-        } else {
-            console.log('No words were loaded, UI will not be updated.');
         }
     }
-    // --- END: MODIFIED FUNCTION FOR DEBUGGING ---
     
     function shuffleArray(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } }
 
@@ -1196,17 +1183,11 @@
     const fileInput = document.createElement('input');
     fileInput.type = 'file'; fileInput.accept = '.txt'; fileInput.multiple = true;
     
-    // --- START: MODIFIED EVENT LISTENER FOR DEBUGGING ---
     fileInput.addEventListener('change', e => {
-      console.log('--- HIDDEN <input> "change" EVENT FIRED ---');
       if (e.target.files && e.target.files.length > 0) {
-        console.log('Files detected in event. Calling handleFileLoad.');
         handleFileLoad(Array.from(e.target.files));
-      } else {
-        console.warn('Change event fired, but no files were found in e.target.files.');
       }
     });
-    // --- END: MODIFIED EVENT LISTENER FOR DEBUGGING ---
 
     if (!isIOS) {
       document.getElementById('welcomeBrowseBtn').addEventListener('click', () => fileInput.click());

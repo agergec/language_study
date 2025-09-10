@@ -207,8 +207,8 @@
           <button id="helpBtn" class="icon-btn" title="Help" data-i18n-title="title_help">?</button>
           <button id="settingsBtn" class="icon-btn" title="Settings" data-i18n-title="title_settings">⚙️</button>
           <div class="language-flags">
-            <div class="language-flag active" id="langEn" onclick="setLanguage('en')">🇺🇸</div>
-            <div class="language-flag" id="langFr" onclick="setLanguage('fr')">🇫🇷</div>
+            <div class="language-flag active" id="langEn">🇺🇸</div>
+            <div class="language-flag" id="langFr">🇫🇷</div>
           </div>
         </div>
       </div>
@@ -236,10 +236,10 @@
     </main>
 
     <aside class="controls-vertical">
-      <button class="btn btn-primary" id="nextBtn" onclick="nextWord()" disabled data-i18n="btn_next">Next (Space)</button>
-      <button class="btn btn-secondary" id="repeatBtn" onclick="repeatWord()" disabled data-i18n="btn_repeat">Repeat (R)</button>
-      <button class="btn btn-success" id="showBtn" onclick="showCurrentWord()" disabled data-i18n="btn_show">Show (S)</button>
-      <button class="btn btn-warning" id="voiceBtn" onclick="toggleVoice()" disabled data-i18n="btn_toggleVoice">Voice (V)</button>
+      <button class="btn btn-primary" id="nextBtn" disabled data-i18n="btn_next">Next (Space)</button>
+      <button class="btn btn-secondary" id="repeatBtn" disabled data-i18n="btn_repeat">Repeat (R)</button>
+      <button class="btn btn-success" id="showBtn" disabled data-i18n="btn_show">Show (S)</button>
+      <button class="btn btn-warning" id="voiceBtn" disabled data-i18n="btn_toggleVoice">Voice (V)</button>
       <button class="btn btn-info" id="viewListBtn" disabled data-i18n="btn_view_list">View List</button>
       <button class="btn btn-info" id="historyBtn" disabled data-i18n="btn_history">History</button>
       <div id="privativeControls" style="display:none; gap:0.5rem; flex-wrap:wrap;">
@@ -545,6 +545,9 @@
     const allModals = document.querySelectorAll('.modal');
     const progressBarFill = document.getElementById('progressBarFill');
     const nextBtn = document.getElementById('nextBtn');
+    const repeatBtn = document.getElementById('repeatBtn');
+    const showBtn = document.getElementById('showBtn');
+    const voiceBtn = document.getElementById('voiceBtn');
     const welcomeModal = document.getElementById('welcomeModal');
     const settingsModal = document.getElementById('settingsModal');
     const helpModal = document.getElementById('helpModal');
@@ -1117,6 +1120,17 @@
       if (isSafari) primeVoices();
       populateVoiceList(); 
     });
+    // Language flags
+    const langEnEl = document.getElementById('langEn');
+    const langFrEl = document.getElementById('langFr');
+    if (langEnEl) langEnEl.addEventListener('click', () => setLanguage('en'));
+    if (langFrEl) langFrEl.addEventListener('click', () => setLanguage('fr'));
+
+    // Primary controls
+    if (nextBtn) nextBtn.addEventListener('click', () => { if (!nextBtn.disabled) nextWord(); });
+    if (repeatBtn) repeatBtn.addEventListener('click', () => { if (!repeatBtn.disabled) repeatWord(); });
+    if (showBtn) showBtn.addEventListener('click', () => { if (!showBtn.disabled) showCurrentWord(); });
+    if (voiceBtn) voiceBtn.addEventListener('click', () => { if (!voiceBtn.disabled) toggleVoice(); });
     document.getElementById('helpBtn').addEventListener('click', () => helpModal.classList.add('visible'));
     
     historyBtn.addEventListener('click', () => {

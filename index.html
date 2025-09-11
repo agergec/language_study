@@ -614,7 +614,8 @@
         toast_single_file: "✅ {count} words loaded – ready to study!",
         toast_multi_file: "✅ {wordCount} words from {fileCount} files loaded – ready to study!",
         confirm_shuffle: "Changing shuffle mode will reset your progress. Are you sure?",
-        confirm_word_list: "Changing active word lists will reset your progress. Are you sure?"
+        confirm_word_list: "Changing active word lists will reset your progress. Are you sure?",
+        confirm_reset: "This will clear local & session storage, API keys, cached files, and reload the app. Continue?"
       },
       fr: {
         page_title: "🇫🇷 Étude d'écoute en français",
@@ -690,7 +691,8 @@
         toast_single_file: "✅ {count} mots chargés – prêt à étudier !",
         toast_multi_file: "✅ {wordCount} mots de {fileCount} fichiers chargés – prêt à étudier !",
         confirm_shuffle: "Changer le mode de mélange réinitialisera votre progression. C'est certain ?",
-        confirm_word_list: "Changer les listes de mots actives réinitialisera votre progression. C'est certain ?"
+        confirm_word_list: "Changer les listes de mots actives réinitialisera votre progression. C'est certain ?",
+        confirm_reset: "Ceci va effacer le stockage local et de session, les clés API, les fichiers en cache et recharger l'application. Continuer ?"
       }
     };
 
@@ -707,7 +709,7 @@
     let shuffleEnabled = false;
     let originalWordOrder = [];
     let isSessionComplete = false;
-    const APP_VERSION = 'v1.5.0';
+    const APP_VERSION = 'v1.5.1';
     // Articles quiz state
     let prefixWords = [];
     let prefixWordsIndef = [];
@@ -2004,21 +2006,26 @@
           if (standalone) { document.documentElement.classList.add('is-standalone'); document.body.classList.add('is-standalone'); }
         } catch (_) {}
 
-        // Settings: reset app button
+        // Settings: reset app button (with confirmation)
         try {
           const resetBtn = document.getElementById('resetAppBtn');
           if (resetBtn) resetBtn.addEventListener('click', async () => {
-            try {
-              if ('serviceWorker' in navigator) {
-                const regs = await navigator.serviceWorker.getRegistrations();
-                await Promise.all(regs.map(r => r.unregister()));
-                const keys = await caches.keys();
-                await Promise.all(keys.map(k => caches.delete(k)));
-              }
-              localStorage.clear();
-              sessionStorage.clear();
-            } catch (_) {}
-            location.reload();
+            confirmationCallback = async () => {
+              try {
+                if ('serviceWorker' in navigator) {
+                  const regs = await navigator.serviceWorker.getRegistrations();
+                  await Promise.all(regs.map(r => r.unregister()));
+                  const keys = await caches.keys();
+                  await Promise.all(keys.map(k => caches.delete(k)));
+                }
+                localStorage.clear();
+                sessionStorage.clear();
+              } catch (_) {}
+              location.reload();
+            };
+            const ctext = document.getElementById('confirmationDialogText');
+            if (ctext) ctext.textContent = i18n[curLang].confirm_reset || 'This will reset the app. Continue?';
+            confirmationDialog.classList.add('visible');
           });
         } catch (_) {}
     });

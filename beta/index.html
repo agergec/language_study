@@ -168,6 +168,11 @@
     .mode-quick-item:hover { background: var(--light-gray); }
     .mode-quick-item.disabled { opacity: 0.45; pointer-events: none; }
     .mode-quick-check { margin-left: auto; opacity: 0.7; }
+    /* Mini confirm near status items */
+    .mini-confirm { position: fixed; z-index: 1900; background: #fff; color: var(--text-color); border: 1px solid var(--border-color); box-shadow: 0 8px 24px rgba(0,0,0,0.12); border-radius: 12px; padding: 8px 10px; display: flex; align-items: center; gap: 10px; max-width: 80vw; }
+    .mini-confirm .mini-actions { margin-left: auto; display: flex; gap: 8px; }
+    .mini-btn { background: #f1f1f1; border: 1px solid #ddd; color: #333; padding: 6px 10px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; }
+    .mini-btn.primary { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
 
     /* --- Modals --- */
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(40, 40, 40, 0.55); align-items: center; justify-content: center; backdrop-filter: blur(8px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
@@ -1810,6 +1815,27 @@
             menuEl.appendChild(item);
           });
         }
+        // Action: Add word list
+        const addItem = document.createElement('div');
+        addItem.className = 'mode-quick-item';
+        addItem.style.fontWeight = '700';
+        addItem.textContent = 'Add Word List…';
+        addItem.addEventListener('click', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          // Prefer global hidden input; fallback to menu input; else create temporary
+          let picker = null;
+          try { picker = (typeof fileInput !== 'undefined') ? fileInput : null; } catch (_) { picker = null; }
+          if (!picker) picker = document.getElementById('menuFileInput');
+          if (picker && typeof picker.click === 'function') { picker.click(); }
+          else {
+            const tmp = document.createElement('input'); tmp.type='file'; tmp.accept='.txt'; tmp.multiple=true;
+            tmp.style.position='fixed'; tmp.style.left='-9999px'; document.body.appendChild(tmp);
+            tmp.addEventListener('change', () => { const files = Array.from(tmp.files||[]).filter(f=>f.name.endsWith('.txt')); if (files.length>0) handleFileLoad(files); document.body.removeChild(tmp); });
+            tmp.click();
+          }
+          closeMenu();
+        });
+        menuEl.appendChild(addItem);
         document.body.appendChild(menuEl);
       }
 
@@ -1871,9 +1897,55 @@
       if (!shuf || !st) return;
       shuf.style.cursor = 'pointer';
       shuf.title = 'Toggle Shuffle';
-      const trigger = (e) => { e && e.preventDefault(); e && e.stopPropagation(); st.dispatchEvent(new Event('change', { bubbles: true })); };
-      shuf.addEventListener('click', trigger);
-      shuf.addEventListener('touchend', (e) => { trigger(e); }, { passive: false });
+
+      function applyShuffle(enabled) {
+        shuffleEnabled = enabled;
+        if (st) st.checked = shuffleEnabled;
+        if (shuffleEnabled) {
+          shuffleArray(words);
+          if (prefixWords.length > 0) shuffleArray(prefixWords);
+        } else {
+          words = [...originalWordOrder];
+          if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
+        }
+        updateShuffleIndicator();
+        initializeStudy();
+      }
+
+      let miniEl = null;
+      function closeMini(){
+        if (!miniEl) return;
+        document.removeEventListener('pointerdown', onDoc, true);
+        window.removeEventListener('resize', closeMini);
+        window.removeEventListener('scroll', closeMini, true);
+        miniEl.remove(); miniEl=null;
+      }
+      function onDoc(e){ if (miniEl && !miniEl.contains(e.target) && !shuf.contains(e.target)) closeMini(); }
+      function showMiniConfirm(){
+        closeMini();
+        miniEl = document.createElement('div');
+        miniEl.className = 'mini-confirm';
+        miniEl.textContent = (i18n[curLang] && i18n[curLang].confirm_shuffle) || 'Change shuffle mode?';
+        const actions = document.createElement('div'); actions.className='mini-actions';
+        const yes = document.createElement('button'); yes.className='mini-btn primary'; yes.textContent = (i18n[curLang] && i18n[curLang].confirm_yes_continue) || 'Yes';
+        const no = document.createElement('button'); no.className='mini-btn'; no.textContent = (i18n[curLang] && i18n[curLang].confirm_cancel) || 'Cancel';
+        actions.appendChild(yes); actions.appendChild(no); miniEl.appendChild(actions);
+        document.body.appendChild(miniEl);
+        // position near shuffle icon
+        const r = shuf.getBoundingClientRect(); const vw=window.innerWidth; const vh=window.innerHeight;
+        miniEl.style.visibility='hidden'; miniEl.style.left='0px'; miniEl.style.top='0px'; const mh=miniEl.offsetHeight; const mw=miniEl.offsetWidth;
+        let left = Math.min(Math.max(r.left, 8), vw - mw - 8);
+        let top; const spaceBelow = vh - r.bottom; const spaceAbove = r.top;
+        if (spaceBelow >= mh + 8) top = r.bottom + 6; else if (spaceAbove >= mh + 8) top = r.top - mh - 6; else top = Math.max(8, Math.min(vh - mh - 8, r.bottom + 6));
+        miniEl.style.left = `${left}px`; miniEl.style.top = `${top}px`; miniEl.style.visibility='visible';
+        setTimeout(()=>{ document.addEventListener('pointerdown', onDoc, true); window.addEventListener('resize', closeMini); window.addEventListener('scroll', closeMini, true); },0);
+        yes.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); applyShuffle(!shuffleEnabled); closeMini(); });
+        no.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); closeMini(); });
+      }
+
+      const onTap = (e) => { e && e.preventDefault(); e && e.stopPropagation(); showMiniConfirm(); };
+      shuf.addEventListener('click', onTap);
+      shuf.addEventListener('touchend', onTap, { passive: false });
     })();
     
     // --- Voice Debug Helper (feature-flagged) ---

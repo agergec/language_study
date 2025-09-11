@@ -288,12 +288,15 @@
     .ios-switch:checked::before { transform: translateX(20px); }
     /* Hide legacy holders when grouped mockup is used */
     #legacyMenuContent { display: none; }
+<<<<<<< HEAD
     /* Subpanels (push navigation) */
     #menuModal .subpanel { position: fixed; inset: 0; background: var(--background-color); transform: translateX(100%); transition: transform 220ms cubic-bezier(.2,.8,.2,1); }
     #menuModal .subpanel[aria-hidden="false"] { transform: translateX(0); }
     #menuModal .subpanel .panel-body { background: #f2f2f7; }
     .panel-back { background: none; border: 0; font-size: 1rem; color: var(--primary-color); padding: 8px; }
     .settings-check { color: var(--primary-color); font-weight: 800; margin-left: auto; }
+=======
+>>>>>>> origin/main
   </style>
 </head>
 <body>
@@ -470,7 +473,11 @@
             <div class="settings-section">
               <div class="settings-section-title">GENERAL</div>
               <div class="settings-card">
+<<<<<<< HEAD
                 <div class="settings-item" id="rowLanguage" role="button" tabindex="0">
+=======
+                <div class="settings-item">
+>>>>>>> origin/main
                   <div class="settings-label">Language</div>
                   <div class="settings-value" id="settingsLangValue">English</div>
                   <div class="settings-chevron">›</div>
@@ -485,7 +492,11 @@
                   <input type="checkbox" id="shuffleToggle" class="ios-switch" />
                 </div>
                 <div class="settings-item" style="position:relative;">
+<<<<<<< HEAD
                   <div class="settings-label">Study Mode</div>
+=======
+                  <div class="settings-label" data-i18n="label_studyMode">Study Mode</div>
+>>>>>>> origin/main
                   <div class="settings-value" id="settingsModeValue">Listen then repeat</div>
                   <div class="settings-chevron">›</div>
                   <select id="studyModeSelect" class="overlay-select">
@@ -516,11 +527,19 @@
             <div class="settings-section">
               <div class="settings-section-title">INTEGRATIONS</div>
               <div class="settings-card">
+<<<<<<< HEAD
                 <div class="settings-item" id="rowEleven" role="button" tabindex="0">
                   <div class="settings-label">ElevenLabs</div>
                   <div class="settings-chevron">›</div>
                 </div>
                 <div class="settings-item" id="rowOpenAI" role="button" tabindex="0">
+=======
+                <div class="settings-item">
+                  <div class="settings-label">ElevenLabs</div>
+                  <div class="settings-chevron">›</div>
+                </div>
+                <div class="settings-item">
+>>>>>>> origin/main
                   <div class="settings-label">OpenAI</div>
                   <div class="settings-chevron">›</div>
                 </div>
@@ -530,7 +549,11 @@
             <div class="settings-section">
               <div class="settings-section-title">DATA & SYSTEM</div>
               <div class="settings-card">
+<<<<<<< HEAD
                 <div class="settings-item" id="rowFiles" role="button" tabindex="0">
+=======
+                <div class="settings-item">
+>>>>>>> origin/main
                   <div class="settings-label">Active Word Lists</div>
                   <div class="settings-value" id="settingsActiveListsCount">0</div>
                   <div class="settings-chevron">›</div>
@@ -545,6 +568,7 @@
               <div id="menuVersion" class="version-inline" style="display:inline-block; padding:0; margin:0;"></div>
             </div>
 
+<<<<<<< HEAD
             <!-- Subpanel: Language -->
             <section id="langPanel" class="panel subpanel" aria-hidden="true" aria-labelledby="langPanelTitle">
               <div class="panel-header">
@@ -643,6 +667,26 @@
                 </div>
               </div>
             </section>
+=======
+            <!-- Legacy elements kept hidden for optional listeners -->
+            <div id="legacyMenuContent" hidden>
+              <div id="menuWordListsSection"><div id="menuWordListsOptions"></div></div>
+              <input type="file" id="menuFileInput" accept=".txt" multiple />
+              <input id="elevenKeyInput" type="password"/>
+              <button id="elevenSaveBtn" type="button"></button>
+              <input type="file" id="elevenKeyFile" accept=".key,.txt"/>
+              <button id="elevenLoadFileBtn" type="button"></button>
+              <button id="elevenClearBtn" type="button"></button>
+              <div id="elevenKeyMasked"></div>
+              <input id="openaiKeyInput" type="password"/>
+              <button id="openaiSaveBtn" type="button"></button>
+              <input type="file" id="openaiKeyFile" accept=".key,.txt"/>
+              <button id="openaiLoadFileBtn" type="button"></button>
+              <button id="openaiClearBtn" type="button"></button>
+              <div id="openaiKeyMasked"></div>
+              <button id="menuHelpBtn" type="button"></button>
+            </div>
+>>>>>>> origin/main
           </div>
   </div>
 

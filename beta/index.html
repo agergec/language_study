@@ -1108,7 +1108,7 @@
       renderVoiceDebug();
     }
 
-    async function handleFileLoad(files) {
+    async function handleFileLoad(files, opts = {}) {
         let totalWords = 0;
 
         const readFile = (file) => new Promise((resolve, reject) => {
@@ -1144,7 +1144,13 @@
             } else {
                 toastMessage = i18n[curLang].toast_multi_file.replace('{wordCount}', totalWords).replace('{fileCount}', fileCount);
             }
-            showToast(toastMessage);
+            // Suppress success toast within Files panel of the menu
+            const filesPanel = document.getElementById('filesPanel');
+            const menuModalEl = document.getElementById('menuModal');
+            const inFilesPanel = !!(menuModalEl && menuModalEl.classList.contains('visible') && filesPanel && filesPanel.getAttribute('aria-hidden') === 'false');
+            if (!opts.suppressToast && !inFilesPanel) {
+              showToast(toastMessage);
+            }
         }
     }
     
@@ -1631,63 +1637,72 @@
         const filenames = Object.keys(wordLists);
         containers.forEach(({container, section, style}) => {
           if (!container || !section) return;
-          if (filenames.length > 1) {
+          if (filenames.length === 0) { section.style.display = 'none'; return; }
+          if (style === 'ios') {
+            // Always show file list with counts; include toggles only when multiple files
+            section.style.display = 'block';
+            const showToggles = filenames.length > 1;
+            filenames.forEach(name => {
+              const row = document.createElement('div');
+              row.className = 'settings-item';
+              const label = document.createElement('div');
+              label.className = 'settings-label';
+              label.textContent = name;
+              const summary = document.createElement('div');
+              summary.className = 'subtle';
+              summary.style.marginRight = '12px';
+              summary.textContent = `${wordLists[name].words.length} ${i18n[curLang].words_lower}`;
+              row.appendChild(label);
+              row.appendChild(summary);
+              if (showToggles) {
+                const toggle = document.createElement('input');
+                toggle.type = 'checkbox';
+                toggle.className = 'ios-switch';
+                toggle.checked = !!wordLists[name].enabled;
+                toggle.dataset.filename = name;
+                toggle.addEventListener('change', () => {
+                  confirmationCallback = () => {
+                    wordLists[name].enabled = toggle.checked;
+                    rebuildActiveWordsList();
+                  };
+                  const ctext = document.getElementById('confirmationDialogText');
+                  if (ctext) ctext.textContent = i18n[curLang].confirm_word_list;
+                  confirmationDialog.classList.add('visible');
+                });
+                row.appendChild(toggle);
+              }
+              container.appendChild(row);
+            });
+          } else {
+            // Legacy settings: show toggles only when multiple files are present
+            if (filenames.length > 1) {
               section.style.display = 'block';
               filenames.forEach(name => {
-                  if (style === 'ios') {
-                    const row = document.createElement('div');
-                    row.className = 'settings-item';
-                    const label = document.createElement('div');
-                    label.className = 'settings-label';
-                    label.textContent = name;
-                    const summary = document.createElement('div');
-                    summary.className = 'subtle';
-                    summary.style.marginRight = '12px';
-                    summary.textContent = `${wordLists[name].words.length} ${i18n[curLang].words_lower}`;
-                    const toggle = document.createElement('input');
-                    toggle.type = 'checkbox';
-                    toggle.className = 'ios-switch';
-                    toggle.checked = !!wordLists[name].enabled;
-                    toggle.dataset.filename = name;
-                    toggle.addEventListener('change', () => {
-                      confirmationCallback = () => {
-                        wordLists[name].enabled = toggle.checked;
-                        rebuildActiveWordsList();
-                      };
-                      const ctext = document.getElementById('confirmationDialogText');
-                      if (ctext) ctext.textContent = i18n[curLang].confirm_word_list;
-                      confirmationDialog.classList.add('visible');
-                    });
-                    row.appendChild(label);
-                    row.appendChild(summary);
-                    row.appendChild(toggle);
-                    container.appendChild(row);
-                  } else {
-                    const item = document.createElement('div');
-                    item.className = 'mode-option';
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.checked = wordLists[name].enabled;
-                    checkbox.id = `file--${name}`;
-                    checkbox.dataset.filename = name;
-                    checkbox.addEventListener('change', () => {
-                        confirmationCallback = () => {
-                            wordLists[name].enabled = checkbox.checked;
-                            rebuildActiveWordsList();
-                        };
-                        document.getElementById('confirmationDialogText').textContent = i18n[curLang].confirm_word_list;
-                        confirmationDialog.classList.add('visible');
-                    });
-                    const label = document.createElement('label');
-                    label.htmlFor = `file--${name}`;
-                    label.textContent = `${name} (${wordLists[name].words.length} ${i18n[curLang].words_lower})`;
-                    item.appendChild(checkbox);
-                    item.appendChild(label);
-                    container.appendChild(item);
-                  }
+                const item = document.createElement('div');
+                item.className = 'mode-option';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = wordLists[name].enabled;
+                checkbox.id = `file--${name}`;
+                checkbox.dataset.filename = name;
+                checkbox.addEventListener('change', () => {
+                  confirmationCallback = () => {
+                    wordLists[name].enabled = checkbox.checked;
+                    rebuildActiveWordsList();
+                  };
+                  document.getElementById('confirmationDialogText').textContent = i18n[curLang].confirm_word_list;
+                  confirmationDialog.classList.add('visible');
+                });
+                const label = document.createElement('label');
+                label.htmlFor = `file--${name}`;
+                label.textContent = `${name} (${wordLists[name].words.length} ${i18n[curLang].words_lower})`;
+                item.appendChild(checkbox);
+                item.appendChild(label);
+                container.appendChild(item);
               });
-          } else {
+            } else {
               section.style.display = 'none';
+            }
           }
         });
     }
@@ -2010,7 +2025,7 @@
       const menuFileInput = document.getElementById('menuFileInput');
       if (menuFileInput) menuFileInput.addEventListener('change', (e) => {
         const files = Array.from(e.target.files || []).filter(f => f.name.endsWith('.txt'));
-        if (files.length > 0) handleFileLoad(files);
+        if (files.length > 0) handleFileLoad(files, { suppressToast: true });
         e.target.value = '';
       });
     })();

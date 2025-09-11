@@ -642,7 +642,7 @@
                 <div class="settings-card" style="margin-top:12px;">
                   <div class="settings-item" style="justify-content:center; gap: 12px;">
                     <button class="panel-link" id="elevenLoadFileBtn" type="button">Choose Key File…</button>
-                    <input type="file" id="elevenKeyFile" accept=".key,.txt" style="display:none;"/>
+                    <input type="file" id="elevenKeyFile" accept=".key" style="display:none;"/>
                   </div>
                 </div>
                 
@@ -674,7 +674,7 @@
                 <div class="settings-card" style="margin-top:12px;">
                   <div class="settings-item" style="justify-content:center; gap: 12px;">
                     <button class="panel-link" id="openaiLoadFileBtn" type="button">Choose Key File…</button>
-                    <input type="file" id="openaiKeyFile" accept=".key,.txt" style="display:none;"/>
+                    <input type="file" id="openaiKeyFile" accept=".key" style="display:none;"/>
                   </div>
                 </div>
                 
@@ -2564,7 +2564,7 @@
       if (loadBtn && keyFile) {
         loadBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); keyFile.click(); });
         keyFile.addEventListener('change', () => {
-          const f = keyFile.files && keyFile.files[0]; if (!f) return; const r = new FileReader();
+          const f = keyFile.files && keyFile.files[0]; if (!f) return; if (!/\.key$/i.test(f.name)) { keyFile.value=''; return; } const r = new FileReader();
           r.onload = () => { const v=String(r.result||'').trim(); if (!v) { keyFile.value=''; return; }
             if (isValidElevenKey(v)) { setElevenKey(v); }
             keyFile.value=''; updateIntegrationIndicators(); };
@@ -2593,7 +2593,7 @@
       if (loadBtn && keyFile) {
         loadBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); keyFile.click(); });
         keyFile.addEventListener('change', () => {
-          const f = keyFile.files && keyFile.files[0]; if (!f) return; const r = new FileReader();
+          const f = keyFile.files && keyFile.files[0]; if (!f) return; if (!/\.key$/i.test(f.name)) { keyFile.value=''; return; } const r = new FileReader();
           r.onload = () => { const v=String(r.result||'').trim(); if (!v) { keyFile.value=''; return; }
             if (isValidOpenAIKey(v)) { setOpenAIKey(v); }
             keyFile.value=''; updateIntegrationIndicators(); };

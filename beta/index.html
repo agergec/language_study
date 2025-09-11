@@ -997,9 +997,10 @@
       if (fr.length === 0) return null;
       // Safari preference: Thomas if available
       if (isSafari) {
-        const thomas = fr.filter(v => (v.name || '').toLowerCase().includes('thomas'))
-                         .sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
-        if (thomas.length) return thomas[0];
+        // On Apple, prefer Thomas, then Audrey, then Amélie
+        const pickBy = (name) => fr.filter(v => (v.name || '').toLowerCase().includes(name)).sort((a,b)=>scoreFrenchVoice(b)-scoreFrenchVoice(a));
+        const seq = ['thomas','audrey','amelie','amélie'];
+        for (const key of seq) { const hits = pickBy(key); if (hits.length) return hits[0]; }
       }
       return fr.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a))[0] || null;
     }
@@ -1014,30 +1015,30 @@
       defaultOption.value = "system";
       defaultOption.textContent = i18n[curLang].opt_system_french_voice;
       vs.appendChild(defaultOption);
-      const allFrench = availableVoices
-        .filter(v => (v.lang || '').toLowerCase().startsWith('fr'));
-      const qualityKeywords = ['siri', 'enhanced', 'premium', 'neural', 'hq', 'audrey', 'amelie', 'thomas'];
+      const allFrench = availableVoices.filter(v => (v.lang || '').toLowerCase().startsWith('fr'));
+      const qualityKeywords = ['siri', 'enhanced', 'premium', 'neural', 'hq', 'audrey', 'amelie', 'amélie', 'thomas'];
 
       let toShow = [];
-      if (isFirefox) {
+      if (isSafari) {
+        // Apple platforms: show only specific system voices (Audrey, Amélie, Thomas)
+        const isAllowedApple = (v) => {
+          const n = (v.name || '').toLowerCase();
+          return n.includes('thomas') || n.includes('audrey') || n.includes('amelie') || n.includes('amélie');
+        };
+        toShow = allFrench.filter(isAllowedApple).sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+      } else if (isFirefox) {
         // Firefox: prefer high-quality filtered list; fallback to all FR
         const high = allFrench.filter(v => qualityKeywords.some(k => (v.name || '').toLowerCase().includes(k)));
         toShow = (high.length ? high : allFrench).sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
       } else if (isChromium) {
-        // Chromium: previous behavior was better—if we can't positively identify HQ voices,
-        // don't list potentially poor ones. Only list if we find HQ matches; otherwise keep only System.
+        // Chromium: only show clearly high-quality voices to avoid poor defaults
         const high = allFrench.filter(v => qualityKeywords.some(k => (v.name || '').toLowerCase().includes(k)));
         toShow = high.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
-        // Best-effort: if user previously selected a specific FR voice and it exists, include it
         if (toShow.length === 0 && currentVoice && currentVoice !== 'system') {
           const saved = allFrench.find(v => v.name === currentVoice);
           if (saved) toShow = [saved];
         }
-      } else if (isSafari) {
-        // Safari (incl. iOS): list all FR voices, sorted by quality (Siri/Enhanced first)
-        toShow = allFrench.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
       } else {
-        // Default: show all FR voices
         toShow = allFrench.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
       }
 
@@ -1076,11 +1077,15 @@
       if (existingIndex >= 0) {
         vs.selectedIndex = existingIndex;
       } else if (isSafari) {
-        // Make Thomas default for Safari if present
-        const thomasIndex = Array.from(vs.options).findIndex(o => (o.value || '').toLowerCase().includes('thomas'));
-        if (thomasIndex > 0) {
-          vs.selectedIndex = thomasIndex;
-          currentVoice = vs.options[thomasIndex].value;
+        // Prefer Thomas on Apple if present, else Audrey, else Amélie
+        const findPref = (name) => Array.from(vs.options).findIndex(o => (o.value || '').toLowerCase().includes(name));
+        const thomasIndex = findPref('thomas');
+        const audreyIndex = findPref('audrey');
+        const amelieIndex = findPref('amelie');
+        const prefIndex = [thomasIndex, audreyIndex, amelieIndex].find(i => i > 0);
+        if (typeof prefIndex === 'number') {
+          vs.selectedIndex = prefIndex;
+          currentVoice = vs.options[prefIndex].value;
         } else {
           vs.selectedIndex = 0;
           currentVoice = 'system';

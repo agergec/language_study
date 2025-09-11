@@ -252,7 +252,7 @@
     #menuModal .panel-body { padding: 1rem; height: calc(100% - 56px); overflow: auto; background: #f2f2f7; }
     #menuModal .modal-header { display:none; }
     #menuModal .modal-section { border: none; padding-bottom: 0; margin-bottom: 0.75rem; }
-    #menuModal .menu-list button { display: block; width: 100%; text-align: left; padding: 0.75rem 0; background: none; border: none; font-size: 1rem; font-weight: 700; color: var(--text-color); }
+    #menuModal .menu-list button { display: block; width: 100%; text-align: left; padding: 0.5rem 0; background: none; border: none; font-size: 1rem; font-weight: 700; color: var(--text-color); }
     #menuModal hr { border: 0; border-top: 1px solid var(--border-color); margin: 0.5rem 0; }
     #menuModal .menu-field { display: flex; flex-direction: column; gap: 0.35rem; padding: 0.5rem 0; }
     #menuModal .menu-field .label-row { display:flex; align-items:center; gap:.5rem; }
@@ -287,7 +287,7 @@
     /* iOS-style grouped Settings mockup */
     .settings-section-title { font-weight: 800; font-size: clamp(0.75rem, 1.6vw, 0.9rem); color: #8e8e93; letter-spacing: .04em; margin: 0.75rem 0 0.5rem; padding-left: .25rem; text-transform: uppercase; }
     .settings-card { background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 0 rgba(0,0,0,0.04); }
-    .settings-item { position: relative; display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #ececec; font-size: 1rem; }
+    .settings-item { position: relative; display: flex; align-items: center; gap: 12px; padding: 9px 16px; border-bottom: 1px solid #ececec; font-size: 1rem; }
     .settings-item:last-child { border-bottom: none; }
     .settings-label { flex: 1; color: #000; }
     .settings-value { color: #8e8e93; margin-left: auto; }
@@ -573,18 +573,22 @@
             </div>
 
             <div class="settings-section">
-              <div class="settings-section-title">DATA & SYSTEM</div>
-              <div class="settings-card">
-                <div class="settings-item" id="rowFiles" role="button" tabindex="0">
-                  <div class="settings-label">Active Word Lists</div>
-                  <div class="settings-value" id="settingsActiveListsCount">0</div>
-                  <div class="settings-chevron">›</div>
-                </div>
-                <div class="settings-item">
-                  <button id="menuResetAppBtn" class="settings-danger" style="background:none;border:0;font:inherit;padding:0;margin:0;">Reset App (Reload)</button>
-                </div>
+            <div class="settings-section-title">DATA & SYSTEM</div>
+            <div class="settings-card">
+              <div class="settings-item" id="rowFiles" role="button" tabindex="0">
+                <div class="settings-label">Active Word Lists</div>
+                <div class="settings-value" id="settingsActiveListsCount">0</div>
+                <div class="settings-chevron">›</div>
+              </div>
+              <div class="settings-item">
+                <button id="menuResetAppBtn" class="settings-danger" style="background:none;border:0;font:inherit;padding:0;margin:0;">Reset App (Reload)</button>
+              </div>
+              <div class="settings-item" id="menuHelpBtn" role="button" tabindex="0">
+                <div class="settings-label">Help & Guide</div>
+                <div class="settings-chevron">›</div>
               </div>
             </div>
+          </div>
 
             <div class="settings-footer">
               <div id="menuVersion" class="version-inline" style="display:inline-block; padding:0; margin:0;"></div>
@@ -704,6 +708,116 @@
                   </div>
                 </div>
                 <div class="settings-note">Tip: You can also drag & drop files anywhere on the page.</div>
+              </div>
+            </section>
+
+            <!-- Subpanel: Help & Guide -->
+            <section id="helpPanel" class="panel subpanel" aria-hidden="true" aria-labelledby="helpPanelTitle">
+              <div class="panel-header">
+                <button class="panel-back" data-back="helpPanel">‹ Back</button>
+                <h2 id="helpPanelTitle" style="margin:0">Help & Guide</h2>
+                <div style="width:44px"></div>
+              </div>
+              <div class="panel-body">
+                <div class="settings-section">
+                  <div class="settings-section-title">GETTING STARTED</div>
+                  <div class="settings-card">
+                    <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
+                      <div><b>Load words</b>: Add one or more <code>.txt</code> files. Each line is a word or phrase.</div>
+                      <div>Ways to add files: Welcome screen → “Add Word List…”, Menu → Data & System → Files → “Add Word List…”, or drag & drop anywhere.</div>
+                      <div>After loading: the app builds your word pool and enables study controls.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="settings-section">
+                  <div class="settings-section-title">STUDY MODES</div>
+                  <div class="settings-card">
+                    <div class="settings-item"><div class="settings-label"><b>Listen & Read</b></div><div class="settings-value">Shows text and speaks once.</div></div>
+                    <div class="settings-item"><div class="settings-label"><b>Read then Say</b></div><div class="settings-value">You read first. On Next, the app speaks once.</div></div>
+                    <div class="settings-item"><div class="settings-label"><b>Listen then Repeat</b></div><div class="settings-value">App speaks, you repeat. On Next, reveals and speaks again.</div></div>
+                    <div class="settings-item"><div class="settings-label"><b>Articles — le/la</b></div><div class="settings-value">Shows base (e.g., “… table”). Pick the correct definite article.</div></div>
+                    <div class="settings-item"><div class="settings-label"><b>Articles — un/une</b></div><div class="settings-value">Shows base (e.g., “… ami”). Pick the correct indefinite article.</div></div>
+                    <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
+                      <div><b>Switch mode</b>: Menu → General → Study Mode or tap the mode text in the footer.</div>
+                      <div><b>Availability</b>: Article modes become selectable when matching words exist.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="settings-section">
+                  <div class="settings-section-title">CONTROLS & SHORTCUTS</div>
+                  <div class="settings-card">
+                    <div class="settings-item"><div class="settings-label"><b>Next</b></div><div class="settings-value">Space</div></div>
+                    <div class="settings-item"><div class="settings-label"><b>Repeat</b></div><div class="settings-value">R</div></div>
+                    <div class="settings-item"><div class="settings-label"><b>Show</b></div><div class="settings-value">S</div></div>
+                    <div class="settings-item"><div class="settings-label"><b>Menu</b></div><div class="settings-value">Alt+M</div></div>
+                    <div class="settings-item"><div class="settings-label"><b>Close</b></div><div class="settings-value">Esc (closes any open modal)</div></div>
+                    <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
+                      <div><b>Answers panel</b>: On desktop, toggle with the chevron on the left panel.</div>
+                      <div><b>Progress</b>: The top bar shows progress by current mode.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="settings-section">
+                  <div class="settings-section-title">VOICES & AUDIO</div>
+                  <div class="settings-card">
+                    <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
+                      <div><b>Voice selection</b>: Menu → Voice Configuration → Voice. Tap “Test Voice” to preview.</div>
+                      <div><b>System voice</b>: Uses your browser/OS voices for French (fr‑FR).</div>
+                      <div><b>OpenAI / ElevenLabs</b>: Add an API key in Integrations to enable extra voices.</div>
+                      <div><b>Quick change</b>: Tap the voice text in the footer to pick a voice inline.</div>
+                      <div><b>Repeat speed‑up</b>: The app caches the most recent TTS clip temporarily to replay instantly on “Repeat”. Cache clears on mode/voice/list/shuffle changes and on app start.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="settings-section">
+                  <div class="settings-section-title">FILES & PERSISTENCE</div>
+                  <div class="settings-card">
+                    <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
+                      <div><b>Manage files</b>: Menu → Data & System → Files. See counts, enable/disable, delete (×), and add.</div>
+                      <div><b>Enable/disable</b>: Toggles take effect immediately and rebuild the session.</div>
+                      <div><b>Delete</b>: Use the × button to remove a file (also removed from local storage).</div>
+                      <div><b>Persistence</b>: On first load per session, you can opt to save lists to IndexedDB. If accepted, lists restore automatically on next visit.</div>
+                      <div><b>Reset app</b>: Settings → Reset clears local/session storage, IndexedDB word lists, and cached files.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="settings-section">
+                  <div class="settings-section-title">STATUS BAR QUICK ACTIONS</div>
+                  <div class="settings-card">
+                    <div class="settings-item"><div class="settings-label"><b>Mode</b></div><div class="settings-value">Tap the text to switch modes inline.</div></div>
+                    <div class="settings-item"><div class="settings-label"><b>Voice</b></div><div class="settings-value">Tap the text to pick a voice inline.</div></div>
+                    <div class="settings-item"><div class="settings-label"><b>Files</b></div><div class="settings-value">Tap the icon to see file list and add a new list.</div></div>
+                    <div class="settings-item"><div class="settings-label"><b>Shuffle</b></div><div class="settings-value">Tap to toggle. A compact confirmation appears near the icon.</div></div>
+                  </div>
+                </div>
+
+                <div class="settings-section">
+                  <div class="settings-section-title">INTEGRATIONS</div>
+                  <div class="settings-card">
+                    <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
+                      <div><b>OpenAI</b>: Add a <code>.key</code> file in Menu → Integrations → OpenAI. Remove with the trash icon.</div>
+                      <div><b>ElevenLabs</b>: Add a <code>.key</code> file in Menu → Integrations → ElevenLabs. Remove with the trash icon.</div>
+                      <div><b>Notes</b>: Keys are stored locally on your device. Network is required for these voices; if unavailable, the app falls back to the system voice.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="settings-section">
+                  <div class="settings-section-title">TIPS & TROUBLESHOOTING</div>
+                  <div class="settings-card">
+                    <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
+                      <div>• If audio does not play, try interacting (tap/click) once to satisfy autoplay policies.</div>
+                      <div>• If voices are missing, open the Menu and revisit Voice to refresh the list.</div>
+                      <div>• If article modes are disabled, ensure your lists include words starting with the required prefixes (le/la or un/une).</div>
+                      <div>• On desktop, collapse/expand the Answers panel with the chevron. Use the History button to see all revealed items.</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </section>
           </div>
@@ -895,7 +1009,7 @@
     let shuffleEnabled = false;
     let originalWordOrder = [];
     let isSessionComplete = false;
-    const APP_VERSION = 'v1.6.3-beta';
+    const APP_VERSION = 'v1.6.3';
     // Articles quiz state
     let prefixWords = [];
     let prefixWordsIndef = [];
@@ -2362,7 +2476,19 @@
     if (nextBtn) nextBtn.addEventListener('click', () => { if (!nextBtn.disabled) nextWord(); });
     if (repeatBtn) repeatBtn.addEventListener('click', () => { if (!repeatBtn.disabled) repeatWord(); });
     if (showBtn) showBtn.addEventListener('click', () => { if (!showBtn.disabled) showCurrentWord(); });
-    document.getElementById('helpBtn').addEventListener('click', () => { helpModal.classList.add('visible'); const mc = helpModal.querySelector('.modal-content'); if (mc) mc.focus(); });
+    document.getElementById('helpBtn').addEventListener('click', () => {
+      const menuModalEl = document.getElementById('menuModal');
+      const menuBtnEl = document.getElementById('menuBtn');
+      if (menuModalEl) {
+        menuModalEl.classList.add('visible');
+        if (toastNotification) toastNotification.classList.remove('visible');
+        if (menuBtnEl) menuBtnEl.setAttribute('aria-expanded','true');
+        bodyScrollLock(true);
+        openMenuPanel();
+        openSubpanel('helpPanel');
+        const mc = menuModalEl.querySelector('.modal-content'); if (mc) mc.focus();
+      }
+    });
     // Hamburger menu
     const menuModal = document.getElementById('menuModal');
     const menuBtn = document.getElementById('menuBtn');
@@ -2419,7 +2545,11 @@
     // Files: Add Word List button triggers hidden input
     const btnAddWordList=document.getElementById('btnAddWordList'); const fileInputEl=document.getElementById('menuFileInput'); if(btnAddWordList && fileInputEl){ btnAddWordList.addEventListener('click',()=>fileInputEl.click()); }
     const menuHelpBtn = document.getElementById('menuHelpBtn');
-    if (menuHelpBtn) menuHelpBtn.addEventListener('click', () => { menuModal.classList.remove('visible'); helpModal.classList.add('visible'); const mc = helpModal.querySelector('.modal-content'); if (mc) mc.focus(); });
+    if (menuHelpBtn) {
+      const openHelpPanel = () => { openSubpanel('helpPanel'); };
+      menuHelpBtn.addEventListener('click', openHelpPanel);
+      menuHelpBtn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openHelpPanel(); } });
+    }
     const menuSettingsBtn = document.getElementById('menuSettingsBtn');
     if (menuSettingsBtn) menuSettingsBtn.addEventListener('click', () => { menuModal.classList.remove('visible'); settingsModal.classList.add('visible'); if (isSafari) primeVoices(); populateVoiceList(); const mc = settingsModal.querySelector('.modal-content'); if (mc) mc.focus(); });
     // Left-rail expanding panel behavior

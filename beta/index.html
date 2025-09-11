@@ -396,15 +396,21 @@
     <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
         <h2 data-i18n="welcome_title">Welcome to the French Study App!</h2>
         <p style="margin: 1rem 0;" data-i18n="welcome_instructions">To begin, please load one or more `.txt` files containing your words.</p>
-        <div id="welcomeUploadArea">
-            <h3 style="pointer-events: none;" data-i18n="welcome_drag_drop">Drag & Drop File(s) Here</h3>
-            <p style="pointer-events: none; margin: 0.5rem 0;" data-i18n="welcome_or">or</p>
-            <button class="btn btn-primary" id="welcomeBrowseBtn" data-i18n="welcome_browse">Browse Files</button>
-            <div id="iosFilePickerRow" style="display:none; margin-top: 0.75rem;">
-              <input type="file" id="iosFileInput" accept=".txt" multiple style="display:block; margin: 0 auto;" />
+        <div id="welcomeActions" class="welcome-actions">
+          <div class="settings-section">
+            <div class="settings-section-title">Files</div>
+            <div class="settings-card">
+              <div class="settings-item" style="justify-content:center;">
+                <button id="welcomeAddBtn" class="panel-link">Add Word List…</button>
+              </div>
             </div>
+            <div class="settings-note">Tip: You can also drag & drop files anywhere on the page.</div>
+          </div>
+          <div id="iosFilePickerRow" style="display:none; margin-top: 0.75rem;">
+            <input type="file" id="iosFileInput" accept=".txt" multiple />
+          </div>
         </div>
-            <div id="welcomeVersion" class="version-inline"></div>
+        <div id="welcomeVersion" class="version-inline"></div>
     </div>
   </div>
 
@@ -535,10 +541,12 @@
               <div class="settings-card">
                 <div class="settings-item" id="rowEleven" role="button" tabindex="0">
                   <div class="settings-label">ElevenLabs</div>
+                  <div class="key-dot" id="dotEleven"></div>
                   <div class="settings-chevron">›</div>
                 </div>
                 <div class="settings-item" id="rowOpenAI" role="button" tabindex="0">
                   <div class="settings-label">OpenAI</div>
+                  <div class="key-dot" id="dotOpenAI"></div>
                   <div class="settings-chevron">›</div>
                 </div>
               </div>
@@ -1964,12 +1972,13 @@
     });
 
     if (!isIOS) {
-      document.getElementById('welcomeBrowseBtn').addEventListener('click', () => fileInput.click());
-      document.getElementById('welcomeUploadArea').addEventListener('click', () => fileInput.click());
+      const addBtn = document.getElementById('welcomeAddBtn'); if (addBtn) addBtn.addEventListener('click', () => fileInput.click());
     } else {
       const iosPickerRow = document.getElementById('iosFilePickerRow');
       const iosFileInput = document.getElementById('iosFileInput');
-      if (iosPickerRow) iosPickerRow.style.display = 'block';
+      // Keep the native input hidden but clickable via our button; show row only if needed
+      const addBtn = document.getElementById('welcomeAddBtn');
+      if (addBtn && iosFileInput) addBtn.addEventListener('click', () => iosFileInput.click());
       if (iosFileInput) {
         iosFileInput.addEventListener('change', e => {
           if (e.target.files && e.target.files.length > 0) {
@@ -2101,6 +2110,18 @@
       populateVoiceList();
     }
     try { const savedEl = localStorage.getItem('eleven_api_key'); if (savedEl) { setElevenKey(savedEl); } } catch(_) {}
+    function updateIntegrationIndicators(){
+      const dotEleven = document.getElementById('dotEleven');
+      const dotOpenAI = document.getElementById('dotOpenAI');
+      if (dotEleven) {
+        const ok = typeof elevenKey === 'string' && elevenKey.startsWith('sk_');
+        dotEleven.classList.toggle('on', !!ok);
+      }
+      if (dotOpenAI) {
+        const ok2 = typeof openaiKey === 'string' && openaiKey.startsWith('sk-proj-');
+        dotOpenAI.classList.toggle('on', !!ok2);
+      }
+    }
     // Auto-save Eleven key on input (non-empty only)
     (function(){
       const inp = document.getElementById('elevenKeyInput');
@@ -2119,13 +2140,15 @@
       const loadBtn = document.getElementById('elevenLoadFileBtn'); const keyFile = document.getElementById('elevenKeyFile');
       if (loadBtn && keyFile) {
         loadBtn.addEventListener('click', () => keyFile.click());
-        keyFile.addEventListener('change', () => { const f = keyFile.files && keyFile.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const v=String(r.result||'').trim(); if (v) { setElevenKey(v); showToast('Key loaded from file'); } keyFile.value=''; }; r.readAsText(f); });
+        keyFile.addEventListener('change', () => { const f = keyFile.files && keyFile.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const v=String(r.result||'').trim(); if (v) { setElevenKey(v); showToast('Key loaded from file'); } keyFile.value=''; updateIntegrationIndicators(); }; r.readAsText(f); });
       }
     })();
     // OpenAI API key handlers
     function maskKey(k){ if(!k) return ''; return k.length>16 ? (k.slice(0,10)+'…'+k.slice(-6)) : k.replace(/.(?=.{4})/g,'•'); }
     function setOpenAIKey(k){ openaiKey = (k||'').trim(); try{ if(openaiKey) localStorage.setItem('openai_api_key', openaiKey); else localStorage.removeItem('openai_api_key'); }catch(_){}; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent = openaiKey? ('Key: '+maskKey(openaiKey)) : 'No key set'; populateVoiceList(); }
     try{ const saved=localStorage.getItem('openai_api_key'); if(saved){ openaiKey=saved; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent='Key: '+maskKey(openaiKey);} }catch(_){}
+    // Initialize integration indicators on load
+    updateIntegrationIndicators();
     // Auto-save OpenAI key on input (non-empty only)
     (function(){
       const inp = document.getElementById('openaiKeyInput');
@@ -2144,7 +2167,7 @@
       const loadBtn = document.getElementById('openaiLoadFileBtn'); const keyFile = document.getElementById('openaiKeyFile');
       if (loadBtn && keyFile) {
         loadBtn.addEventListener('click', () => keyFile.click());
-        keyFile.addEventListener('change', () => { const f = keyFile.files && keyFile.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const v=String(r.result||'').trim(); if (v) { setOpenAIKey(v); showToast('Key loaded from file'); } keyFile.value=''; }; r.readAsText(f); });
+        keyFile.addEventListener('change', () => { const f = keyFile.files && keyFile.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const v=String(r.result||'').trim(); if (v) { setOpenAIKey(v); showToast('Key loaded from file'); } keyFile.value=''; updateIntegrationIndicators(); }; r.readAsText(f); });
       }
     })();
     const studyModeSelect = document.getElementById('studyModeSelect');

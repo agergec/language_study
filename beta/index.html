@@ -1391,6 +1391,13 @@
 
     async function speakWithOpenAITTS(text, voice) {
       try {
+        // Play from short-term cache if available
+        const cached = getAudioCache('openai', voice, text);
+        if (cached) {
+          const a = new Audio(cached);
+          await a.play();
+          return new Promise(resolve => { a.onended = resolve; });
+        }
         if (openaiAudio) { try { openaiAudio.pause(); } catch(_){} }
         const resp = await fetch('https://api.openai.com/v1/audio/speech', {
           method: 'POST',
@@ -1415,6 +1422,13 @@
     // ElevenLabs TTS (non-streaming: Create Speech)
     async function speakWithElevenLabs(text, voiceId) {
       try {
+        // Play from short-term cache if available
+        const cached = getAudioCache('eleven', voiceId, text);
+        if (cached) {
+          const a = new Audio(cached);
+          await a.play();
+          return new Promise(resolve => { a.onended = resolve; });
+        }
         const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
         const resp = await fetch(url, {
           method: 'POST',
@@ -1426,7 +1440,7 @@
           body: JSON.stringify({
             text,
             model_id: 'eleven_multilingual_v2',
-            language: 'fr-FR',
+            language_code: 'fr',
             voice_settings: { stability: 0.5, similarity_boost: 0.7, style: 0.0, use_speaker_boost: true }
           })
         });

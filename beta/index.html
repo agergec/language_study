@@ -1173,6 +1173,7 @@
             if (!opts.suppressToast && !inFilesPanel) {
               showToast(toastMessage);
             }
+            clearAudioCache();
             // Ask to persist to IndexedDB (one-time per session unless accepted)
             maybePromptPersist();
         }
@@ -1325,7 +1326,23 @@
         generateWordListsUI();
         rebuildActiveWordsList();
         persistIfConsented();
+        clearAudioCache();
       } catch (_) { /* noop */ }
+    }
+
+    const AUDIO_CACHE_KEY = 'tts_last_audio';
+    function clearAudioCache(){ try { localStorage.removeItem(AUDIO_CACHE_KEY); } catch(_){} }
+    function setAudioCache(engine, voice, text, dataUrl, mime){
+      try { localStorage.setItem(AUDIO_CACHE_KEY, JSON.stringify({ engine, voice, text, dataUrl, mime, ts: Date.now() })); } catch(_){}
+    }
+    function getAudioCache(engine, voice, text){
+      try { const s = localStorage.getItem(AUDIO_CACHE_KEY); if (!s) return null; const o = JSON.parse(s);
+        if (o && o.engine===engine && o.voice===voice && o.text===text && typeof o.dataUrl==='string') return o.dataUrl;
+      } catch(_){}
+      return null;
+    }
+    function blobToDataURL(blob){
+      return new Promise((resolve, reject) => { try { const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=reject; r.readAsDataURL(blob); } catch(e){ resolve(null); } });
     }
 
     function speakWord(w) {
@@ -1385,6 +1402,8 @@
         if (!resp.ok) throw new Error('TTS request failed');
         const buf = await resp.arrayBuffer();
         const blob = new Blob([buf], { type: 'audio/mpeg' });
+        // Save short-term cache (last clip only)
+        blobToDataURL(blob).then((dataUrl)=>{ if (dataUrl) setAudioCache('openai', voice, text, dataUrl, blob.type); });
         const url = URL.createObjectURL(blob);
         openaiAudio = new Audio(url);
         await openaiAudio.play();
@@ -1416,6 +1435,7 @@
         if (!resp.ok) throw new Error('ElevenLabs TTS failed');
         const buf = await resp.arrayBuffer();
         const blob = new Blob([buf], { type: 'audio/mpeg' });
+        blobToDataURL(blob).then((dataUrl)=>{ if (dataUrl) setAudioCache('eleven', voiceId, text, dataUrl, blob.type); });
         const urlObj = URL.createObjectURL(blob);
         const audio = new Audio(urlObj);
         await audio.play();
@@ -1598,11 +1618,20 @@
 
     async function repeatWord() { 
       if (!currentWord) return; 
-      if ((getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef') && currentBaseWord) {
-        await speakWord(currentBaseWord);
-      } else {
-        await speakWord(currentWord);
+      const isArticles = (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef');
+      const text = (isArticles && currentBaseWord) ? currentBaseWord : currentWord;
+      // Use cached audio for OpenAI/Eleven replays if available
+      if (typeof currentVoice === 'string') {
+        if (currentVoice.startsWith('openai:')) {
+          const v = currentVoice.split(':')[1] || 'echo';
+          const cached = getAudioCache('openai', v, text);
+          if (cached) { const a = new Audio(cached); await a.play(); return; }
+        } else if (currentVoice.startsWith('eleven:')) {
+          const v = currentVoice.split(':')[1] || '';
+          if (v) { const cached = getAudioCache('eleven', v, text); if (cached) { const a = new Audio(cached); await a.play(); return; } }
+        }
       }
+      await speakWord(text);
     }
 
     function showCurrentWord() {
@@ -2021,6 +2050,7 @@
         }
         updateShuffleIndicator();
         initializeStudy();
+        clearAudioCache();
       }
 
       let miniEl = null;
@@ -2162,6 +2192,7 @@
                   wordLists[name].enabled = toggle.checked;
                   rebuildActiveWordsList();
                   persistIfConsented();
+                  clearAudioCache();
                 });
                 row.appendChild(toggle);
               }
@@ -2189,6 +2220,7 @@
                   wordLists[name].enabled = checkbox.checked;
                   rebuildActiveWordsList();
                   persistIfConsented();
+                  clearAudioCache();
                 });
                 const label = document.createElement('label');
                 label.htmlFor = `file--${name}`;
@@ -2463,6 +2495,7 @@
             }
             updateShuffleIndicator();
             initializeStudy();
+            clearAudioCache();
         };
         document.getElementById('confirmationDialogText').textContent = i18n[curLang].confirm_shuffle;
         confirmationDialog.classList.add('visible');
@@ -2617,6 +2650,7 @@
       try { localStorage.setItem('selectedVoice', currentVoice); } catch (_) {}
       updateVoiceIndicator(); 
       renderVoiceDebug();
+      clearAudioCache();
     });
     document.getElementById('voiceSelect').addEventListener('focus', populateVoiceList);
     const voiceTestBtn = document.getElementById('voiceTestBtn');
@@ -2633,6 +2667,7 @@
       const m = document.getElementById('elevenKeyMasked'); if (m) m.textContent = elevenKey ? ('Key: ' + (elevenKey.length>16 ? (elevenKey.slice(0,10)+'…'+elevenKey.slice(-6)) : elevenKey.replace(/.(?=.{4})/g,'•'))) : 'No key set';
       populateVoiceList();
       updateIntegrationIndicators();
+      clearAudioCache();
     }
     try {
       const savedEl = localStorage.getItem('eleven_api_key');
@@ -2693,7 +2728,7 @@
     })();
     // OpenAI API key handlers
     function maskKey(k){ if(!k) return ''; return k.length>16 ? (k.slice(0,10)+'…'+k.slice(-6)) : k.replace(/.(?=.{4})/g,'•'); }
-    function setOpenAIKey(k){ const v=(k||'').trim(); if(v && !isValidOpenAIKey(v)) { return; } openaiKey = v; try{ if(openaiKey) localStorage.setItem('openai_api_key', openaiKey); else localStorage.removeItem('openai_api_key'); }catch(_){}; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent = openaiKey? ('Key: '+maskKey(openaiKey)) : 'No key set'; populateVoiceList(); updateIntegrationIndicators(); }
+    function setOpenAIKey(k){ const v=(k||'').trim(); if(v && !isValidOpenAIKey(v)) { return; } openaiKey = v; try{ if(openaiKey) localStorage.setItem('openai_api_key', openaiKey); else localStorage.removeItem('openai_api_key'); }catch(_){}; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent = openaiKey? ('Key: '+maskKey(openaiKey)) : 'No key set'; populateVoiceList(); updateIntegrationIndicators(); clearAudioCache(); }
     try{ const saved=localStorage.getItem('openai_api_key'); if(saved){ openaiKey=saved; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent='Key: '+maskKey(openaiKey);} }catch(_){}
     // Initialize integration indicators on load
     updateIntegrationIndicators();
@@ -2734,6 +2769,7 @@
       }
       updateProgressBar();
       try { localStorage.setItem('studyMode', studyModeSelect.value); } catch (_) {}
+      clearAudioCache();
     });
 
     // --- INITIALIZATION ---
@@ -2752,6 +2788,8 @@
           if (sel) sel.value = modeToUse;
         } catch (_) {}
 
+        // Clear short-term audio cache each start
+        clearAudioCache();
         populateVoiceList(); // Use the (restored) currentVoice where possible
         setLanguage("en");
         updateAllIndicators();

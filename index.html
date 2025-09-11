@@ -149,6 +149,9 @@
     .bottom-status .off { opacity: 0.3; filter: grayscale(1); }
     .bottom-status span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #bottomVoice, #bottomMode { min-width: 0; }
+    /* Allow bottomVoice to wrap like bottomMode */
+    #bottomVoice { white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.15; }
+    @media (max-width: 480px) { #bottomVoice { font-size: 0.9em; } }
     /* Allow mode to wrap on small screens to avoid horizontal scroll */
     #bottomMode { flex: 1; white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.15; }
     /* Slightly smaller font for wrapped mode names on narrow screens */
@@ -158,6 +161,18 @@
     /* no spacer row; display grows naturally */
     .status-ok { color: #2e7d32; }
     .status-alert { color: #c62828; }
+
+    /* --- Bottom Mode Quick Menu --- */
+    .mode-quick-menu { position: fixed; z-index: 1800; background: #fff; color: var(--text-color); border: 1px solid var(--border-color); box-shadow: 0 8px 24px rgba(0,0,0,0.12); border-radius: 12px; padding: 6px; min-width: 180px; max-width: 80vw; max-height: 60vh; overflow: auto; }
+    .mode-quick-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; cursor: pointer; user-select: none; }
+    .mode-quick-item:hover { background: var(--light-gray); }
+    .mode-quick-item.disabled { opacity: 0.45; pointer-events: none; }
+    .mode-quick-check { margin-left: auto; opacity: 0.7; }
+    /* Mini confirm near status items */
+    .mini-confirm { position: fixed; z-index: 1900; background: #fff; color: var(--text-color); border: 1px solid var(--border-color); box-shadow: 0 8px 24px rgba(0,0,0,0.12); border-radius: 12px; padding: 8px 10px; display: flex; align-items: center; gap: 10px; max-width: 80vw; }
+    .mini-confirm .mini-actions { margin-left: auto; display: flex; gap: 8px; }
+    .mini-btn { background: #f1f1f1; border: 1px solid #ddd; color: #333; padding: 6px 10px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; }
+    .mini-btn.primary { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
 
     /* --- Modals --- */
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(40, 40, 40, 0.55); align-items: center; justify-content: center; backdrop-filter: blur(8px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
@@ -196,9 +211,7 @@
       z-index: 2000;
       font-weight: 600;
     }
-    .toast.visible {
-      bottom: 20px;
-    }
+    .toast.visible { bottom: 20px; }
     /* iOS Safari adjustments: allow scroll and safe-area padding only on iOS */
     html.is-ios, body.is-ios {
       height: auto;
@@ -225,7 +238,9 @@
 
     /* Mobile Menu (drawer from right) */
     /* Menu shell turns right-drawer into left-rail + expanding panel */
-    #menuModal .modal-content { width: 100vw; max-width: none; height: 100vh; margin: 0; border-radius: 0; background: transparent; box-shadow: none; border: 0; transform: none; display: block; }
+    /* Avoid 100vw/100vh to prevent horizontal overflow with scrollbars on Firefox/Chromium */
+    #menuModal { overflow: hidden; }
+    #menuModal .modal-content { width: 100%; max-width: none; height: 100%; margin: 0; border-radius: 0; background: transparent; box-shadow: none; border: 0; transform: none; display: block; }
     #menuModal.visible .modal-content { transform: none; }
     #menuModal .menu-shell { position: relative; height: 100%; }
     /* Panel animates from right->left to full-screen */
@@ -234,7 +249,7 @@
     #menuModal .panel[aria-hidden="false"] { transform: translateX(0) scaleX(1); opacity: 1; }
     @media (prefers-reduced-motion: reduce) { #menuModal .panel { transition-duration: 1ms; } }
     #menuModal .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); }
-    #menuModal .panel-body { padding: 1rem; height: calc(100% - 56px); overflow: auto; }
+    #menuModal .panel-body { padding: 1rem; height: calc(100% - 56px); overflow: auto; background: #f2f2f7; }
     #menuModal .modal-header { display:none; }
     #menuModal .modal-section { border: none; padding-bottom: 0; margin-bottom: 0.75rem; }
     #menuModal .menu-list button { display: block; width: 100%; text-align: left; padding: 0.75rem 0; background: none; border: none; font-size: 1rem; font-weight: 700; color: var(--text-color); }
@@ -269,6 +284,54 @@
     /* Thin red countdown bar at top of main display */
     .countdown-topbar { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.25); }
     .countdown-topbar-fill { height: 100%; width: 0%; background: #ff3b30; transition: width 0.1s linear; }
+    /* iOS-style grouped Settings mockup */
+    .settings-section-title { font-weight: 800; font-size: clamp(0.75rem, 1.6vw, 0.9rem); color: #8e8e93; letter-spacing: .04em; margin: 0.75rem 0 0.5rem; padding-left: .25rem; text-transform: uppercase; }
+    .settings-card { background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 0 rgba(0,0,0,0.04); }
+    .settings-item { position: relative; display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #ececec; font-size: 1rem; }
+    .settings-item:last-child { border-bottom: none; }
+    .settings-label { flex: 1; color: #000; }
+    .settings-value { color: #8e8e93; margin-left: auto; }
+    .settings-chevron { color: #c7c7cc; margin-left: 8px; font-weight: 700; font-size: 1.35rem; }
+    .settings-danger { color: #ff3b30; font-weight: 700; }
+    .settings-footer { color: #8e8e93; font-size: 0.85rem; text-align: center; padding: 0.75rem 0; }
+    .trash-btn { background: none; border: none; font-size: 1.1rem; color: #ff3b30; cursor: pointer; padding: 4px; line-height: 1; }
+    .trash-btn:hover { opacity: 0.85; }
+    .key-mask-wrap { position: relative; }
+    .key-mask-wrap .settings-note { padding-right: 32px; }
+    .key-mask-wrap .trash-btn { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); }
+    /* Overlay selects turn rows into native pickers while showing value text */
+    .overlay-select { position: absolute; inset: 0; opacity: 0; -webkit-appearance: none; appearance: none; width: 100%; height: 100%; border: none; background: transparent; cursor: pointer; }
+    /* iOS switch */
+    .ios-switch { -webkit-appearance: none; appearance: none; width: 51px; height: 31px; background: #e9e9ea; border-radius: 999px; position: relative; outline: none; cursor: pointer; transition: background .2s ease; flex: 0 0 auto; }
+    .ios-switch::before { content: ''; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; background: #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s ease; }
+    .ios-switch:checked { background: #34c759; }
+    .ios-switch:checked::before { transform: translateX(20px); }
+    /* Hide legacy holders when grouped mockup is used */
+    #legacyMenuContent { display: none; }
+    /* Subpanels (push navigation) */
+    #menuModal .subpanel { position: fixed; inset: 0; background: var(--background-color); transform: translateX(100%); transition: transform 220ms cubic-bezier(.2,.8,.2,1); z-index: 1400; }
+    #menuModal .subpanel[aria-hidden="false"] { transform: translateX(0); }
+    #menuModal .subpanel .panel-body { background: #f2f2f7; }
+    .panel-back { background: none; border: 0; font-size: 1.35rem; color: var(--primary-color); padding: 8px; }
+    .panel-actions { display:flex; align-items:center; gap: 8px; min-width: 44px; justify-content: flex-end; }
+    .panel-link { background: none; border: 0; color: var(--primary-color); font-weight: 700; padding: 6px 8px; font-size: 0.98rem; }
+    .panel-link.link-disabled { opacity: .45; pointer-events: none; }
+    .settings-check { color: var(--primary-color); font-weight: 800; margin-left: auto; }
+    html.is-ios #menuModal .subpanel .panel-header { padding-top: calc(0.75rem + env(safe-area-inset-top)); }
+    /* Hide main header when a subpanel is open to avoid overlap */
+    #menuPanel.sub-open > .panel-header { visibility: hidden; pointer-events: none; }
+    /* Hide subpanel center title (keep breadcrumbs in body) */
+    #menuModal .subpanel .panel-header h2 { display: none; }
+    /* Subtle text and footer notes */
+    .subtle { color: #8e8e93; font-size: 0.9em; }
+    .settings-note { color: #8e8e93; font-size: 0.85rem; padding: 0.75rem 0; }
+    .btn-destructive { background: none; border: 0; color: #ff3b30; font-weight: 700; padding: 12px 8px; text-align: center; width: 100%; }
+    /* Action sheet */
+    .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.3); display: none; align-items:flex-end; justify-content:center; z-index: 1600; }
+    .sheet-backdrop.visible { display:flex; }
+    .sheet { width: 100%; max-width: 560px; background: #f2f2f7; padding: 8px; border-radius: 16px 16px 0 0; }
+    .sheet .action { background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:12px; padding:14px; text-align:center; margin-bottom:8px; font-weight:600; }
+    .sheet .cancel { background:#fff; border-radius:12px; padding:14px; text-align:center; font-weight:600; }
   </style>
 </head>
 <body>
@@ -283,7 +346,7 @@
             <button type="button" class="language-flag active" id="langEn" aria-label="English" title="English">🇺🇸</button>
             <button type="button" class="language-flag" id="langFr" aria-label="Français" title="Français">🇫🇷</button>
           </div>
-          <button id="menuBtn" class="icon-btn" aria-label="Menu" title="Menu" aria-controls="menuModal" aria-expanded="false">☰</button>
+          <button id="menuBtn" class="icon-btn" aria-label="Settings" title="Settings" aria-controls="menuModal" aria-expanded="false">☰</button>
         </div>
       </div>
       <div class="progress-bar">
@@ -322,7 +385,6 @@
       <button class="btn btn-primary" id="nextBtn" disabled data-i18n="btn_next">Next (Space)</button>
       <button class="btn btn-secondary" id="repeatBtn" disabled data-i18n="btn_repeat">Repeat (R)</button>
       <button class="btn btn-success" id="showBtn" disabled data-i18n="btn_show">Show (S)</button>
-      <button class="btn btn-warning" id="voiceBtn" disabled data-i18n="btn_toggleVoice">Voice (V)</button>
       <button class="btn btn-info" id="viewListBtn" disabled data-i18n="btn_view_list">View List</button>
       <button class="btn btn-info" id="historyBtn" disabled data-i18n="btn_history">History</button>
       <div id="privativeControls" style="display:none; gap:0.5rem; flex-wrap:wrap;">
@@ -354,15 +416,21 @@
     <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
         <h2 data-i18n="welcome_title">Welcome to the French Study App!</h2>
         <p style="margin: 1rem 0;" data-i18n="welcome_instructions">To begin, please load one or more `.txt` files containing your words.</p>
-        <div id="welcomeUploadArea">
-            <h3 style="pointer-events: none;" data-i18n="welcome_drag_drop">Drag & Drop File(s) Here</h3>
-            <p style="pointer-events: none; margin: 0.5rem 0;" data-i18n="welcome_or">or</p>
-            <button class="btn btn-primary" id="welcomeBrowseBtn" data-i18n="welcome_browse">Browse Files</button>
-            <div id="iosFilePickerRow" style="display:none; margin-top: 0.75rem;">
-              <input type="file" id="iosFileInput" accept=".txt" multiple style="display:block; margin: 0 auto;" />
+        <div id="welcomeActions" class="welcome-actions">
+          <div class="settings-section">
+            <div class="settings-section-title">Files</div>
+            <div class="settings-card">
+              <div class="settings-item" style="justify-content:center;">
+                <button id="welcomeAddBtn" class="panel-link">Add Word List…</button>
+              </div>
             </div>
+            <div class="settings-note">Tip: You can also drag & drop files anywhere on the page.</div>
+          </div>
+          <div id="iosFilePickerRow" style="display:none; margin-top: 0.75rem;">
+            <input type="file" id="iosFileInput" accept=".txt" multiple />
+          </div>
         </div>
-            <div id="welcomeVersion" class="version-inline"></div>
+        <div id="welcomeVersion" class="version-inline"></div>
     </div>
   </div>
 
@@ -438,89 +506,207 @@
       <div class="menu-shell">
         <section id="menuPanel" class="panel" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="menuPanelTitle">
           <div class="panel-header">
-            <h2 id="menuPanelTitle" style="margin:0">Menu</h2>
+            <h2 id="menuPanelTitle" style="margin:0">Settings</h2>
           </div>
           <div class="panel-body">
-      <div class="modal-section">
-        <label style="display:block; font-weight:600; margin-bottom:0.25rem;">Language</label>
-        <div class="language-flags" style="display:flex; gap:0.75rem;">
-          <button type="button" class="language-flag" id="menuLangEn" aria-label="English" title="English">🇺🇸</button>
-          <button type="button" class="language-flag" id="menuLangFr" aria-label="Français" title="Français">🇫🇷</button>
-        </div>
-      </div>
-      <div class="modal-section menu-field">
-        <div class="switch-row"><input type="checkbox" id="shuffleToggle"><label for="shuffleToggle" data-i18n="label_shuffle">Shuffle words</label></div>
-      </div>
-      <div class="modal-section menu-field">
-        <label for="studyModeSelect" data-i18n="label_studyMode">Study Mode:</label>
-        <select id="studyModeSelect" style="width:100%; padding:0.5rem;">
-          <option value="listenRead" data-i18n="mode_listen_read">Listen and read</option>
-          <option value="readThenSay" data-i18n="mode_read_then_say">Read then say</option>
-          <option value="listenThenRepeat" data-i18n="mode_listen_then_repeat">Listen then repeat</option>
-          <option value="articlesDef" data-i18n="mode_articles_def">Articles définis (le/la)</option>
-          <option value="articlesIndef" data-i18n="mode_articles_indef">Articles indéfinis (un/une)</option>
-        </select>
-      </div>
-      <div class="modal-section menu-field">
-        <label for="voiceSelect" data-i18n="label_voice">Voice:</label>
-        <select id="voiceSelect" style="width: 100%; padding: 0.5rem;"></select>
-        <div style="display:flex; gap:.5rem; align-items:center; margin-top:.5rem; flex-wrap:wrap;">
-          <button class="btn btn-secondary" id="voiceTestBtn" type="button" data-i18n="btn_test_voice">Test Voice</button>
-          <div id="iosVoiceHint" class="ios-voice-hint" data-i18n="voice_hint_ios" style="display:none; font-size: 0.85em; color: #777;">
-            Tip (iOS): After the first playback, reopen Settings to refresh French voices.
+            <!-- Grouped settings mockup (iOS-style) -->
+            <div class="settings-section">
+              <div class="settings-section-title">GENERAL</div>
+              <div class="settings-card">
+                <div class="settings-item" id="rowLanguage" role="button" tabindex="0">
+                  <div class="settings-label">Language</div>
+                  <div class="settings-value" id="settingsLangValue">English</div>
+                  <div class="settings-chevron">›</div>
+                  <!-- Keep original language buttons hidden for logic -->
+                  <div style="position:absolute; right:10px; top:50%; transform:translateY(-50%); display:none; gap:.5rem;">
+                    <button type="button" class="language-flag" id="menuLangEn" aria-label="English" title="English">🇺🇸</button>
+                    <button type="button" class="language-flag" id="menuLangFr" aria-label="Français" title="Français">🇫🇷</button>
+                  </div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label" data-i18n="label_shuffle">Shuffle Words</div>
+                  <input type="checkbox" id="shuffleToggle" class="ios-switch" />
+                </div>
+                <div class="settings-item" style="position:relative;">
+                  <div class="settings-label">Study Mode</div>
+                  <div class="settings-value" id="settingsModeValue">Listen then repeat</div>
+                  <div class="settings-chevron">›</div>
+                  <select id="studyModeSelect" class="overlay-select">
+                    <option value="listenRead" data-i18n="mode_listen_read">Listen and read</option>
+                    <option value="readThenSay" data-i18n="mode_read_then_say">Read then say</option>
+                    <option value="listenThenRepeat" data-i18n="mode_listen_then_repeat" selected>Listen then repeat</option>
+                    <option value="articlesDef" data-i18n="mode_articles_def">Articles définis (le/la)</option>
+                    <option value="articlesIndef" data-i18n="mode_articles_indef">Articles indéfinis (un/une)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="settings-section-title">VOICE CONFIGURATION</div>
+              <div class="settings-card">
+                <div class="settings-item" style="position:relative;">
+                  <div class="settings-label">Voice</div>
+                  <div class="settings-value" id="settingsVoiceValue">—</div>
+                  <div class="settings-chevron">›</div>
+                  <select id="voiceSelect" class="overlay-select"></select>
+                  <button class="btn btn-secondary" id="voiceTestBtn" type="button" style="display:none">Test Voice</button>
+                  <div id="iosVoiceHint" class="ios-voice-hint" style="display:none;"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="settings-section-title">INTEGRATIONS</div>
+              <div class="settings-card">
+                <div class="settings-item" id="rowEleven" role="button" tabindex="0">
+                  <div class="settings-label">ElevenLabs</div>
+                  <div class="settings-value" id="elevenStatus"></div>
+                  <div class="settings-chevron">›</div>
+                </div>
+                <div class="settings-item" id="rowOpenAI" role="button" tabindex="0">
+                  <div class="settings-label">OpenAI</div>
+                  <div class="settings-value" id="openaiStatus"></div>
+                  <div class="settings-chevron">›</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="settings-section-title">DATA & SYSTEM</div>
+              <div class="settings-card">
+                <div class="settings-item" id="rowFiles" role="button" tabindex="0">
+                  <div class="settings-label">Active Word Lists</div>
+                  <div class="settings-value" id="settingsActiveListsCount">0</div>
+                  <div class="settings-chevron">›</div>
+                </div>
+                <div class="settings-item">
+                  <button id="menuResetAppBtn" class="settings-danger" style="background:none;border:0;font:inherit;padding:0;margin:0;">Reset App (Reload)</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-footer">
+              <div id="menuVersion" class="version-inline" style="display:inline-block; padding:0; margin:0;"></div>
+            </div>
+
           </div>
-        </div>
-      </div>
-      <div class="modal-section menu-field">
-        <label>ElevenLabs Voice (optional)</label>
-        <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
-          <input id="elevenKeyInput" type="password" placeholder="elevenlabs_api_key" style="flex:1; min-width:220px;"/>
-          <button class="btn btn-secondary" id="elevenSaveBtn" type="button">Save</button>
-          <input type="file" id="elevenKeyFile" accept=".key,.txt" style="display:none;"/>
-          <button class="btn btn-secondary" id="elevenLoadFileBtn" type="button">Load from File</button>
-          <button class="btn btn-secondary" id="elevenClearBtn" type="button">Clear</button>
-        </div>
-        <div id="elevenKeyMasked" style="font-size:0.85em; color:#777; margin-top:0.25rem;"></div>
-        <div style="font-size:0.85em; color:#777; margin-top:0.25rem;">Adds ElevenLabs voices “Josh” (male) and “Bella” (female) to the selector using non‑streaming playback (fr‑FR).</div>
-      </div>
-      <div class="modal-section menu-field">
-        <label>OpenAI Voice (optional)</label>
-        <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
-          <input id="openaiKeyInput" type="password" placeholder="sk-..." style="flex:1; min-width:220px;"/>
-          <button class="btn btn-secondary" id="openaiSaveBtn" type="button">Save</button>
-          <input type="file" id="openaiKeyFile" accept=".key,.txt" style="display:none;"/>
-          <button class="btn btn-secondary" id="openaiLoadFileBtn" type="button">Load from File</button>
-          <button class="btn btn-secondary" id="openaiClearBtn" type="button">Clear</button>
-        </div>
-        <div id="openaiKeyMasked" style="font-size:0.85em; color:#777; margin-top:0.25rem;"></div>
-        <div style="font-size:0.85em; color:#777; margin-top:0.25rem;">Adds OpenAI voices “Echo” and “Nova” to the selector using a low‑latency model.</div>
-      </div>
-      <div class="modal-section menu-field">
-        <details id="menuFiles" style="width:100%;">
-          <summary style="cursor:pointer; font-weight:700;">Files</summary>
-          <div id="menuWordListsSection" class="menu-field" style="margin-top:0.5rem;">
-            <label>Active Word Lists</label>
-            <div id="menuWordListsOptions" class="word-lists-options"></div>
+        </section>
+
+        <!-- Subpanel: Language (sibling of #menuPanel) -->
+        <!-- Note: subpanels are outside #menuPanel so its header hiding rule doesn't affect them -->
+        <!-- Subpanel: Language -->
+        <section id="langPanel" class="panel subpanel" aria-hidden="true" aria-labelledby="langPanelTitle">
+              <div class="panel-header">
+                <button class="panel-back" data-back="langPanel">‹ Back</button>
+                <h2 id="langPanelTitle" style="margin:0">Language</h2>
+                <div style="width:44px"></div>
+              </div>
+              <div class="panel-body">
+                <div class="settings-section-title">General → Language</div>
+                <div class="settings-card">
+                  <div class="settings-item" id="langOptionEn" role="button" tabindex="0">
+                    <div class="settings-label">English</div>
+                    <div class="settings-check" id="langCheckEn" style="display:none;">✓</div>
+                  </div>
+                  <div class="settings-item" id="langOptionFr" role="button" tabindex="0">
+                    <div class="settings-label">Français</div>
+                    <div class="settings-check" id="langCheckFr" style="display:none;">✓</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Subpanel: ElevenLabs -->
+            <section id="elevenPanel" class="panel subpanel" aria-hidden="true" aria-labelledby="elevenPanelTitle">
+              <div class="panel-header">
+                <button class="panel-back" data-back="elevenPanel">‹ Back</button>
+                <h2 id="elevenPanelTitle" style="margin:0">ElevenLabs</h2>
+                <div style="width:44px"></div>
+              </div>
+              <div class="panel-body">
+                <div class="settings-section-title">Integrations → ElevenLabs</div>
+                <div class="settings-card">
+                  <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:8px;">
+                    <div class="label-row" style="display:flex; align-items:center; justify-content:space-between;">
+                      <div class="settings-label" style="font-weight:700;">API Key</div>
+                    </div>
+                    <input id="elevenKeyInput" type="password" placeholder="elevenlabs_api_key" style="flex:1; min-width:220px; padding:.5rem;"/>
+                    <div class="key-mask-wrap">
+                      <div id="elevenKeyMasked" class="settings-note">No key set</div>
+                      <button id="elevenDeleteBtn" class="trash-btn" type="button" title="Remove key" aria-label="Remove ElevenLabs key">🗑️</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-card" style="margin-top:12px;">
+                  <div class="settings-item" style="justify-content:center; gap: 12px;">
+                    <button class="panel-link" id="elevenLoadFileBtn" type="button">Choose Key File…</button>
+                    <input type="file" id="elevenKeyFile" accept=".key" style="display:none;"/>
+                  </div>
+                </div>
+                
+                <div class="settings-note">Adds ElevenLabs voices “Josh” (male) and “Bella” (female) to the selector using non‑streaming playback (fr‑FR).</div>
+              </div>
+            </section>
+
+            <!-- Subpanel: OpenAI -->
+            <section id="openaiPanel" class="panel subpanel" aria-hidden="true" aria-labelledby="openaiPanelTitle">
+              <div class="panel-header">
+                <button class="panel-back" data-back="openaiPanel">‹ Back</button>
+                <h2 id="openaiPanelTitle" style="margin:0">OpenAI</h2>
+                <div style="width:44px"></div>
+              </div>
+              <div class="panel-body">
+                <div class="settings-section-title">Integrations → OpenAI</div>
+                <div class="settings-card">
+                  <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:8px;">
+                    <div class="label-row" style="display:flex; align-items:center; justify-content:space-between;">
+                      <div class="settings-label" style="font-weight:700;">API Key</div>
+                    </div>
+                    <input id="openaiKeyInput" type="password" placeholder="sk-..." style="flex:1; min-width:220px; padding:.5rem;"/>
+                    <div class="key-mask-wrap">
+                      <div id="openaiKeyMasked" class="settings-note">No key set</div>
+                      <button id="openaiDeleteBtn" class="trash-btn" type="button" title="Remove key" aria-label="Remove OpenAI key">🗑️</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-card" style="margin-top:12px;">
+                  <div class="settings-item" style="justify-content:center; gap: 12px;">
+                    <button class="panel-link" id="openaiLoadFileBtn" type="button">Choose Key File…</button>
+                    <input type="file" id="openaiKeyFile" accept=".key" style="display:none;"/>
+                  </div>
+                </div>
+                
+                <div class="settings-note">Adds OpenAI voices “Echo” and “Nova” to the selector using a low‑latency model.</div>
+              </div>
+            </section>
+
+            <!-- Subpanel: Files -->
+            <section id="filesPanel" class="panel subpanel" aria-hidden="true" aria-labelledby="filesPanelTitle">
+              <div class="panel-header">
+                <button class="panel-back" data-back="filesPanel">‹ Back</button>
+                <h2 id="filesPanelTitle" style="margin:0">Files</h2>
+                <div style="width:44px"></div>
+              </div>
+              <div class="panel-body">
+                <div class="settings-section-title">Data & System → Files</div>
+                <div class="settings-section">
+                  <div class="settings-card" id="filesListCard">
+                    <div id="menuWordListsSection" class="menu-field" style="margin:0; padding:0; width:100%;">
+                      <div id="menuWordListsOptions" class="word-lists-options" style="padding: 0;"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-card" style="margin-top:12px;">
+                  <div class="settings-item" style="justify-content:center;">
+                    <button id="btnAddWordList" class="panel-link" type="button">Add Word List…</button>
+                    <input type="file" id="menuFileInput" accept=".txt" multiple style="display:none;" />
+                  </div>
+                </div>
+                <div class="settings-note">Tip: You can also drag & drop files anywhere on the page.</div>
+              </div>
+            </section>
           </div>
-          <div style="margin-top:0.5rem;">
-            <label for="menuFileInput" style="display:block; font-weight:600; margin-bottom:0.25rem;">Add .txt files</label>
-            <input type="file" id="menuFileInput" accept=".txt" multiple />
-            <div style="font-size:0.85em; color:#777; margin-top:0.25rem;">Tip: You can also drag & drop files anywhere on the page.</div>
-          </div>
-        </details>
-      </div>
-      <div class="modal-section" style="margin-top:0.5rem;">
-        <label style="display:block; font-weight:600; margin-bottom:0.5rem;">System</label>
-        <button class="btn btn-secondary" id="menuResetAppBtn" type="button">Reset App (Reload)</button>
-      </div>
-      <hr/>
-      <div class="menu-bottom" style="margin-top:auto;">
-        <div class="modal-section menu-list" style="margin-top:0;">
-          <button id="menuHelpBtn">Help</button>
-        </div>
-        <div id="menuVersion" class="version-inline" style="padding-bottom:0.5rem;"></div>
-      </div>
-    </div>
   </div>
 
   <div id="confirmationDialog" class="modal">
@@ -560,7 +746,7 @@
         label_active_word_lists: "Active Word Lists",
         btn_next: "Next (Space)", btn_repeat: "Repeat (R)", btn_show: "Show (S)", btn_toggleVoice: "Voice (V)",
         status_ready: "Ready to start a new session", history_title: "Answers",
-        label_voice: "Voice:", label_studyMode: "Study Mode:",
+        label_voice: "Voice:", label_studyMode: "Study Mode",
         label_shuffle: "Shuffle words", label_seconds: "seconds",
         mode_simultaneous: "Listen and Read simultaneously",
         mode_listen_read: "Listen and read",
@@ -637,7 +823,7 @@
         label_active_word_lists: "Listes de mots actives",
         btn_next: "Suivant (Espace)", btn_repeat: "Répéter (R)", btn_show: "Afficher (S)", btn_toggleVoice: "Voix (V)",
         status_ready: "Prêt à commencer une nouvelle session", history_title: "Réponses",
-        label_voice: "Voix :", label_studyMode: "Mode d'étude :",
+        label_voice: "Voix :", label_studyMode: "Mode d'étude",
         label_shuffle: "Mélanger les mots", label_seconds: "secondes",
         mode_simultaneous: "Écouter et lire simultanément",
         mode_listen_read: "Écouter et lire",
@@ -709,7 +895,7 @@
     let shuffleEnabled = false;
     let originalWordOrder = [];
     let isSessionComplete = false;
-    const APP_VERSION = 'v1.5.1';
+    const APP_VERSION = 'v1.6.3-beta';
     // Articles quiz state
     let prefixWords = [];
     let prefixWordsIndef = [];
@@ -746,7 +932,6 @@
     const nextBtn = document.getElementById('nextBtn');
     const repeatBtn = document.getElementById('repeatBtn');
     const showBtn = document.getElementById('showBtn');
-    const voiceBtn = document.getElementById('voiceBtn');
     const welcomeModal = document.getElementById('welcomeModal');
     const settingsModal = document.getElementById('settingsModal');
     const helpModal = document.getElementById('helpModal');
@@ -767,6 +952,9 @@
       const mEn = document.getElementById('menuLangEn');
       const mFr = document.getElementById('menuLangFr');
       if (mEn && mFr) { mEn.classList.toggle('active', lang === 'en'); mFr.classList.toggle('active', lang === 'fr'); }
+      // update grouped settings value label
+      const settingsLangValue = document.getElementById('settingsLangValue');
+      if (settingsLangValue) settingsLangValue.textContent = (lang === 'en') ? 'English' : 'Français';
       document.querySelectorAll("[data-i18n]").forEach(el => {
         const key = el.getAttribute("data-i18n");
         if (i18n[lang] && i18n[lang][key]) {
@@ -838,9 +1026,10 @@
       if (fr.length === 0) return null;
       // Safari preference: Thomas if available
       if (isSafari) {
-        const thomas = fr.filter(v => (v.name || '').toLowerCase().includes('thomas'))
-                         .sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
-        if (thomas.length) return thomas[0];
+        // On Apple, prefer Thomas, then Audrey, then Amélie
+        const pickBy = (name) => fr.filter(v => (v.name || '').toLowerCase().includes(name)).sort((a,b)=>scoreFrenchVoice(b)-scoreFrenchVoice(a));
+        const seq = ['thomas','audrey','amelie','amélie'];
+        for (const key of seq) { const hits = pickBy(key); if (hits.length) return hits[0]; }
       }
       return fr.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a))[0] || null;
     }
@@ -855,30 +1044,30 @@
       defaultOption.value = "system";
       defaultOption.textContent = i18n[curLang].opt_system_french_voice;
       vs.appendChild(defaultOption);
-      const allFrench = availableVoices
-        .filter(v => (v.lang || '').toLowerCase().startsWith('fr'));
-      const qualityKeywords = ['siri', 'enhanced', 'premium', 'neural', 'hq', 'audrey', 'amelie', 'thomas'];
+      const allFrench = availableVoices.filter(v => (v.lang || '').toLowerCase().startsWith('fr'));
+      const qualityKeywords = ['siri', 'enhanced', 'premium', 'neural', 'hq', 'audrey', 'amelie', 'amélie', 'thomas'];
 
       let toShow = [];
-      if (isFirefox) {
+      if (isSafari) {
+        // Apple platforms: show only specific system voices (Audrey, Amélie, Thomas)
+        const isAllowedApple = (v) => {
+          const n = (v.name || '').toLowerCase();
+          return n.includes('thomas') || n.includes('audrey') || n.includes('amelie') || n.includes('amélie');
+        };
+        toShow = allFrench.filter(isAllowedApple).sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+      } else if (isFirefox) {
         // Firefox: prefer high-quality filtered list; fallback to all FR
         const high = allFrench.filter(v => qualityKeywords.some(k => (v.name || '').toLowerCase().includes(k)));
         toShow = (high.length ? high : allFrench).sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
       } else if (isChromium) {
-        // Chromium: previous behavior was better—if we can't positively identify HQ voices,
-        // don't list potentially poor ones. Only list if we find HQ matches; otherwise keep only System.
+        // Chromium: only show clearly high-quality voices to avoid poor defaults
         const high = allFrench.filter(v => qualityKeywords.some(k => (v.name || '').toLowerCase().includes(k)));
         toShow = high.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
-        // Best-effort: if user previously selected a specific FR voice and it exists, include it
         if (toShow.length === 0 && currentVoice && currentVoice !== 'system') {
           const saved = allFrench.find(v => v.name === currentVoice);
           if (saved) toShow = [saved];
         }
-      } else if (isSafari) {
-        // Safari (incl. iOS): list all FR voices, sorted by quality (Siri/Enhanced first)
-        toShow = allFrench.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
       } else {
-        // Default: show all FR voices
         toShow = allFrench.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
       }
 
@@ -917,11 +1106,15 @@
       if (existingIndex >= 0) {
         vs.selectedIndex = existingIndex;
       } else if (isSafari) {
-        // Make Thomas default for Safari if present
-        const thomasIndex = Array.from(vs.options).findIndex(o => (o.value || '').toLowerCase().includes('thomas'));
-        if (thomasIndex > 0) {
-          vs.selectedIndex = thomasIndex;
-          currentVoice = vs.options[thomasIndex].value;
+        // Prefer Thomas on Apple if present, else Audrey, else Amélie
+        const findPref = (name) => Array.from(vs.options).findIndex(o => (o.value || '').toLowerCase().includes(name));
+        const thomasIndex = findPref('thomas');
+        const audreyIndex = findPref('audrey');
+        const amelieIndex = findPref('amelie');
+        const prefIndex = [thomasIndex, audreyIndex, amelieIndex].find(i => i > 0);
+        if (typeof prefIndex === 'number') {
+          vs.selectedIndex = prefIndex;
+          currentVoice = vs.options[prefIndex].value;
         } else {
           vs.selectedIndex = 0;
           currentVoice = 'system';
@@ -935,7 +1128,7 @@
       renderVoiceDebug();
     }
 
-    async function handleFileLoad(files) {
+    async function handleFileLoad(files, opts = {}) {
         let totalWords = 0;
 
         const readFile = (file) => new Promise((resolve, reject) => {
@@ -971,7 +1164,16 @@
             } else {
                 toastMessage = i18n[curLang].toast_multi_file.replace('{wordCount}', totalWords).replace('{fileCount}', fileCount);
             }
-            showToast(toastMessage);
+            // Suppress success toast within Files panel of the menu
+            const filesPanel = document.getElementById('filesPanel');
+            const menuModalEl = document.getElementById('menuModal');
+            const inFilesPanel = !!(menuModalEl && menuModalEl.classList.contains('visible') && filesPanel && filesPanel.getAttribute('aria-hidden') === 'false');
+            if (!opts.suppressToast && !inFilesPanel) {
+              showToast(toastMessage);
+            }
+            clearAudioCache();
+            // Ask to persist to IndexedDB (one-time per session unless accepted)
+            maybePromptPersist();
         }
     }
     
@@ -988,7 +1190,7 @@
       currentExpectedPrefix = "";
       privativeAnswered = true;
       displayHistory = [];
-      ['nextBtn', 'repeatBtn', 'showBtn', 'voiceBtn', 'historyBtn'].forEach(id => document.getElementById(id).disabled = words.length === 0);
+      ['nextBtn', 'repeatBtn', 'showBtn', 'historyBtn'].forEach(id => document.getElementById(id).disabled = words.length === 0);
       document.getElementById('viewListBtn').disabled = words.length === 0;
       nextBtn.textContent = i18n[curLang].btn_next;
       updateStatusInfo('');
@@ -1014,6 +1216,131 @@
         if (shuffleEnabled) shuffleArray(prefixWords);
         else if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
       }
+    }
+
+    // --- Persistent Storage (IndexedDB) for Word Lists ---
+    const IDB_DB_NAME = 'studyApp';
+    const IDB_DB_VERSION = 1;
+    const IDB_STORE = 'wordlists';
+
+    function idbOpen() {
+      return new Promise((resolve, reject) => {
+        try {
+          if (!('indexedDB' in window)) return reject(new Error('IndexedDB not supported'));
+          const req = indexedDB.open(IDB_DB_NAME, IDB_DB_VERSION);
+          req.onupgradeneeded = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE, { keyPath: 'filename' });
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error || new Error('IndexedDB open failed'));
+        } catch (e) { reject(e); }
+      });
+    }
+
+    async function persistAllWordListsToIDB() {
+      try {
+        const db = await idbOpen();
+        const tx = db.transaction(IDB_STORE, 'readwrite');
+        const store = tx.objectStore(IDB_STORE);
+        store.clear();
+        for (const name of Object.keys(wordLists)) {
+          const rec = { filename: name, words: wordLists[name].words || [], enabled: !!wordLists[name].enabled, updated: Date.now() };
+          store.put(rec);
+        }
+        return new Promise((resolve, reject) => {
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => reject(tx.error);
+          tx.onabort = () => reject(tx.error || new Error('IDB tx aborted'));
+        });
+      } catch (_) { /* ignore */ }
+      return false;
+    }
+
+    async function loadWordListsFromIDB() {
+      try {
+        const db = await idbOpen();
+        const tx = db.transaction(IDB_STORE, 'readonly');
+        const store = tx.objectStore(IDB_STORE);
+        const req = store.getAll();
+        return await new Promise((resolve, reject) => {
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+      } catch (_) { return []; }
+    }
+
+    function persistIfConsented() {
+      try { if (localStorage.getItem('persistConsent') === '1') persistAllWordListsToIDB(); } catch (_) {}
+    }
+
+    function maybePromptPersist(anchorEl) {
+      try {
+        if (!('indexedDB' in window)) return;
+        if (localStorage.getItem('persistConsent') === '1') { persistAllWordListsToIDB(); return; }
+        if (sessionStorage.getItem('persistPrompted') === '1') return;
+        sessionStorage.setItem('persistPrompted', '1');
+        // Build mini confirm near anchor (bottom file icon if present)
+        const anchor = anchorEl || document.getElementById('bottomFileStatus') || document.body;
+        const mini = document.createElement('div');
+        mini.className = 'mini-confirm';
+        mini.textContent = 'Save word lists on this device for next time?';
+        const actions = document.createElement('div'); actions.className = 'mini-actions';
+        const yes = document.createElement('button'); yes.className = 'mini-btn primary'; yes.textContent = (i18n[curLang]?.confirm_yes_continue) || 'Yes';
+        const no = document.createElement('button'); no.className = 'mini-btn'; no.textContent = (i18n[curLang]?.confirm_cancel) || 'Cancel';
+        actions.appendChild(yes); actions.appendChild(no); mini.appendChild(actions);
+        document.body.appendChild(mini);
+        // position
+        const r = anchor.getBoundingClientRect(); const vw = window.innerWidth; const vh = window.innerHeight;
+        mini.style.visibility = 'hidden'; mini.style.left = '0px'; mini.style.top = '0px';
+        const mh = mini.offsetHeight; const mw = mini.offsetWidth;
+        let left = Math.min(Math.max(r.left, 8), vw - mw - 8);
+        let top; const spaceBelow = vh - r.bottom; const spaceAbove = r.top;
+        if (spaceBelow >= mh + 8) top = r.bottom + 6; else if (spaceAbove >= mh + 8) top = r.top - mh - 6; else top = Math.max(8, Math.min(vh - mh - 8, r.bottom + 6));
+        mini.style.left = `${left}px`; mini.style.top = `${top}px`; mini.style.visibility = 'visible';
+        const cleanup = () => { document.removeEventListener('pointerdown', outside, true); window.removeEventListener('resize', destroy); window.removeEventListener('scroll', destroy, true); mini.remove(); };
+        const outside = (e) => { if (!mini.contains(e.target)) cleanup(); };
+        const destroy = () => cleanup();
+        setTimeout(() => { document.addEventListener('pointerdown', outside, true); window.addEventListener('resize', destroy); window.addEventListener('scroll', destroy, true); }, 0);
+        yes.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); try { localStorage.setItem('persistConsent', '1'); } catch (_) {} persistAllWordListsToIDB(); cleanup(); });
+        no.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); cleanup(); });
+      } catch (_) { /* no-op */ }
+    }
+
+    async function deleteWordList(name) {
+      try {
+        // Remove from in-memory list
+        if (wordLists && Object.prototype.hasOwnProperty.call(wordLists, name)) {
+          delete wordLists[name];
+        }
+        // Remove single record from IDB (best-effort)
+        try {
+          const db = await idbOpen();
+          const tx = db.transaction(IDB_STORE, 'readwrite');
+          tx.objectStore(IDB_STORE).delete(name);
+          await new Promise((resolve, reject) => { tx.oncomplete = resolve; tx.onerror = reject; tx.onabort = reject; });
+        } catch (_) { /* ignore */ }
+        // Rebuild UI/state
+        generateWordListsUI();
+        rebuildActiveWordsList();
+        persistIfConsented();
+        clearAudioCache();
+      } catch (_) { /* noop */ }
+    }
+
+    const AUDIO_CACHE_KEY = 'tts_last_audio';
+    function clearAudioCache(){ try { localStorage.removeItem(AUDIO_CACHE_KEY); } catch(_){} }
+    function setAudioCache(engine, voice, text, dataUrl, mime){
+      try { localStorage.setItem(AUDIO_CACHE_KEY, JSON.stringify({ engine, voice, text, dataUrl, mime, ts: Date.now() })); } catch(_){}
+    }
+    function getAudioCache(engine, voice, text){
+      try { const s = localStorage.getItem(AUDIO_CACHE_KEY); if (!s) return null; const o = JSON.parse(s);
+        if (o && o.engine===engine && o.voice===voice && o.text===text && typeof o.dataUrl==='string') return o.dataUrl;
+      } catch(_){}
+      return null;
+    }
+    function blobToDataURL(blob){
+      return new Promise((resolve, reject) => { try { const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=reject; r.readAsDataURL(blob); } catch(e){ resolve(null); } });
     }
 
     function speakWord(w) {
@@ -1064,6 +1391,13 @@
 
     async function speakWithOpenAITTS(text, voice) {
       try {
+        // Play from short-term cache if available
+        const cached = getAudioCache('openai', voice, text);
+        if (cached) {
+          const a = new Audio(cached);
+          await a.play();
+          return new Promise(resolve => { a.onended = resolve; });
+        }
         if (openaiAudio) { try { openaiAudio.pause(); } catch(_){} }
         const resp = await fetch('https://api.openai.com/v1/audio/speech', {
           method: 'POST',
@@ -1073,6 +1407,8 @@
         if (!resp.ok) throw new Error('TTS request failed');
         const buf = await resp.arrayBuffer();
         const blob = new Blob([buf], { type: 'audio/mpeg' });
+        // Save short-term cache (last clip only)
+        blobToDataURL(blob).then((dataUrl)=>{ if (dataUrl) setAudioCache('openai', voice, text, dataUrl, blob.type); });
         const url = URL.createObjectURL(blob);
         openaiAudio = new Audio(url);
         await openaiAudio.play();
@@ -1086,6 +1422,13 @@
     // ElevenLabs TTS (non-streaming: Create Speech)
     async function speakWithElevenLabs(text, voiceId) {
       try {
+        // Play from short-term cache if available
+        const cached = getAudioCache('eleven', voiceId, text);
+        if (cached) {
+          const a = new Audio(cached);
+          await a.play();
+          return new Promise(resolve => { a.onended = resolve; });
+        }
         const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
         const resp = await fetch(url, {
           method: 'POST',
@@ -1097,13 +1440,14 @@
           body: JSON.stringify({
             text,
             model_id: 'eleven_multilingual_v2',
-            language: 'fr-FR',
+            language_code: 'fr',
             voice_settings: { stability: 0.5, similarity_boost: 0.7, style: 0.0, use_speaker_boost: true }
           })
         });
         if (!resp.ok) throw new Error('ElevenLabs TTS failed');
         const buf = await resp.arrayBuffer();
         const blob = new Blob([buf], { type: 'audio/mpeg' });
+        blobToDataURL(blob).then((dataUrl)=>{ if (dataUrl) setAudioCache('eleven', voiceId, text, dataUrl, blob.type); });
         const urlObj = URL.createObjectURL(blob);
         const audio = new Audio(urlObj);
         await audio.play();
@@ -1222,7 +1566,7 @@
         updateInstruction('');
         nextBtn.textContent = i18n[curLang].start_next_session;
         updateProgressBar();
-        ['repeatBtn', 'showBtn', 'voiceBtn'].forEach(id => document.getElementById(id).disabled = true);
+        ['repeatBtn', 'showBtn'].forEach(id => document.getElementById(id).disabled = true);
         return;
       }
 
@@ -1286,11 +1630,20 @@
 
     async function repeatWord() { 
       if (!currentWord) return; 
-      if ((getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef') && currentBaseWord) {
-        await speakWord(currentBaseWord);
-      } else {
-        await speakWord(currentWord);
+      const isArticles = (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef');
+      const text = (isArticles && currentBaseWord) ? currentBaseWord : currentWord;
+      // Use cached audio for OpenAI/Eleven replays if available
+      if (typeof currentVoice === 'string') {
+        if (currentVoice.startsWith('openai:')) {
+          const v = currentVoice.split(':')[1] || 'echo';
+          const cached = getAudioCache('openai', v, text);
+          if (cached) { const a = new Audio(cached); await a.play(); return; }
+        } else if (currentVoice.startsWith('eleven:')) {
+          const v = currentVoice.split(':')[1] || '';
+          if (v) { const cached = getAudioCache('eleven', v, text); if (cached) { const a = new Audio(cached); await a.play(); return; } }
+        }
       }
+      await speakWord(text);
     }
 
     function showCurrentWord() {
@@ -1310,15 +1663,7 @@
       }
     }
 
-    function toggleVoice() {
-      const vs = document.getElementById("voiceSelect");
-      if (vs.options.length === 0) return;
-      vs.selectedIndex = (vs.selectedIndex + 1) % vs.options.length;
-      currentVoice = vs.value;
-      try { localStorage.setItem('selectedVoice', currentVoice); } catch (_) {}
-      updateVoiceIndicator();
-      renderVoiceDebug();
-    }
+    
     
     // --- UI UPDATE & MANAGEMENT FUNCTIONS ---
     function updateProgressBar() {
@@ -1337,9 +1682,11 @@
         const vs = document.getElementById('voiceSelect');
         const selectedOption = vs.selectedOptions[0];
         const bottomVoice = document.getElementById('bottomVoice');
+        const settingsVoiceValue = document.getElementById('settingsVoiceValue');
         if (!selectedOption) { 
           document.getElementById('activeVoiceDisplay').textContent = i18n[curLang].no_voices; 
           if (bottomVoice) bottomVoice.textContent = i18n[curLang].no_voices; 
+          if (settingsVoiceValue) settingsVoiceValue.textContent = '—';
           return; 
         }
         // If "system" is selected, try to show the resolved best French voice name
@@ -1348,11 +1695,13 @@
           if (resolved) {
             document.getElementById('activeVoiceDisplay').textContent = `🗣️ ${resolved.name} (${resolved.lang})`;
             if (bottomVoice) bottomVoice.textContent = `${resolved.name} (${resolved.lang})`;
+            if (settingsVoiceValue) settingsVoiceValue.textContent = `${resolved.name}`;
             return;
           }
         }
         document.getElementById('activeVoiceDisplay').textContent = `🗣️ ${selectedOption.text}`;
         if (bottomVoice) bottomVoice.textContent = selectedOption.text;
+        if (settingsVoiceValue) settingsVoiceValue.textContent = selectedOption.text;
     }
 
     function getSelectedStudyMode() {
@@ -1368,6 +1717,7 @@
       const text = (sel && sel.selectedOptions && sel.selectedOptions[0]) ? sel.selectedOptions[0].text : '';
       document.getElementById('activeStudyModeDisplay').textContent = `${i18n[curLang].indicator_mode_prefix} ${text}`;
       const bottomMode = document.getElementById('bottomMode'); if (bottomMode) bottomMode.textContent = text;
+      const settingsModeValue = document.getElementById('settingsModeValue'); if (settingsModeValue) settingsModeValue.textContent = text || settingsModeValue.textContent;
     }
 
     function updateShuffleIndicator() {
@@ -1384,6 +1734,364 @@
       updateStudyModeIndicator();
       updateShuffleIndicator();
     }
+    
+    // --- Bottom Mode Quick Menu ---
+    (function initBottomModeQuickMenu(){
+      const bottomModeEl = document.getElementById('bottomMode');
+      if (!bottomModeEl) return;
+      let menuEl = null;
+
+      function buildMenu() {
+        if (menuEl) menuEl.remove();
+        // Close any other quick menus
+        document.querySelectorAll('.mode-quick-menu').forEach(el => el.remove());
+        menuEl = document.createElement('div');
+        menuEl.className = 'mode-quick-menu';
+        menuEl.setAttribute('role','listbox');
+
+        const sel = document.getElementById('studyModeSelect');
+        const cur = sel ? (sel.value || '') : '';
+        const opts = sel ? Array.from(sel.options) : [];
+        opts.forEach(o => {
+          const item = document.createElement('div');
+          item.className = 'mode-quick-item' + (o.disabled ? ' disabled' : '');
+          item.setAttribute('role','option');
+          item.dataset.value = o.value;
+          item.textContent = o.text;
+          if (o.value === cur) {
+            const check = document.createElement('span');
+            check.className = 'mode-quick-check';
+            check.textContent = '✓';
+            item.appendChild(check);
+          }
+          item.addEventListener('click', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            if (o.disabled) return;
+            if (sel) {
+              sel.value = o.value;
+              sel.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            closeMenu();
+          });
+          menuEl.appendChild(item);
+        });
+        document.body.appendChild(menuEl);
+      }
+
+      function positionMenu() {
+        if (!menuEl) return;
+        const r = bottomModeEl.getBoundingClientRect();
+        const vw = window.innerWidth; const vh = window.innerHeight;
+        // Default place above the bar if near bottom
+        // First, place off-screen to measure height
+        menuEl.style.visibility = 'hidden';
+        menuEl.style.top = '0px'; menuEl.style.left = '0px';
+        const mh = menuEl.offsetHeight; const mw = menuEl.offsetWidth;
+        let left = Math.min(Math.max(r.left, 8), vw - mw - 8);
+        let top;
+        const spaceBelow = vh - r.bottom;
+        const spaceAbove = r.top;
+        if (spaceBelow >= mh + 8) {
+          top = r.bottom + 6; // open below
+        } else if (spaceAbove >= mh + 8) {
+          top = r.top - mh - 6; // open above
+        } else {
+          // clamp inside viewport
+          top = Math.max(8, Math.min(vh - mh - 8, r.bottom + 6));
+        }
+        menuEl.style.left = `${left}px`;
+        menuEl.style.top = `${top}px`;
+        menuEl.style.visibility = 'visible';
+      }
+
+      function closeMenu() {
+        if (!menuEl) return;
+        document.removeEventListener('pointerdown', onDocDown, true);
+        window.removeEventListener('resize', closeMenu);
+        window.removeEventListener('scroll', closeMenu, true);
+        menuEl.remove();
+        menuEl = null;
+      }
+
+      function onDocDown(e) {
+        if (!menuEl) return;
+        if (menuEl.contains(e.target) || bottomModeEl.contains(e.target)) return;
+        closeMenu();
+      }
+
+      function toggleMenu() {
+        if (menuEl) { closeMenu(); return; }
+        buildMenu();
+        positionMenu();
+        // Close on outside interactions
+        setTimeout(() => { // defer to avoid immediate close on same click
+          document.addEventListener('pointerdown', onDocDown, true);
+          window.addEventListener('resize', closeMenu);
+          window.addEventListener('scroll', closeMenu, true);
+        }, 0);
+      }
+
+      bottomModeEl.style.cursor = 'pointer';
+      bottomModeEl.title = 'Change Study Mode';
+      bottomModeEl.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); toggleMenu(); });
+      bottomModeEl.addEventListener('touchend', (e) => { e.preventDefault(); toggleMenu(); }, { passive: false });
+    })();
+
+    // --- Bottom Voice Quick Menu ---
+    (function initBottomVoiceQuickMenu(){
+      const bottomVoiceEl = document.getElementById('bottomVoice');
+      if (!bottomVoiceEl) return;
+      let menuEl = null;
+
+      function buildMenu() {
+        if (menuEl) menuEl.remove();
+        document.querySelectorAll('.mode-quick-menu').forEach(el => el.remove());
+        // Ensure voice list is up to date
+        try { populateVoiceList(); } catch (_) {}
+        const vs = document.getElementById('voiceSelect');
+        menuEl = document.createElement('div');
+        menuEl.className = 'mode-quick-menu';
+        menuEl.setAttribute('role','listbox');
+        const cur = vs && vs.value ? vs.value : 'system';
+        const opts = vs ? Array.from(vs.options) : [];
+        opts.forEach(o => {
+          if (!o.value) return; // skip placeholders
+          const item = document.createElement('div');
+          item.className = 'mode-quick-item' + (o.disabled ? ' disabled' : '');
+          item.setAttribute('role','option');
+          item.dataset.value = o.value;
+          item.textContent = o.text;
+          if (o.value === cur) {
+            const check = document.createElement('span');
+            check.className = 'mode-quick-check';
+            check.textContent = '✓';
+            item.appendChild(check);
+          }
+          item.addEventListener('click', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            if (o.disabled) return;
+            if (vs) {
+              vs.value = o.value;
+              vs.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            closeMenu();
+          });
+          menuEl.appendChild(item);
+        });
+        document.body.appendChild(menuEl);
+      }
+
+      function positionMenu() {
+        if (!menuEl) return;
+        const r = bottomVoiceEl.getBoundingClientRect();
+        const vw = window.innerWidth; const vh = window.innerHeight;
+        menuEl.style.visibility = 'hidden';
+        menuEl.style.top = '0px'; menuEl.style.left = '0px';
+        const mh = menuEl.offsetHeight; const mw = menuEl.offsetWidth;
+        let left = Math.min(Math.max(r.left, 8), vw - mw - 8);
+        let top;
+        const spaceBelow = vh - r.bottom;
+        const spaceAbove = r.top;
+        if (spaceBelow >= mh + 8) { top = r.bottom + 6; }
+        else if (spaceAbove >= mh + 8) { top = r.top - mh - 6; }
+        else { top = Math.max(8, Math.min(vh - mh - 8, r.bottom + 6)); }
+        menuEl.style.left = `${left}px`;
+        menuEl.style.top = `${top}px`;
+        menuEl.style.visibility = 'visible';
+      }
+
+      function closeMenu() {
+        if (!menuEl) return;
+        document.removeEventListener('pointerdown', onDocDown, true);
+        window.removeEventListener('resize', closeMenu);
+        window.removeEventListener('scroll', closeMenu, true);
+        menuEl.remove();
+        menuEl = null;
+      }
+
+      function onDocDown(e) {
+        if (!menuEl) return;
+        if (menuEl.contains(e.target) || bottomVoiceEl.contains(e.target)) return;
+        closeMenu();
+      }
+
+      function toggleMenu() {
+        if (menuEl) { closeMenu(); return; }
+        buildMenu();
+        positionMenu();
+        setTimeout(() => {
+          document.addEventListener('pointerdown', onDocDown, true);
+          window.addEventListener('resize', closeMenu);
+          window.addEventListener('scroll', closeMenu, true);
+        }, 0);
+      }
+
+      bottomVoiceEl.style.cursor = 'pointer';
+      bottomVoiceEl.title = 'Change Voice';
+      bottomVoiceEl.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); toggleMenu(); });
+      bottomVoiceEl.addEventListener('touchend', (e) => { e.preventDefault(); toggleMenu(); }, { passive: false });
+    })();
+
+    // --- Bottom File List Quick Menu ---
+    (function initBottomFilesQuickMenu(){
+      const fileIcon = document.getElementById('bottomFileStatus');
+      if (!fileIcon) return;
+      let menuEl = null;
+
+      function buildMenu() {
+        if (menuEl) menuEl.remove();
+        document.querySelectorAll('.mode-quick-menu').forEach(el => el.remove());
+        menuEl = document.createElement('div');
+        menuEl.className = 'mode-quick-menu';
+        menuEl.setAttribute('role','listbox');
+        const filenames = Object.keys(wordLists || {});
+        if (filenames.length === 0) {
+          const item = document.createElement('div');
+          item.className = 'mode-quick-item disabled';
+          item.textContent = i18n[curLang].file_info_none || 'No file loaded.';
+          menuEl.appendChild(item);
+        } else {
+          filenames.forEach(name => {
+            const item = document.createElement('div');
+            item.className = 'mode-quick-item';
+            const wc = (wordLists[name] && wordLists[name].words) ? wordLists[name].words.length : 0;
+            item.textContent = `${name} (${wc} ${i18n[curLang].words_lower})`;
+            menuEl.appendChild(item);
+          });
+        }
+        // Action: Add word list
+        const addItem = document.createElement('div');
+        addItem.className = 'mode-quick-item';
+        addItem.style.fontWeight = '700';
+        addItem.textContent = 'Add Word List…';
+        addItem.addEventListener('click', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          // Prefer global hidden input; fallback to menu input; else create temporary
+          let picker = null;
+          try { picker = (typeof fileInput !== 'undefined') ? fileInput : null; } catch (_) { picker = null; }
+          if (!picker) picker = document.getElementById('menuFileInput');
+          if (picker && typeof picker.click === 'function') { picker.click(); }
+          else {
+            const tmp = document.createElement('input'); tmp.type='file'; tmp.accept='.txt'; tmp.multiple=true;
+            tmp.style.position='fixed'; tmp.style.left='-9999px'; document.body.appendChild(tmp);
+            tmp.addEventListener('change', () => { const files = Array.from(tmp.files||[]).filter(f=>f.name.endsWith('.txt')); if (files.length>0) handleFileLoad(files); document.body.removeChild(tmp); });
+            tmp.click();
+          }
+          closeMenu();
+        });
+        menuEl.appendChild(addItem);
+        document.body.appendChild(menuEl);
+      }
+
+      function positionMenu() {
+        if (!menuEl) return;
+        const r = fileIcon.getBoundingClientRect();
+        const vw = window.innerWidth; const vh = window.innerHeight;
+        menuEl.style.visibility = 'hidden';
+        menuEl.style.top = '0px'; menuEl.style.left = '0px';
+        const mh = menuEl.offsetHeight; const mw = menuEl.offsetWidth;
+        let left = Math.min(Math.max(r.left, 8), vw - mw - 8);
+        let top;
+        const spaceBelow = vh - r.bottom;
+        const spaceAbove = r.top;
+        if (spaceBelow >= mh + 8) { top = r.bottom + 6; }
+        else if (spaceAbove >= mh + 8) { top = r.top - mh - 6; }
+        else { top = Math.max(8, Math.min(vh - mh - 8, r.bottom + 6)); }
+        menuEl.style.left = `${left}px`;
+        menuEl.style.top = `${top}px`;
+        menuEl.style.visibility = 'visible';
+      }
+
+      function closeMenu() {
+        if (!menuEl) return;
+        document.removeEventListener('pointerdown', onDocDown, true);
+        window.removeEventListener('resize', closeMenu);
+        window.removeEventListener('scroll', closeMenu, true);
+        menuEl.remove();
+        menuEl = null;
+      }
+
+      function onDocDown(e) {
+        if (!menuEl) return;
+        if (menuEl.contains(e.target) || fileIcon.contains(e.target)) return;
+        closeMenu();
+      }
+
+      function toggleMenu() {
+        if (menuEl) { closeMenu(); return; }
+        buildMenu();
+        positionMenu();
+        setTimeout(() => {
+          document.addEventListener('pointerdown', onDocDown, true);
+          window.addEventListener('resize', closeMenu);
+          window.addEventListener('scroll', closeMenu, true);
+        }, 0);
+      }
+
+      fileIcon.style.cursor = 'pointer';
+      fileIcon.title = 'Show Files';
+      fileIcon.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); toggleMenu(); });
+      fileIcon.addEventListener('touchend', (e) => { e.preventDefault(); toggleMenu(); }, { passive: false });
+    })();
+
+    // --- Bottom Shuffle Toggle ---
+    (function initBottomShuffleToggle(){
+      const shuf = document.getElementById('bottomShuffle');
+      const st = document.getElementById('shuffleToggle');
+      if (!shuf || !st) return;
+      shuf.style.cursor = 'pointer';
+      shuf.title = 'Toggle Shuffle';
+
+      function applyShuffle(enabled) {
+        shuffleEnabled = enabled;
+        if (st) st.checked = shuffleEnabled;
+        if (shuffleEnabled) {
+          shuffleArray(words);
+          if (prefixWords.length > 0) shuffleArray(prefixWords);
+        } else {
+          words = [...originalWordOrder];
+          if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
+        }
+        updateShuffleIndicator();
+        initializeStudy();
+        clearAudioCache();
+      }
+
+      let miniEl = null;
+      function closeMini(){
+        if (!miniEl) return;
+        document.removeEventListener('pointerdown', onDoc, true);
+        window.removeEventListener('resize', closeMini);
+        window.removeEventListener('scroll', closeMini, true);
+        miniEl.remove(); miniEl=null;
+      }
+      function onDoc(e){ if (miniEl && !miniEl.contains(e.target) && !shuf.contains(e.target)) closeMini(); }
+      function showMiniConfirm(){
+        closeMini();
+        miniEl = document.createElement('div');
+        miniEl.className = 'mini-confirm';
+        miniEl.textContent = (i18n[curLang] && i18n[curLang].confirm_shuffle) || 'Change shuffle mode?';
+        const actions = document.createElement('div'); actions.className='mini-actions';
+        const yes = document.createElement('button'); yes.className='mini-btn primary'; yes.textContent = (i18n[curLang] && i18n[curLang].confirm_yes_continue) || 'Yes';
+        const no = document.createElement('button'); no.className='mini-btn'; no.textContent = (i18n[curLang] && i18n[curLang].confirm_cancel) || 'Cancel';
+        actions.appendChild(yes); actions.appendChild(no); miniEl.appendChild(actions);
+        document.body.appendChild(miniEl);
+        // position near shuffle icon
+        const r = shuf.getBoundingClientRect(); const vw=window.innerWidth; const vh=window.innerHeight;
+        miniEl.style.visibility='hidden'; miniEl.style.left='0px'; miniEl.style.top='0px'; const mh=miniEl.offsetHeight; const mw=miniEl.offsetWidth;
+        let left = Math.min(Math.max(r.left, 8), vw - mw - 8);
+        let top; const spaceBelow = vh - r.bottom; const spaceAbove = r.top;
+        if (spaceBelow >= mh + 8) top = r.bottom + 6; else if (spaceAbove >= mh + 8) top = r.top - mh - 6; else top = Math.max(8, Math.min(vh - mh - 8, r.bottom + 6));
+        miniEl.style.left = `${left}px`; miniEl.style.top = `${top}px`; miniEl.style.visibility='visible';
+        setTimeout(()=>{ document.addEventListener('pointerdown', onDoc, true); window.addEventListener('resize', closeMini); window.addEventListener('scroll', closeMini, true); },0);
+        yes.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); applyShuffle(!shuffleEnabled); closeMini(); });
+        no.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); closeMini(); });
+      }
+
+      const onTap = (e) => { e && e.preventDefault(); e && e.stopPropagation(); showMiniConfirm(); };
+      shuf.addEventListener('click', onTap);
+      shuf.addEventListener('touchend', onTap, { passive: false });
+    })();
     
     // --- Voice Debug Helper (feature-flagged) ---
     function isVoiceDebugEnabled() {
@@ -1446,40 +2154,89 @@
     
     function generateWordListsUI() {
         const containers = [
-          { container: document.getElementById('wordListsOptions'), section: document.getElementById('wordListsSection') },
-          { container: document.getElementById('menuWordListsOptions'), section: document.getElementById('menuWordListsSection') },
+          { container: document.getElementById('wordListsOptions'), section: document.getElementById('wordListsSection'), style: 'legacy' },
+          { container: document.getElementById('menuWordListsOptions'), section: document.getElementById('menuWordListsSection'), style: 'ios' },
         ];
         containers.forEach(({container, section}) => { if (container) container.innerHTML = ''; });
         const filenames = Object.keys(wordLists);
-        containers.forEach(({container, section}) => {
+        containers.forEach(({container, section, style}) => {
           if (!container || !section) return;
-          if (filenames.length > 1) {
+          if (filenames.length === 0) { section.style.display = 'none'; return; }
+          if (style === 'ios') {
+            // Always show file list with counts; include toggles only when multiple files
+            section.style.display = 'block';
+            const showToggles = filenames.length > 1;
+            filenames.forEach(name => {
+              const row = document.createElement('div');
+              row.className = 'settings-item';
+              // Delete (X) button on the left
+              const del = document.createElement('button');
+              del.type = 'button';
+              del.textContent = '×';
+              del.title = 'Remove';
+              del.style.cssText = 'background:none;border:0;color:#c62828;font-weight:700;font-size:1.1rem;padding:4px 6px;line-height:1;cursor:pointer;';
+              del.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); deleteWordList(name); });
+              row.appendChild(del);
+              const label = document.createElement('div');
+              label.className = 'settings-label';
+              label.textContent = name;
+              const summary = document.createElement('div');
+              summary.className = 'subtle';
+              summary.style.marginRight = '12px';
+              summary.textContent = `${wordLists[name].words.length} ${i18n[curLang].words_lower}`;
+              row.appendChild(label);
+              row.appendChild(summary);
+              if (showToggles) {
+                const toggle = document.createElement('input');
+                toggle.type = 'checkbox';
+                toggle.className = 'ios-switch';
+                toggle.checked = !!wordLists[name].enabled;
+                toggle.dataset.filename = name;
+                toggle.addEventListener('change', () => {
+                  wordLists[name].enabled = toggle.checked;
+                  rebuildActiveWordsList();
+                  persistIfConsented();
+                  clearAudioCache();
+                });
+                row.appendChild(toggle);
+              }
+              container.appendChild(row);
+            });
+          } else {
+            // Legacy settings: show toggles only when multiple files are present
+            if (filenames.length > 1) {
               section.style.display = 'block';
               filenames.forEach(name => {
-                  const item = document.createElement('div');
-                  item.className = 'mode-option';
-                  const checkbox = document.createElement('input');
-                  checkbox.type = 'checkbox';
-                  checkbox.checked = wordLists[name].enabled;
-                  checkbox.id = `file--${name}`;
-                  checkbox.dataset.filename = name;
-                  checkbox.addEventListener('change', () => {
-                      confirmationCallback = () => {
-                          wordLists[name].enabled = checkbox.checked;
-                          rebuildActiveWordsList();
-                      };
-                      document.getElementById('confirmationDialogText').textContent = i18n[curLang].confirm_word_list;
-                      confirmationDialog.classList.add('visible');
-                  });
-                  const label = document.createElement('label');
-                  label.htmlFor = `file--${name}`;
-                  label.textContent = `${name} (${wordLists[name].words.length} ${i18n[curLang].words_lower})`;
-                  item.appendChild(checkbox);
-                  item.appendChild(label);
-                  container.appendChild(item);
+                const item = document.createElement('div');
+                item.className = 'mode-option';
+                const del = document.createElement('button');
+                del.type = 'button';
+                del.textContent = '×';
+                del.title = 'Remove';
+                del.style.cssText = 'background:none;border:0;color:#c62828;font-weight:700;font-size:1.1rem;padding:4px 6px;line-height:1;cursor:pointer;';
+                del.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); deleteWordList(name); });
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = wordLists[name].enabled;
+                checkbox.id = `file--${name}`;
+                checkbox.dataset.filename = name;
+                checkbox.addEventListener('change', () => {
+                  wordLists[name].enabled = checkbox.checked;
+                  rebuildActiveWordsList();
+                  persistIfConsented();
+                  clearAudioCache();
+                });
+                const label = document.createElement('label');
+                label.htmlFor = `file--${name}`;
+                label.textContent = `${name} (${wordLists[name].words.length} ${i18n[curLang].words_lower})`;
+                item.appendChild(del);
+                item.appendChild(checkbox);
+                item.appendChild(label);
+                container.appendChild(item);
               });
-          } else {
+            } else {
               section.style.display = 'none';
+            }
           }
         });
     }
@@ -1493,6 +2250,9 @@
                 fileCount++;
             }
         }
+        // Update grouped settings count if present
+        const activeCountEl = document.getElementById('settingsActiveListsCount');
+        if (activeCountEl) activeCountEl.textContent = String(fileCount);
         words = newWordList;
         originalWordOrder = [...words]; // Update original order for unshuffling
         const bottomIcon = document.getElementById('bottomFileStatus');
@@ -1538,6 +2298,9 @@
     }
 
     function showToast(message, duration = 3000) {
+        // Suppress toast when menu is open to avoid overlay clutter
+        const menuEl = document.getElementById('menuModal');
+        if (menuEl && menuEl.classList.contains('visible')) return;
         toastNotification.textContent = message;
         toastNotification.classList.add('visible');
         setTimeout(() => {
@@ -1582,6 +2345,8 @@
     document.getElementById('settingsBtn').addEventListener('click', () => { 
       // Open Menu for one-click access to controls
       menuModal.classList.add('visible');
+      // Hide any active toast while menu is open
+      if (toastNotification) toastNotification.classList.remove('visible');
       document.getElementById('menuBtn')?.setAttribute('aria-expanded','true');
       if (isSafari) primeVoices();
       populateVoiceList();
@@ -1597,7 +2362,6 @@
     if (nextBtn) nextBtn.addEventListener('click', () => { if (!nextBtn.disabled) nextWord(); });
     if (repeatBtn) repeatBtn.addEventListener('click', () => { if (!repeatBtn.disabled) repeatWord(); });
     if (showBtn) showBtn.addEventListener('click', () => { if (!showBtn.disabled) showCurrentWord(); });
-    if (voiceBtn) voiceBtn.addEventListener('click', () => { if (!voiceBtn.disabled) toggleVoice(); });
     document.getElementById('helpBtn').addEventListener('click', () => { helpModal.classList.add('visible'); const mc = helpModal.querySelector('.modal-content'); if (mc) mc.focus(); });
     // Hamburger menu
     const menuModal = document.getElementById('menuModal');
@@ -1605,8 +2369,12 @@
     if (menuBtn) menuBtn.addEventListener('click', () => { 
       if (menuModal) { 
         menuModal.classList.add('visible'); 
+        if (toastNotification) toastNotification.classList.remove('visible');
         menuBtn.setAttribute('aria-expanded','true'); 
         bodyScrollLock(true);
+        // Sync grouped UI controls on open
+        const st = document.getElementById('shuffleToggle'); if (st) st.checked = shuffleEnabled;
+        updateAllIndicators();
         const closeOverlay = document.getElementById('menuCloseOverlay');
         if (closeOverlay) {
           const rect = menuBtn.getBoundingClientRect();
@@ -1632,6 +2400,24 @@
     const menuLangFr = document.getElementById('menuLangFr');
     if (menuLangEn) menuLangEn.addEventListener('click', () => { setLanguage('en'); });
     if (menuLangFr) menuLangFr.addEventListener('click', () => { setLanguage('fr'); });
+    // Row navigation to subpanels
+    function openSubpanel(id){ const el=document.getElementById(id); if(!el) return; el.setAttribute('aria-hidden','false'); const mp=document.getElementById('menuPanel'); if(mp) mp.classList.add('sub-open'); }
+    function closeSubpanel(id){ const el=document.getElementById(id); if(!el) return; el.setAttribute('aria-hidden','true'); const mp=document.getElementById('menuPanel'); if(mp){ const anyOpen=Array.from(document.querySelectorAll('#menuModal .subpanel')).some(sp=>sp.getAttribute('aria-hidden')==='false'); if(!anyOpen) mp.classList.remove('sub-open'); } }
+    const rowLanguage = document.getElementById('rowLanguage'); if(rowLanguage){ const fn=()=>{ openSubpanel('langPanel'); updateLangChecks(); }; rowLanguage.addEventListener('click', fn); rowLanguage.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
+    const rowEleven = document.getElementById('rowEleven'); if(rowEleven){ const fn=()=>openSubpanel('elevenPanel'); rowEleven.addEventListener('click', fn); rowEleven.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
+    const rowOpenAI = document.getElementById('rowOpenAI'); if(rowOpenAI){ const fn=()=>openSubpanel('openaiPanel'); rowOpenAI.addEventListener('click', fn); rowOpenAI.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
+    const rowFiles = document.getElementById('rowFiles'); if(rowFiles){ const fn=()=>{ openSubpanel('filesPanel'); generateWordListsUI(); }; rowFiles.addEventListener('click', fn); rowFiles.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
+    // Back buttons
+    document.querySelectorAll('.panel-back').forEach(btn=>{ btn.addEventListener('click',()=>{ const id=btn.getAttribute('data-back'); if(id) closeSubpanel(id); }); });
+    // Language sheet handlers
+    function updateLangChecks(){ const en=document.getElementById('langCheckEn'); const fr=document.getElementById('langCheckFr'); if(en&&fr){ en.style.display = (curLang==='en')?'block':'none'; fr.style.display = (curLang==='fr')?'block':'none'; } }
+    const langOptionEn = document.getElementById('langOptionEn'); if(langOptionEn){ langOptionEn.addEventListener('click',()=>{ setLanguage('en'); updateLangChecks(); closeSubpanel('langPanel'); }); }
+    const langOptionFr = document.getElementById('langOptionFr'); if(langOptionFr){ langOptionFr.addEventListener('click',()=>{ setLanguage('fr'); updateLangChecks(); closeSubpanel('langPanel'); }); }
+
+    // No action sheets; direct file selectors handled below
+
+    // Files: Add Word List button triggers hidden input
+    const btnAddWordList=document.getElementById('btnAddWordList'); const fileInputEl=document.getElementById('menuFileInput'); if(btnAddWordList && fileInputEl){ btnAddWordList.addEventListener('click',()=>fileInputEl.click()); }
     const menuHelpBtn = document.getElementById('menuHelpBtn');
     if (menuHelpBtn) menuHelpBtn.addEventListener('click', () => { menuModal.classList.remove('visible'); helpModal.classList.add('visible'); const mc = helpModal.querySelector('.modal-content'); if (mc) mc.focus(); });
     const menuSettingsBtn = document.getElementById('menuSettingsBtn');
@@ -1664,7 +2450,7 @@
     if (menuPanelClose) menuPanelClose.addEventListener('click', closeMenuPanel);
     // Alt+M shortcut
     document.addEventListener('keydown', e => {
-      if (e.altKey && (e.key === 'm' || e.key === 'M')) { e.preventDefault(); if (!menuModal.classList.contains('visible')) { menuModal.classList.add('visible'); menuBtn?.setAttribute('aria-expanded','true'); bodyScrollLock(true); openMenuPanel(); } else { toggleMenuPanel(); } }
+      if (e.altKey && (e.key === 'm' || e.key === 'M')) { e.preventDefault(); if (!menuModal.classList.contains('visible')) { menuModal.classList.add('visible'); if (toastNotification) toastNotification.classList.remove('visible'); menuBtn?.setAttribute('aria-expanded','true'); bodyScrollLock(true); openMenuPanel(); } else { toggleMenuPanel(); } }
     });
     
     historyBtn.addEventListener('click', () => {
@@ -1712,6 +2498,7 @@
             }
             updateShuffleIndicator();
             initializeStudy();
+            clearAudioCache();
         };
         document.getElementById('confirmationDialogText').textContent = i18n[curLang].confirm_shuffle;
         confirmationDialog.classList.add('visible');
@@ -1741,12 +2528,13 @@
     });
 
     if (!isIOS) {
-      document.getElementById('welcomeBrowseBtn').addEventListener('click', () => fileInput.click());
-      document.getElementById('welcomeUploadArea').addEventListener('click', () => fileInput.click());
+      const addBtn = document.getElementById('welcomeAddBtn'); if (addBtn) addBtn.addEventListener('click', () => fileInput.click());
     } else {
       const iosPickerRow = document.getElementById('iosFilePickerRow');
       const iosFileInput = document.getElementById('iosFileInput');
-      if (iosPickerRow) iosPickerRow.style.display = 'block';
+      // Keep the native input hidden but clickable via our button; show row only if needed
+      const addBtn = document.getElementById('welcomeAddBtn');
+      if (addBtn && iosFileInput) addBtn.addEventListener('click', () => iosFileInput.click());
       if (iosFileInput) {
         iosFileInput.addEventListener('change', e => {
           if (e.target.files && e.target.files.length > 0) {
@@ -1777,7 +2565,7 @@
       const menuFileInput = document.getElementById('menuFileInput');
       if (menuFileInput) menuFileInput.addEventListener('change', (e) => {
         const files = Array.from(e.target.files || []).filter(f => f.name.endsWith('.txt'));
-        if (files.length > 0) handleFileLoad(files);
+        if (files.length > 0) handleFileLoad(files, { suppressToast: true });
         e.target.value = '';
       });
     })();
@@ -1794,7 +2582,7 @@
         bodyScrollLock(false);
       }
       if (e.target.tagName.toLowerCase() === 'input' || document.querySelector('.modal.visible')) return;
-      const btnId = { ' ': 'nextBtn', 'r': 'repeatBtn', 's': 'showBtn', 'v': 'voiceBtn' }[e.key.toLowerCase()];
+      const btnId = { ' ': 'nextBtn', 'r': 'repeatBtn', 's': 'showBtn' }[e.key.toLowerCase()];
       if (btnId && !e.metaKey && !e.ctrlKey && !e.altKey) {
         e.preventDefault();
         const btn = document.getElementById(btnId);
@@ -1865,31 +2653,111 @@
       try { localStorage.setItem('selectedVoice', currentVoice); } catch (_) {}
       updateVoiceIndicator(); 
       renderVoiceDebug();
+      clearAudioCache();
     });
     document.getElementById('voiceSelect').addEventListener('focus', populateVoiceList);
     const voiceTestBtn = document.getElementById('voiceTestBtn');
     if (voiceTestBtn) voiceTestBtn.addEventListener('click', () => { speakWord(i18n[curLang].test_phrase); });
     // ElevenLabs API key handlers
+    function isValidElevenKey(k) { return typeof k === 'string' && /^sk_[A-Za-z0-9]{8,}/.test(k); }
+    function isValidOpenAIKey(k) { return typeof k === 'string' && /^sk-proj-[A-Za-z0-9_-]{8,}/.test(k); }
     function setElevenKey(k) {
-      elevenKey = (k || '').trim();
+      const v = (k || '').trim();
+      if (v && !isValidElevenKey(v)) { return; }
+      elevenKey = v;
       try { if (elevenKey) localStorage.setItem('eleven_api_key', elevenKey); else localStorage.removeItem('eleven_api_key'); } catch(_) {}
       window._ELEVEN = window._ELEVEN || {}; window._ELEVEN.key = elevenKey;
       const m = document.getElementById('elevenKeyMasked'); if (m) m.textContent = elevenKey ? ('Key: ' + (elevenKey.length>16 ? (elevenKey.slice(0,10)+'…'+elevenKey.slice(-6)) : elevenKey.replace(/.(?=.{4})/g,'•'))) : 'No key set';
       populateVoiceList();
+      updateIntegrationIndicators();
+      clearAudioCache();
     }
-    try { const savedEl = localStorage.getItem('eleven_api_key'); if (savedEl) { setElevenKey(savedEl); } } catch(_) {}
-    const elevenSaveBtn = document.getElementById('elevenSaveBtn'); if (elevenSaveBtn) elevenSaveBtn.addEventListener('click', () => { const inp = document.getElementById('elevenKeyInput'); if (inp && inp.value.trim()) { setElevenKey(inp.value); inp.value=''; showToast('ElevenLabs key saved'); } });
-    const elevenClearBtn = document.getElementById('elevenClearBtn'); if (elevenClearBtn) elevenClearBtn.addEventListener('click', () => { setElevenKey(''); showToast('ElevenLabs key cleared'); });
-    const elevenLoadFileBtn = document.getElementById('elevenLoadFileBtn'); const elevenKeyFile = document.getElementById('elevenKeyFile');
-    if (elevenLoadFileBtn && elevenKeyFile) { elevenLoadFileBtn.addEventListener('click', () => elevenKeyFile.click()); elevenKeyFile.addEventListener('change', () => { const f = elevenKeyFile.files && elevenKeyFile.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { setElevenKey(String(r.result||'').trim()); showToast('Key loaded from file'); elevenKeyFile.value=''; }; r.readAsText(f); }); }
+    try {
+      const savedEl = localStorage.getItem('eleven_api_key');
+      if (savedEl) {
+        elevenKey = String(savedEl).trim();
+        window._ELEVEN = window._ELEVEN || {}; window._ELEVEN.key = elevenKey;
+        const m = document.getElementById('elevenKeyMasked'); if (m) m.textContent = 'Key: ' + (elevenKey.length>16 ? (elevenKey.slice(0,10)+'…'+elevenKey.slice(-6)) : elevenKey.replace(/.(?=.{4})/g,'•'));
+        populateVoiceList();
+        updateIntegrationIndicators();
+      }
+    } catch(_) {}
+    function updateIntegrationIndicators(){
+      const elevenOk = typeof elevenKey === 'string' && elevenKey.startsWith('sk_');
+      const openaiOk = typeof openaiKey === 'string' && openaiKey.startsWith('sk-proj-');
+      const es = document.getElementById('elevenStatus'); if (es) es.textContent = elevenOk ? 'Configured' : '';
+      const os = document.getElementById('openaiStatus'); if (os) os.textContent = openaiOk ? 'Configured' : '';
+      // Disable/enable fields and file pickers based on state
+      const eInput = document.getElementById('elevenKeyInput');
+      const eLoad = document.getElementById('elevenLoadFileBtn');
+      if (eInput) {
+        eInput.disabled = !!elevenOk;
+        eInput.value = '';
+        eInput.placeholder = elevenOk ? 'Remove ElevenLabs key before load a new one.' : 'Paste a valid API Key';
+      }
+      if (eLoad) eLoad.classList.toggle('link-disabled', !!elevenOk);
+      const oInput = document.getElementById('openaiKeyInput');
+      const oLoad = document.getElementById('openaiLoadFileBtn');
+      if (oInput) {
+        oInput.disabled = !!openaiOk;
+        oInput.value = '';
+        oInput.placeholder = openaiOk ? 'OpenAI key is loaded. Remove the previous key to load a new one.' : 'Paste a valid API Key';
+      }
+      if (oLoad) oLoad.classList.toggle('link-disabled', !!openaiOk);
+    }
+    // Auto-save Eleven key on input (non-empty only)
+    (function(){
+      const inp = document.getElementById('elevenKeyInput');
+      if (inp) {
+        const saveIfValue = (hard=false) => { const v = (inp.value||'').trim(); if (!v) return; if (isValidElevenKey(v)) { setElevenKey(v); } };
+        inp.addEventListener('input', () => saveIfValue(false));
+        inp.addEventListener('change', () => saveIfValue(true));
+        inp.addEventListener('paste', () => setTimeout(()=>saveIfValue(true), 0));
+      }
+      // Inline delete via trash icon
+      const delBtn = document.getElementById('elevenDeleteBtn');
+      if (delBtn) delBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); setElevenKey(''); updateIntegrationIndicators(); });
+      const loadBtn = document.getElementById('elevenLoadFileBtn'); const keyFile = document.getElementById('elevenKeyFile');
+      if (loadBtn && keyFile) {
+        loadBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); keyFile.click(); });
+        keyFile.addEventListener('change', () => {
+          const f = keyFile.files && keyFile.files[0]; if (!f) return; if (!/\.key$/i.test(f.name)) { keyFile.value=''; return; } const r = new FileReader();
+          r.onload = () => { const v=String(r.result||'').trim(); if (!v) { keyFile.value=''; return; }
+            if (isValidElevenKey(v)) { setElevenKey(v); }
+            keyFile.value=''; updateIntegrationIndicators(); };
+          r.readAsText(f);
+        });
+      }
+    })();
     // OpenAI API key handlers
     function maskKey(k){ if(!k) return ''; return k.length>16 ? (k.slice(0,10)+'…'+k.slice(-6)) : k.replace(/.(?=.{4})/g,'•'); }
-    function setOpenAIKey(k){ openaiKey = (k||'').trim(); try{ if(openaiKey) localStorage.setItem('openai_api_key', openaiKey); else localStorage.removeItem('openai_api_key'); }catch(_){}; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent = openaiKey? ('Key: '+maskKey(openaiKey)) : 'No key set'; populateVoiceList(); }
+    function setOpenAIKey(k){ const v=(k||'').trim(); if(v && !isValidOpenAIKey(v)) { return; } openaiKey = v; try{ if(openaiKey) localStorage.setItem('openai_api_key', openaiKey); else localStorage.removeItem('openai_api_key'); }catch(_){}; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent = openaiKey? ('Key: '+maskKey(openaiKey)) : 'No key set'; populateVoiceList(); updateIntegrationIndicators(); clearAudioCache(); }
     try{ const saved=localStorage.getItem('openai_api_key'); if(saved){ openaiKey=saved; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent='Key: '+maskKey(openaiKey);} }catch(_){}
-    const openaiSaveBtn=document.getElementById('openaiSaveBtn'); if(openaiSaveBtn) openaiSaveBtn.addEventListener('click',()=>{ const inp=document.getElementById('openaiKeyInput'); if(inp && inp.value.trim()) { setOpenAIKey(inp.value); inp.value=''; showToast('OpenAI key saved'); }});
-    const openaiClearBtn=document.getElementById('openaiClearBtn'); if(openaiClearBtn) openaiClearBtn.addEventListener('click',()=>{ setOpenAIKey(''); showToast('OpenAI key cleared'); });
-    const openaiLoadFileBtn=document.getElementById('openaiLoadFileBtn'); const openaiKeyFile=document.getElementById('openaiKeyFile');
-    if(openaiLoadFileBtn && openaiKeyFile){ openaiLoadFileBtn.addEventListener('click',()=>openaiKeyFile.click()); openaiKeyFile.addEventListener('change',()=>{ const f=openaiKeyFile.files&&openaiKeyFile.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ setOpenAIKey(String(r.result||'').trim()); showToast('Key loaded from file'); openaiKeyFile.value=''; }; r.readAsText(f); }); }
+    // Initialize integration indicators on load
+    updateIntegrationIndicators();
+    // Auto-save OpenAI key on input (non-empty only)
+    (function(){
+      const inp = document.getElementById('openaiKeyInput');
+      if (inp) {
+        const saveIfValue = (hard=false) => { const v = (inp.value||'').trim(); if (!v) return; if (isValidOpenAIKey(v)) { setOpenAIKey(v); } };
+        inp.addEventListener('input', () => saveIfValue(false));
+        inp.addEventListener('change', () => saveIfValue(true));
+        inp.addEventListener('paste', () => setTimeout(()=>saveIfValue(true), 0));
+      }
+      const delBtn2 = document.getElementById('openaiDeleteBtn');
+      if (delBtn2) delBtn2.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); setOpenAIKey(''); updateIntegrationIndicators(); });
+      const loadBtn = document.getElementById('openaiLoadFileBtn'); const keyFile = document.getElementById('openaiKeyFile');
+      if (loadBtn && keyFile) {
+        loadBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); keyFile.click(); });
+        keyFile.addEventListener('change', () => {
+          const f = keyFile.files && keyFile.files[0]; if (!f) return; if (!/\.key$/i.test(f.name)) { keyFile.value=''; return; } const r = new FileReader();
+          r.onload = () => { const v=String(r.result||'').trim(); if (!v) { keyFile.value=''; return; }
+            if (isValidOpenAIKey(v)) { setOpenAIKey(v); }
+            keyFile.value=''; updateIntegrationIndicators(); };
+          r.readAsText(f);
+        });
+      }
+    })();
     const studyModeSelect = document.getElementById('studyModeSelect');
     if (studyModeSelect) studyModeSelect.addEventListener('change', () => {
       updateStudyModeIndicator();
@@ -1904,6 +2772,7 @@
       }
       updateProgressBar();
       try { localStorage.setItem('studyMode', studyModeSelect.value); } catch (_) {}
+      clearAudioCache();
     });
 
     // --- INITIALIZATION ---
@@ -1922,10 +2791,25 @@
           if (sel) sel.value = modeToUse;
         } catch (_) {}
 
+        // Clear short-term audio cache each start
+        clearAudioCache();
         populateVoiceList(); // Use the (restored) currentVoice where possible
         setLanguage("en");
         updateAllIndicators();
         welcomeModal.classList.add('visible');
+        // Try restore from IndexedDB (even for small files)
+        (async () => {
+          const recs = await loadWordListsFromIDB();
+          if (Array.isArray(recs) && recs.length > 0) {
+            try {
+              wordLists = {};
+              recs.forEach(r => { if (r && r.filename) { wordLists[r.filename] = { words: Array.isArray(r.words)? r.words : [], enabled: !!r.enabled }; } });
+              generateWordListsUI();
+              rebuildActiveWordsList();
+              welcomeModal.classList.remove('visible');
+            } catch (_) {}
+          }
+        })();
         // Initialize voice debug if enabled
         renderVoiceDebug();
         // Apply iOS-only layout tweaks
@@ -2021,6 +2905,13 @@
                   }
                   localStorage.clear();
                   sessionStorage.clear();
+                  // Also clear IndexedDB word lists
+                  try {
+                    const db = await idbOpen();
+                    const tx = db.transaction(IDB_STORE, 'readwrite');
+                    tx.objectStore(IDB_STORE).clear();
+                    await new Promise((resolve, reject) => { tx.oncomplete = resolve; tx.onerror = reject; tx.onabort = reject; });
+                  } catch (_) {}
                 } catch (_) {}
                 location.reload();
               };

@@ -1771,6 +1771,9 @@
     }
 
     function showToast(message, duration = 3000) {
+        // Suppress toast when menu is open to avoid overlay clutter
+        const menuEl = document.getElementById('menuModal');
+        if (menuEl && menuEl.classList.contains('visible')) return;
         toastNotification.textContent = message;
         toastNotification.classList.add('visible');
         setTimeout(() => {
@@ -1815,6 +1818,8 @@
     document.getElementById('settingsBtn').addEventListener('click', () => { 
       // Open Menu for one-click access to controls
       menuModal.classList.add('visible');
+      // Hide any active toast while menu is open
+      if (toastNotification) toastNotification.classList.remove('visible');
       document.getElementById('menuBtn')?.setAttribute('aria-expanded','true');
       if (isSafari) primeVoices();
       populateVoiceList();
@@ -1838,6 +1843,7 @@
     if (menuBtn) menuBtn.addEventListener('click', () => { 
       if (menuModal) { 
         menuModal.classList.add('visible'); 
+        if (toastNotification) toastNotification.classList.remove('visible');
         menuBtn.setAttribute('aria-expanded','true'); 
         bodyScrollLock(true);
         // Sync grouped UI controls on open
@@ -1918,7 +1924,7 @@
     if (menuPanelClose) menuPanelClose.addEventListener('click', closeMenuPanel);
     // Alt+M shortcut
     document.addEventListener('keydown', e => {
-      if (e.altKey && (e.key === 'm' || e.key === 'M')) { e.preventDefault(); if (!menuModal.classList.contains('visible')) { menuModal.classList.add('visible'); menuBtn?.setAttribute('aria-expanded','true'); bodyScrollLock(true); openMenuPanel(); } else { toggleMenuPanel(); } }
+      if (e.altKey && (e.key === 'm' || e.key === 'M')) { e.preventDefault(); if (!menuModal.classList.contains('visible')) { menuModal.classList.add('visible'); if (toastNotification) toastNotification.classList.remove('visible'); menuBtn?.setAttribute('aria-expanded','true'); bodyScrollLock(true); openMenuPanel(); } else { toggleMenuPanel(); } }
     });
     
     historyBtn.addEventListener('click', () => {

@@ -270,7 +270,7 @@
     .countdown-topbar { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.25); }
     .countdown-topbar-fill { height: 100%; width: 0%; background: #ff3b30; transition: width 0.1s linear; }
     /* iOS-style grouped Settings mockup */
-    .settings-section-title { font-weight: 800; font-size: 0.8rem; color: #8e8e93; letter-spacing: .04em; margin: 0.75rem 0 0.5rem; padding-left: .25rem; text-transform: uppercase; }
+    .settings-section-title { font-weight: 800; font-size: clamp(0.75rem, 1.6vw, 0.9rem); color: #8e8e93; letter-spacing: .04em; margin: 0.75rem 0 0.5rem; padding-left: .25rem; text-transform: uppercase; }
     .settings-card { background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 0 rgba(0,0,0,0.04); }
     .settings-item { position: relative; display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #ececec; font-size: 1rem; }
     .settings-item:last-child { border-bottom: none; }
@@ -289,11 +289,12 @@
     /* Hide legacy holders when grouped mockup is used */
     #legacyMenuContent { display: none; }
     /* Subpanels (push navigation) */
-    #menuModal .subpanel { position: fixed; inset: 0; background: var(--background-color); transform: translateX(100%); transition: transform 220ms cubic-bezier(.2,.8,.2,1); }
+    #menuModal .subpanel { position: fixed; inset: 0; background: var(--background-color); transform: translateX(100%); transition: transform 220ms cubic-bezier(.2,.8,.2,1); z-index: 1400; }
     #menuModal .subpanel[aria-hidden="false"] { transform: translateX(0); }
     #menuModal .subpanel .panel-body { background: #f2f2f7; }
     .panel-back { background: none; border: 0; font-size: 1rem; color: var(--primary-color); padding: 8px; }
     .settings-check { color: var(--primary-color); font-weight: 800; margin-left: auto; }
+    html.is-ios #menuModal .subpanel .panel-header { padding-top: calc(0.75rem + env(safe-area-inset-top)); }
   </style>
 </head>
 <body>
@@ -553,6 +554,7 @@
                 <div style="width:44px"></div>
               </div>
               <div class="panel-body">
+                <div class="settings-section-title">General → Language</div>
                 <div class="settings-card">
                   <div class="settings-item" id="langOptionEn" role="button" tabindex="0">
                     <div class="settings-label">English</div>
@@ -574,6 +576,7 @@
                 <div style="width:44px"></div>
               </div>
               <div class="panel-body">
+                <div class="settings-section-title">Integrations → ElevenLabs</div>
                 <div class="settings-card">
                   <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:8px;">
                     <div class="settings-label" style="font-weight:700;">API Key</div>
@@ -599,6 +602,7 @@
                 <div style="width:44px"></div>
               </div>
               <div class="panel-body">
+                <div class="settings-section-title">Integrations → OpenAI</div>
                 <div class="settings-card">
                   <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:8px;">
                     <div class="settings-label" style="font-weight:700;">API Key</div>
@@ -624,6 +628,7 @@
                 <div style="width:44px"></div>
               </div>
               <div class="panel-body">
+                <div class="settings-section-title">Data & System → Files</div>
                 <div class="settings-section">
                   <div class="settings-section-title">Active Word Lists</div>
                   <div class="settings-card">

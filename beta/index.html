@@ -293,8 +293,24 @@
     #menuModal .subpanel[aria-hidden="false"] { transform: translateX(0); }
     #menuModal .subpanel .panel-body { background: #f2f2f7; }
     .panel-back { background: none; border: 0; font-size: 1rem; color: var(--primary-color); padding: 8px; }
+    .panel-actions { display:flex; align-items:center; gap: 8px; min-width: 44px; justify-content: flex-end; }
+    .panel-link { background: none; border: 0; color: var(--primary-color); font-weight: 700; padding: 6px 8px; font-size: 0.98rem; }
     .settings-check { color: var(--primary-color); font-weight: 800; margin-left: auto; }
     html.is-ios #menuModal .subpanel .panel-header { padding-top: calc(0.75rem + env(safe-area-inset-top)); }
+    /* Hide main header when a subpanel is open to avoid overlap */
+    #menuPanel.sub-open > .panel-header { visibility: hidden; pointer-events: none; }
+    /* Hide subpanel center title (keep breadcrumbs in body) */
+    #menuModal .subpanel .panel-header h2 { display: none; }
+    /* Subtle text and footer notes */
+    .subtle { color: #8e8e93; font-size: 0.9em; }
+    .settings-note { color: #8e8e93; font-size: 0.85rem; padding: 0.75rem 0; }
+    .btn-destructive { background: none; border: 0; color: #ff3b30; font-weight: 700; padding: 12px 8px; text-align: center; width: 100%; }
+    /* Action sheet */
+    .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.3); display: none; align-items:flex-end; justify-content:center; z-index: 1600; }
+    .sheet-backdrop.visible { display:flex; }
+    .sheet { width: 100%; max-width: 560px; background: #f2f2f7; padding: 8px; border-radius: 16px 16px 0 0; }
+    .sheet .action { background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:12px; padding:14px; text-align:center; margin-bottom:8px; font-weight:600; }
+    .sheet .cancel { background:#fff; border-radius:12px; padding:14px; text-align:center; font-weight:600; }
   </style>
 </head>
 <body>
@@ -546,8 +562,13 @@
               <div id="menuVersion" class="version-inline" style="display:inline-block; padding:0; margin:0;"></div>
             </div>
 
-            <!-- Subpanel: Language -->
-            <section id="langPanel" class="panel subpanel" aria-hidden="true" aria-labelledby="langPanelTitle">
+          </div>
+        </section>
+
+        <!-- Subpanel: Language (sibling of #menuPanel) -->
+        <!-- Note: subpanels are outside #menuPanel so its header hiding rule doesn't affect them -->
+        <!-- Subpanel: Language -->
+        <section id="langPanel" class="panel subpanel" aria-hidden="true" aria-labelledby="langPanelTitle">
               <div class="panel-header">
                 <button class="panel-back" data-back="langPanel">‹ Back</button>
                 <h2 id="langPanelTitle" style="margin:0">Language</h2>
@@ -580,17 +601,22 @@
                 <div class="settings-card">
                   <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:8px;">
                     <div class="settings-label" style="font-weight:700;">API Key</div>
-                    <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; width:100%;">
-                      <input id="elevenKeyInput" type="password" placeholder="elevenlabs_api_key" style="flex:1; min-width:220px; padding:.5rem;"/>
-                      <button class="btn btn-secondary" id="elevenSaveBtn" type="button">Save</button>
-                      <input type="file" id="elevenKeyFile" accept=".key,.txt" style="display:none;"/>
-                      <button class="btn btn-secondary" id="elevenLoadFileBtn" type="button">Load from File</button>
-                      <button class="btn btn-secondary" id="elevenClearBtn" type="button">Clear</button>
-                    </div>
-                    <div id="elevenKeyMasked" style="font-size:0.9em; color:#777;">No key set</div>
-                    <div style="font-size:0.85em; color:#777;">Adds ElevenLabs voices “Josh” (male) and “Bella” (female) to the selector using non‑streaming playback (fr‑FR).</div>
+                    <input id="elevenKeyInput" type="password" placeholder="elevenlabs_api_key" style="flex:1; min-width:220px; padding:.5rem;"/>
+                    <div id="elevenKeyMasked" class="settings-note">No key set</div>
                   </div>
                 </div>
+                <div class="settings-card" style="margin-top:12px;">
+                  <div class="settings-item" style="justify-content:center; gap: 12px;">
+                    <button class="panel-link" id="elevenLoadFileBtn" type="button">Choose Key File…</button>
+                    <input type="file" id="elevenKeyFile" accept=".key,.txt" style="display:none;"/>
+                  </div>
+                </div>
+                <div class="settings-card" style="margin-top:12px;">
+                  <div class="settings-item" style="justify-content:center;">
+                    <button class="btn-destructive" id="elevenClearBtn" type="button" style="font-size: 3em; line-height: 1;">Clear Key</button>
+                  </div>
+                </div>
+                <div class="settings-note">Adds ElevenLabs voices “Josh” (male) and “Bella” (female) to the selector using non‑streaming playback (fr‑FR).</div>
               </div>
             </section>
 
@@ -606,17 +632,22 @@
                 <div class="settings-card">
                   <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:8px;">
                     <div class="settings-label" style="font-weight:700;">API Key</div>
-                    <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; width:100%;">
-                      <input id="openaiKeyInput" type="password" placeholder="sk-..." style="flex:1; min-width:220px; padding:.5rem;"/>
-                      <button class="btn btn-secondary" id="openaiSaveBtn" type="button">Save</button>
-                      <input type="file" id="openaiKeyFile" accept=".key,.txt" style="display:none;"/>
-                      <button class="btn btn-secondary" id="openaiLoadFileBtn" type="button">Load from File</button>
-                      <button class="btn btn-secondary" id="openaiClearBtn" type="button">Clear</button>
-                    </div>
-                    <div id="openaiKeyMasked" style="font-size:0.9em; color:#777;">No key set</div>
-                    <div style="font-size:0.85em; color:#777;">Adds OpenAI voices “Echo” and “Nova” to the selector using a low‑latency model.</div>
+                    <input id="openaiKeyInput" type="password" placeholder="sk-..." style="flex:1; min-width:220px; padding:.5rem;"/>
+                    <div id="openaiKeyMasked" class="settings-note">No key set</div>
                   </div>
                 </div>
+                <div class="settings-card" style="margin-top:12px;">
+                  <div class="settings-item" style="justify-content:center; gap: 12px;">
+                    <button class="panel-link" id="openaiLoadFileBtn" type="button">Choose Key File…</button>
+                    <input type="file" id="openaiKeyFile" accept=".key,.txt" style="display:none;"/>
+                  </div>
+                </div>
+                <div class="settings-card" style="margin-top:12px;">
+                  <div class="settings-item" style="justify-content:center;">
+                    <button class="btn-destructive" id="openaiClearBtn" type="button" style="font-size: 3em; line-height: 1;">Clear Key</button>
+                  </div>
+                </div>
+                <div class="settings-note">Adds OpenAI voices “Echo” and “Nova” to the selector using a low‑latency model.</div>
               </div>
             </section>
 
@@ -630,22 +661,19 @@
               <div class="panel-body">
                 <div class="settings-section-title">Data & System → Files</div>
                 <div class="settings-section">
-                  <div class="settings-section-title">Active Word Lists</div>
-                  <div class="settings-card">
+                  <div class="settings-card" id="filesListCard">
                     <div id="menuWordListsSection" class="menu-field" style="margin:0; padding:0; width:100%;">
-                      <div id="menuWordListsOptions" class="word-lists-options" style="padding: 8px 12px;"></div>
+                      <div id="menuWordListsOptions" class="word-lists-options" style="padding: 0;"></div>
                     </div>
                   </div>
                 </div>
-                <div class="settings-section">
-                  <div class="settings-section-title">Add .txt files</div>
-                  <div class="settings-card">
-                    <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:8px;">
-                      <input type="file" id="menuFileInput" accept=".txt" multiple />
-                      <div style="font-size:0.85em; color:#777;">Tip: You can also drag & drop files anywhere on the page.</div>
-                    </div>
+                <div class="settings-card" style="margin-top:12px;">
+                  <div class="settings-item" style="justify-content:center;">
+                    <button id="btnAddWordList" class="panel-link" type="button">Add Word List…</button>
+                    <input type="file" id="menuFileInput" accept=".txt" multiple style="display:none;" />
                   </div>
                 </div>
+                <div class="settings-note">Tip: You can also drag & drop files anywhere on the page.</div>
               </div>
             </section>
           </div>
@@ -1582,37 +1610,67 @@
     
     function generateWordListsUI() {
         const containers = [
-          { container: document.getElementById('wordListsOptions'), section: document.getElementById('wordListsSection') },
-          { container: document.getElementById('menuWordListsOptions'), section: document.getElementById('menuWordListsSection') },
+          { container: document.getElementById('wordListsOptions'), section: document.getElementById('wordListsSection'), style: 'legacy' },
+          { container: document.getElementById('menuWordListsOptions'), section: document.getElementById('menuWordListsSection'), style: 'ios' },
         ];
         containers.forEach(({container, section}) => { if (container) container.innerHTML = ''; });
         const filenames = Object.keys(wordLists);
-        containers.forEach(({container, section}) => {
+        containers.forEach(({container, section, style}) => {
           if (!container || !section) return;
           if (filenames.length > 1) {
               section.style.display = 'block';
               filenames.forEach(name => {
-                  const item = document.createElement('div');
-                  item.className = 'mode-option';
-                  const checkbox = document.createElement('input');
-                  checkbox.type = 'checkbox';
-                  checkbox.checked = wordLists[name].enabled;
-                  checkbox.id = `file--${name}`;
-                  checkbox.dataset.filename = name;
-                  checkbox.addEventListener('change', () => {
+                  if (style === 'ios') {
+                    const row = document.createElement('div');
+                    row.className = 'settings-item';
+                    const label = document.createElement('div');
+                    label.className = 'settings-label';
+                    label.textContent = name;
+                    const summary = document.createElement('div');
+                    summary.className = 'subtle';
+                    summary.style.marginRight = '12px';
+                    summary.textContent = `${wordLists[name].words.length} ${i18n[curLang].words_lower}`;
+                    const toggle = document.createElement('input');
+                    toggle.type = 'checkbox';
+                    toggle.className = 'ios-switch';
+                    toggle.checked = !!wordLists[name].enabled;
+                    toggle.dataset.filename = name;
+                    toggle.addEventListener('change', () => {
                       confirmationCallback = () => {
-                          wordLists[name].enabled = checkbox.checked;
-                          rebuildActiveWordsList();
+                        wordLists[name].enabled = toggle.checked;
+                        rebuildActiveWordsList();
                       };
-                      document.getElementById('confirmationDialogText').textContent = i18n[curLang].confirm_word_list;
+                      const ctext = document.getElementById('confirmationDialogText');
+                      if (ctext) ctext.textContent = i18n[curLang].confirm_word_list;
                       confirmationDialog.classList.add('visible');
-                  });
-                  const label = document.createElement('label');
-                  label.htmlFor = `file--${name}`;
-                  label.textContent = `${name} (${wordLists[name].words.length} ${i18n[curLang].words_lower})`;
-                  item.appendChild(checkbox);
-                  item.appendChild(label);
-                  container.appendChild(item);
+                    });
+                    row.appendChild(label);
+                    row.appendChild(summary);
+                    row.appendChild(toggle);
+                    container.appendChild(row);
+                  } else {
+                    const item = document.createElement('div');
+                    item.className = 'mode-option';
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = wordLists[name].enabled;
+                    checkbox.id = `file--${name}`;
+                    checkbox.dataset.filename = name;
+                    checkbox.addEventListener('change', () => {
+                        confirmationCallback = () => {
+                            wordLists[name].enabled = checkbox.checked;
+                            rebuildActiveWordsList();
+                        };
+                        document.getElementById('confirmationDialogText').textContent = i18n[curLang].confirm_word_list;
+                        confirmationDialog.classList.add('visible');
+                    });
+                    const label = document.createElement('label');
+                    label.htmlFor = `file--${name}`;
+                    label.textContent = `${name} (${wordLists[name].words.length} ${i18n[curLang].words_lower})`;
+                    item.appendChild(checkbox);
+                    item.appendChild(label);
+                    container.appendChild(item);
+                  }
               });
           } else {
               section.style.display = 'none';
@@ -1775,8 +1833,8 @@
     if (menuLangEn) menuLangEn.addEventListener('click', () => { setLanguage('en'); });
     if (menuLangFr) menuLangFr.addEventListener('click', () => { setLanguage('fr'); });
     // Row navigation to subpanels
-    function openSubpanel(id){ const el=document.getElementById(id); if(!el) return; el.setAttribute('aria-hidden','false'); }
-    function closeSubpanel(id){ const el=document.getElementById(id); if(!el) return; el.setAttribute('aria-hidden','true'); }
+    function openSubpanel(id){ const el=document.getElementById(id); if(!el) return; el.setAttribute('aria-hidden','false'); const mp=document.getElementById('menuPanel'); if(mp) mp.classList.add('sub-open'); }
+    function closeSubpanel(id){ const el=document.getElementById(id); if(!el) return; el.setAttribute('aria-hidden','true'); const mp=document.getElementById('menuPanel'); if(mp){ const anyOpen=Array.from(document.querySelectorAll('#menuModal .subpanel')).some(sp=>sp.getAttribute('aria-hidden')==='false'); if(!anyOpen) mp.classList.remove('sub-open'); } }
     const rowLanguage = document.getElementById('rowLanguage'); if(rowLanguage){ const fn=()=>{ openSubpanel('langPanel'); updateLangChecks(); }; rowLanguage.addEventListener('click', fn); rowLanguage.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
     const rowEleven = document.getElementById('rowEleven'); if(rowEleven){ const fn=()=>openSubpanel('elevenPanel'); rowEleven.addEventListener('click', fn); rowEleven.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
     const rowOpenAI = document.getElementById('rowOpenAI'); if(rowOpenAI){ const fn=()=>openSubpanel('openaiPanel'); rowOpenAI.addEventListener('click', fn); rowOpenAI.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
@@ -1787,6 +1845,11 @@
     function updateLangChecks(){ const en=document.getElementById('langCheckEn'); const fr=document.getElementById('langCheckFr'); if(en&&fr){ en.style.display = (curLang==='en')?'block':'none'; fr.style.display = (curLang==='fr')?'block':'none'; } }
     const langOptionEn = document.getElementById('langOptionEn'); if(langOptionEn){ langOptionEn.addEventListener('click',()=>{ setLanguage('en'); updateLangChecks(); closeSubpanel('langPanel'); }); }
     const langOptionFr = document.getElementById('langOptionFr'); if(langOptionFr){ langOptionFr.addEventListener('click',()=>{ setLanguage('fr'); updateLangChecks(); closeSubpanel('langPanel'); }); }
+
+    // No action sheets; direct file selectors handled below
+
+    // Files: Add Word List button triggers hidden input
+    const btnAddWordList=document.getElementById('btnAddWordList'); const fileInputEl=document.getElementById('menuFileInput'); if(btnAddWordList && fileInputEl){ btnAddWordList.addEventListener('click',()=>fileInputEl.click()); }
     const menuHelpBtn = document.getElementById('menuHelpBtn');
     if (menuHelpBtn) menuHelpBtn.addEventListener('click', () => { menuModal.classList.remove('visible'); helpModal.classList.add('visible'); const mc = helpModal.querySelector('.modal-content'); if (mc) mc.focus(); });
     const menuSettingsBtn = document.getElementById('menuSettingsBtn');
@@ -2033,18 +2096,52 @@
       populateVoiceList();
     }
     try { const savedEl = localStorage.getItem('eleven_api_key'); if (savedEl) { setElevenKey(savedEl); } } catch(_) {}
-    const elevenSaveBtn = document.getElementById('elevenSaveBtn'); if (elevenSaveBtn) elevenSaveBtn.addEventListener('click', () => { const inp = document.getElementById('elevenKeyInput'); if (inp && inp.value.trim()) { setElevenKey(inp.value); inp.value=''; showToast('ElevenLabs key saved'); } });
-    const elevenClearBtn = document.getElementById('elevenClearBtn'); if (elevenClearBtn) elevenClearBtn.addEventListener('click', () => { setElevenKey(''); showToast('ElevenLabs key cleared'); });
-    const elevenLoadFileBtn = document.getElementById('elevenLoadFileBtn'); const elevenKeyFile = document.getElementById('elevenKeyFile');
-    if (elevenLoadFileBtn && elevenKeyFile) { elevenLoadFileBtn.addEventListener('click', () => elevenKeyFile.click()); elevenKeyFile.addEventListener('change', () => { const f = elevenKeyFile.files && elevenKeyFile.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { setElevenKey(String(r.result||'').trim()); showToast('Key loaded from file'); elevenKeyFile.value=''; }; r.readAsText(f); }); }
+    // Auto-save Eleven key on input (non-empty only)
+    (function(){
+      const inp = document.getElementById('elevenKeyInput');
+      if (inp) {
+        const saveIfValue = () => { const v = (inp.value||'').trim(); if (v) { setElevenKey(v); showToast('ElevenLabs key saved'); } };
+        inp.addEventListener('input', saveIfValue);
+        inp.addEventListener('change', saveIfValue);
+        inp.addEventListener('paste', () => setTimeout(saveIfValue, 0));
+      }
+      const clearBtn = document.getElementById('elevenClearBtn');
+      if (clearBtn) clearBtn.addEventListener('click', () => {
+        confirmationCallback = () => { setElevenKey(''); showToast('ElevenLabs key cleared'); };
+        const ctext = document.getElementById('confirmationDialogText'); if (ctext) ctext.textContent = 'Clear ElevenLabs API key?';
+        confirmationDialog.classList.add('visible');
+      });
+      const loadBtn = document.getElementById('elevenLoadFileBtn'); const keyFile = document.getElementById('elevenKeyFile');
+      if (loadBtn && keyFile) {
+        loadBtn.addEventListener('click', () => keyFile.click());
+        keyFile.addEventListener('change', () => { const f = keyFile.files && keyFile.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const v=String(r.result||'').trim(); if (v) { setElevenKey(v); showToast('Key loaded from file'); } keyFile.value=''; }; r.readAsText(f); });
+      }
+    })();
     // OpenAI API key handlers
     function maskKey(k){ if(!k) return ''; return k.length>16 ? (k.slice(0,10)+'…'+k.slice(-6)) : k.replace(/.(?=.{4})/g,'•'); }
     function setOpenAIKey(k){ openaiKey = (k||'').trim(); try{ if(openaiKey) localStorage.setItem('openai_api_key', openaiKey); else localStorage.removeItem('openai_api_key'); }catch(_){}; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent = openaiKey? ('Key: '+maskKey(openaiKey)) : 'No key set'; populateVoiceList(); }
     try{ const saved=localStorage.getItem('openai_api_key'); if(saved){ openaiKey=saved; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent='Key: '+maskKey(openaiKey);} }catch(_){}
-    const openaiSaveBtn=document.getElementById('openaiSaveBtn'); if(openaiSaveBtn) openaiSaveBtn.addEventListener('click',()=>{ const inp=document.getElementById('openaiKeyInput'); if(inp && inp.value.trim()) { setOpenAIKey(inp.value); inp.value=''; showToast('OpenAI key saved'); }});
-    const openaiClearBtn=document.getElementById('openaiClearBtn'); if(openaiClearBtn) openaiClearBtn.addEventListener('click',()=>{ setOpenAIKey(''); showToast('OpenAI key cleared'); });
-    const openaiLoadFileBtn=document.getElementById('openaiLoadFileBtn'); const openaiKeyFile=document.getElementById('openaiKeyFile');
-    if(openaiLoadFileBtn && openaiKeyFile){ openaiLoadFileBtn.addEventListener('click',()=>openaiKeyFile.click()); openaiKeyFile.addEventListener('change',()=>{ const f=openaiKeyFile.files&&openaiKeyFile.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ setOpenAIKey(String(r.result||'').trim()); showToast('Key loaded from file'); openaiKeyFile.value=''; }; r.readAsText(f); }); }
+    // Auto-save OpenAI key on input (non-empty only)
+    (function(){
+      const inp = document.getElementById('openaiKeyInput');
+      if (inp) {
+        const saveIfValue = () => { const v = (inp.value||'').trim(); if (v) { setOpenAIKey(v); showToast('OpenAI key saved'); } };
+        inp.addEventListener('input', saveIfValue);
+        inp.addEventListener('change', saveIfValue);
+        inp.addEventListener('paste', () => setTimeout(saveIfValue, 0));
+      }
+      const clearBtn = document.getElementById('openaiClearBtn');
+      if (clearBtn) clearBtn.addEventListener('click', () => {
+        confirmationCallback = () => { setOpenAIKey(''); showToast('OpenAI key cleared'); };
+        const ctext = document.getElementById('confirmationDialogText'); if (ctext) ctext.textContent = 'Clear OpenAI API key?';
+        confirmationDialog.classList.add('visible');
+      });
+      const loadBtn = document.getElementById('openaiLoadFileBtn'); const keyFile = document.getElementById('openaiKeyFile');
+      if (loadBtn && keyFile) {
+        loadBtn.addEventListener('click', () => keyFile.click());
+        keyFile.addEventListener('change', () => { const f = keyFile.files && keyFile.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const v=String(r.result||'').trim(); if (v) { setOpenAIKey(v); showToast('Key loaded from file'); } keyFile.value=''; }; r.readAsText(f); });
+      }
+    })();
     const studyModeSelect = document.getElementById('studyModeSelect');
     if (studyModeSelect) studyModeSelect.addEventListener('change', () => {
       updateStudyModeIndicator();

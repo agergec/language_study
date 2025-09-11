@@ -3,6 +3,15 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <!-- PWA: iOS standalone support -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="French Study">
+  <meta name="theme-color" content="#4A90E2">
+  <!-- Manifest will be injected from inline JSON via Blob at runtime -->
+  <link rel="manifest" id="manifestLink">
+  <!-- iOS home-screen icon (set at runtime to PNG) -->
+  <link rel="apple-touch-icon" sizes="180x180" id="appleIcon">
   <title data-i18n="page_title">🇫🇷 French Listening Study</title>
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇫🇷</text></svg>">
@@ -46,10 +55,11 @@
     .container {
       width: 100%;
       height: 100%;
+      min-height: 100svh;
       display: grid;
-      grid-template-rows: auto auto 1fr auto auto auto;
+      grid-template-rows: auto auto 1fr auto auto;
       grid-template-columns: 1fr;
-      grid-template-areas: "header" "sub-header" "display" "controls" "countdown" "footer";
+      grid-template-areas: "header" "sub-header" "display" "controls" "footer";
       padding: 0.75rem;
       gap: 0.75rem;
     }
@@ -74,18 +84,22 @@
     .icon-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-color); transition: transform 0.2s; }
     .icon-btn:hover { transform: scale(1.1); }
     .language-flags { display: flex; gap: 0.5rem; }
-    .language-flag { font-size: 1.5rem; cursor: pointer; opacity: 0.5; transition: all 0.2s ease; }
+    .language-flag { font-size: 1.5rem; cursor: pointer; opacity: 0.5; transition: all 0.2s ease; background: none; border: none; padding: 0; line-height: 1; }
     .language-flag.active { opacity: 1; transform: scale(1.15); }
+    /* Always use hamburger; hide individual icons/flags on main header */
+    .header-actions .icon-btn:not(#menuBtn), .header-actions .language-flags { display: none; }
     
     .progress-bar { width: 100%; height: 5px; background-color: var(--border-color); border-radius: 5px; overflow: hidden; }
     .progress-bar-fill { height: 100%; width: 0%; background-color: var(--success-color); transition: width 0.3s ease-in-out; border-radius: 5px; }
 
-    .sub-header { grid-area: sub-header; display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); font-size: 0.8em; }
+    /* Hide old top status strip; we move indicators to footer */
+    .sub-header { display: none; }
     .status-indicator { background-color: var(--light-gray); padding: 0.25rem 0.75rem; border-radius: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 
     /* --- Main Display --- */
     .display-container { grid-area: display; background: var(--primary-color); color: white; border-radius: var(--border-radius); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem; position: relative; overflow: hidden; box-shadow: var(--shadow); }
     .display-area-upper { font-size: clamp(2rem, 8vw, 4.5rem); font-weight: 800; text-align: center; }
+    .display-instruction { margin-top: 0.5rem; font-size: clamp(0.9rem, 2.5vw, 1rem); opacity: 0.9; text-align: center; }
     .session-complete-message { font-size: clamp(1.5rem, 5vw, 2.5rem); opacity: 0.9; }
 
     /* --- Controls --- */
@@ -97,6 +111,8 @@
     .btn:disabled { background-color: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
     .btn-primary { background-color: var(--primary-color); }
     .btn-secondary { background-color: var(--secondary-color); color: var(--text-color); }
+    /* Ensure Repeat button matches other buttons' text color */
+    #repeatBtn { color: #fff; }
     .btn-success { background-color: var(--success-color); }
     .btn-warning { background-color: var(--warning-color); }
     .btn-info { background-color: #90b8de; }
@@ -117,23 +133,40 @@
     .container.history-hidden #historyToggleBtn { transform: rotate(180deg); }
 
     /* --- Countdown --- */
-    .countdown-wrapper { grid-area: countdown; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; min-height: 60px; }
-    .progress-ring { position: absolute; width: 60px; height: 60px; }
+    .countdown-wrapper { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 60px; pointer-events: none; top: auto; }
+    .progress-ring { position: relative; width: 60px; height: 60px; }
     .progress-ring__circle { transition: stroke-dashoffset 0.1s linear; transform: rotate(-90deg); transform-origin: 50% 50%; stroke-width: 6; stroke: var(--success-color); stroke-linecap: round; }
     .progress-ring__track { stroke-width: 6; stroke: var(--border-color); }
     .countdown-text { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); }
 
     /* --- Footer / Status Bar --- */
-    .footer { grid-area: footer; display: flex; justify-content: space-between; align-items: center; padding-top: 0.5rem; border-top: 1px solid var(--border-color); font-size: 0.8em; gap: 1rem; }
-    #statusInfo { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    #fileInfo { white-space: nowrap; text-align: right; flex-shrink: 0; }
+    .footer { grid-area: footer; display: flex; flex-direction: column; gap: 0.35rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color); font-size: 0.85em; }
+    .footer-meta { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+    #statusInfo { display: none; }
+    .bottom-status { display: flex; align-items: center; justify-content: space-between; color: #666; overflow: hidden; }
+    .bottom-left { display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0; }
+    .bottom-status .sep { opacity: 0.4; }
+    .bottom-status .off { opacity: 0.3; filter: grayscale(1); }
+    .bottom-status span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #bottomVoice, #bottomMode { min-width: 0; }
+    /* Allow mode to wrap on small screens to avoid horizontal scroll */
+    #bottomMode { flex: 1; white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.15; }
+    /* Slightly smaller font for wrapped mode names on narrow screens */
+    @media (max-width: 480px) { #bottomMode { font-size: 0.9em; } }
+    .bottom-version { display: none; color: #666; }
+    @media (min-width: 1024px) { .bottom-version { display: inline; } }
+    /* no spacer row; display grows naturally */
+    .status-ok { color: #2e7d32; }
+    .status-alert { color: #c62828; }
 
     /* --- Modals --- */
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(74, 74, 74, 0.5); align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(40, 40, 40, 0.55); align-items: center; justify-content: center; backdrop-filter: blur(8px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .modal.visible { display: flex; }
     .modal-content { background-color: var(--background-color); padding: 1.5rem; border-radius: var(--border-radius); width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-height: 80vh; overflow-y: auto; }
     html.is-ios .modal { align-items: flex-start; padding: 1rem; }
     html.is-ios .modal-content { max-height: calc(100svh - 2rem); -webkit-overflow-scrolling: touch; }
+    html.is-standalone .modal { align-items: flex-start; padding: 1rem; padding-top: calc(1rem + env(safe-area-inset-top)); }
+    html.is-standalone .modal-content { max-height: calc(100svh - (1rem + env(safe-area-inset-top)) - 1rem); }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
     .modal-header h2 { margin: 0; }
     .modal-section { margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; }
@@ -177,25 +210,65 @@
     }
     body.is-ios .container {
       height: auto;
-      min-height: 100%;
+      min-height: 100svh;
       padding-top: calc(0.75rem + env(safe-area-inset-top));
       padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
     }
+    /* Standalone (PWA) safe-area padding */
+    html.is-standalone .container { padding-top: calc(0.75rem + env(safe-area-inset-top)); padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
     /* App version tags */
-    .app-version-corner {
-      position: fixed;
-      left: 8px;
-      bottom: 6px;
-      color: #666;
-      font-size: 0.75em;
-      z-index: 10;
-      pointer-events: none;
-    }
+    .app-version-corner { display: none; }
+
+    /* iOS adjustments: (countdown circle removed) restore default padding */
+    html.is-ios .display-container { padding-bottom: 1rem; }
+    html.is-ios .countdown-wrapper { bottom: calc(12px + env(safe-area-inset-bottom)); }
+
+    /* Mobile Menu (drawer from right) */
+    /* Menu shell turns right-drawer into left-rail + expanding panel */
+    #menuModal .modal-content { width: 100vw; max-width: none; height: 100vh; margin: 0; border-radius: 0; background: transparent; box-shadow: none; border: 0; transform: none; display: block; }
+    #menuModal.visible .modal-content { transform: none; }
+    #menuModal .menu-shell { position: relative; height: 100%; }
+    /* Panel animates from right->left to full-screen */
+    #menuModal .panel { position: fixed; inset: 0; background: var(--background-color); transform-origin: right center; transform: translateX(8px) scaleX(0.07); opacity: 0; transition: transform 220ms cubic-bezier(.2,.8,.2,1), opacity 180ms ease; }
+    #menuModal .panel[aria-hidden="true"] { pointer-events: none; }
+    #menuModal .panel[aria-hidden="false"] { transform: translateX(0) scaleX(1); opacity: 1; }
+    @media (prefers-reduced-motion: reduce) { #menuModal .panel { transition-duration: 1ms; } }
+    #menuModal .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); }
+    #menuModal .panel-body { padding: 1rem; height: calc(100% - 56px); overflow: auto; }
+    #menuModal .modal-header { display:none; }
+    #menuModal .modal-section { border: none; padding-bottom: 0; margin-bottom: 0.75rem; }
+    #menuModal .menu-list button { display: block; width: 100%; text-align: left; padding: 0.75rem 0; background: none; border: none; font-size: 1rem; font-weight: 700; color: var(--text-color); }
+    #menuModal hr { border: 0; border-top: 1px solid var(--border-color); margin: 0.5rem 0; }
+    #menuModal .menu-field { display: flex; flex-direction: column; gap: 0.35rem; padding: 0.5rem 0; }
+    #menuModal .menu-field .label-row { display:flex; align-items:center; gap:.5rem; }
+    #menuModal .menu-field label { font-weight: 700; font-size: 0.9rem; }
+    #menuModal .switch-row { display: flex; align-items: center; gap: 0.5rem; }
+    #menuModal .menu-icon { width: 1.2rem; text-align:center; opacity:.7; }
+    #menuModal hr.menu-divider { border: 0; border-top: 1px solid var(--border-color); margin: 0.75rem 0; opacity: .7; }
     .version-inline {
       margin-top: 0.5rem;
       color: #666;
       font-size: 0.85em;
     }
+
+    /* Floating close button (aligned with hamburger) */
+    #menuCloseOverlay {
+      position: fixed;
+      z-index: 1500; /* above drawer */
+      display: none;
+      background: transparent;
+      border: none;
+      font-size: 1.75rem;
+      color: var(--text-color);
+      line-height: 1;
+      touch-action: manipulation;
+    }
+    /* Prefer floating close on mobile */
+    @media (max-width: 1023px) { #menuModal .modal-header .close-btn { display: none; } }
+
+    /* Thin red countdown bar at top of main display */
+    .countdown-topbar { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.25); }
+    .countdown-topbar-fill { height: 100%; width: 0%; background: #ff3b30; transition: width 0.1s linear; }
   </style>
 </head>
 <body>
@@ -207,9 +280,10 @@
           <button id="helpBtn" class="icon-btn" title="Help" data-i18n-title="title_help">?</button>
           <button id="settingsBtn" class="icon-btn" title="Settings" data-i18n-title="title_settings">⚙️</button>
           <div class="language-flags">
-            <div class="language-flag active" id="langEn" onclick="setLanguage('en')">🇺🇸</div>
-            <div class="language-flag" id="langFr" onclick="setLanguage('fr')">🇫🇷</div>
+            <button type="button" class="language-flag active" id="langEn" aria-label="English" title="English">🇺🇸</button>
+            <button type="button" class="language-flag" id="langFr" aria-label="Français" title="Français">🇫🇷</button>
           </div>
+          <button id="menuBtn" class="icon-btn" aria-label="Menu" title="Menu" aria-controls="menuModal" aria-expanded="false">☰</button>
         </div>
       </div>
       <div class="progress-bar">
@@ -225,22 +299,31 @@
 
     <aside class="history-sidebar">
       <div class="history-header">
-        <div class="history-title" data-i18n="history_title">Revealed Words</div>
+        <div class="history-title" data-i18n="history_title">Answers</div>
         <button id="historyToggleBtn" class="icon-btn" title="Toggle History Panel" data-i18n-title="title_toggle_history">‹</button>
       </div>
       <div class="history-list" id="historyList"></div>
     </aside>
 
     <main class="display-container">
-      <div class="display-area-upper" id="displayAreaUpper" data-i18n="welcome_message">Welcome!</div>
+      <div class="countdown-topbar"><div id="countdownTopbarFill" class="countdown-topbar-fill"></div></div>
+      <div class="display-area-upper" id="displayAreaUpper" data-i18n="welcome_message" aria-live="polite" aria-atomic="true">Welcome!</div>
+      <div id="displayInstruction" class="display-instruction"></div>
+      <div class="countdown-wrapper">
+        <svg class="progress-ring" viewBox="0 0 100 100">
+          <circle class="progress-ring__track" cx="50" cy="50" r="45" fill="transparent" />
+          <circle class="progress-ring__circle" cx="50" cy="50" r="45" fill="transparent" />
+        </svg>
+        <span id="countdownText" class="countdown-text">--</span>
+      </div>
     </main>
 
     <aside class="controls-vertical">
-      <button class="btn btn-primary" id="nextBtn" onclick="nextWord()" disabled data-i18n="btn_next">Next (Space)</button>
-      <button class="btn btn-secondary" id="repeatBtn" onclick="repeatWord()" disabled data-i18n="btn_repeat">Repeat (R)</button>
-      <button class="btn btn-success" id="showBtn" onclick="showCurrentWord()" disabled data-i18n="btn_show">Show (S)</button>
-      <button class="btn btn-warning" id="voiceBtn" onclick="toggleVoice()" disabled data-i18n="btn_toggleVoice">Voice (V)</button>
-      <button class="btn btn-info" id="viewListBtn" onclick="showWordList()" disabled data-i18n="btn_view_list">View List</button>
+      <button class="btn btn-primary" id="nextBtn" disabled data-i18n="btn_next">Next (Space)</button>
+      <button class="btn btn-secondary" id="repeatBtn" disabled data-i18n="btn_repeat">Repeat (R)</button>
+      <button class="btn btn-success" id="showBtn" disabled data-i18n="btn_show">Show (S)</button>
+      <button class="btn btn-warning" id="voiceBtn" disabled data-i18n="btn_toggleVoice">Voice (V)</button>
+      <button class="btn btn-info" id="viewListBtn" disabled data-i18n="btn_view_list">View List</button>
       <button class="btn btn-info" id="historyBtn" disabled data-i18n="btn_history">History</button>
       <div id="privativeControls" style="display:none; gap:0.5rem; flex-wrap:wrap;">
         <button class="btn btn-secondary" id="prefixUnBtn" type="button" data-i18n="btn_prefix_un">Prefix: un</button>
@@ -248,22 +331,27 @@
       </div>
     </aside>
 
-    <div class="countdown-wrapper">
-      <svg class="progress-ring" viewBox="0 0 100 100">
-        <circle class="progress-ring__track" cx="50" cy="50" r="45" fill="transparent" />
-        <circle class="progress-ring__circle" cx="50" cy="50" r="45" fill="transparent" />
-      </svg>
-      <span id="countdownText" class="countdown-text">--</span>
-    </div>
+    <!-- countdown moved into display container -->
 
     <footer class="footer">
-      <div id="statusInfo" data-i18n="status_load_prompt">Load a word list to start.</div>
-      <div id="fileInfo" data-i18n="file_info_none">No file loaded.</div>
+      <div id="bottomStatus" class="bottom-status">
+        <div class="bottom-left">
+          <span id="bottomShuffle" aria-label="Shuffle" title="Shuffle">🔀</span>
+          <span class="sep">|</span>
+          <span id="bottomFileStatus" class="file-status-icon" aria-label="Files" title="Files">❌</span>
+          <span class="sep">|</span>
+          <span id="bottomVoice"></span>
+          <span class="sep">|</span>
+          <span id="bottomMode"></span>
+          <span id="statusInfo" class="status-alert" data-i18n="status_load_prompt" aria-live="polite" aria-atomic="true"></span>
+        </div>
+        <span id="bottomVersion" class="bottom-version"></span>
+      </div>
     </footer>
   </div>
 
   <div id="welcomeModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
         <h2 data-i18n="welcome_title">Welcome to the French Study App!</h2>
         <p style="margin: 1rem 0;" data-i18n="welcome_instructions">To begin, please load one or more `.txt` files containing your words.</p>
         <div id="welcomeUploadArea">
@@ -279,41 +367,28 @@
   </div>
 
   <div id="settingsModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
       <div class="modal-header">
         <h2 data-i18n="settings_title">Settings</h2>
-        <button class="icon-btn close-btn">&times;</button>
+        <button class="icon-btn close-btn" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">&times;</button>
+      </div>
+      <div class="modal-section">
+        <p style="margin:0; color:#666;">Controls have moved to the Menu (☰).</p>
+      </div>
+      <div class="modal-section">
+        <label style="display:block; font-weight:600; margin-bottom:0.5rem;">System</label>
+        <button class="btn btn-secondary" id="resetAppBtn" type="button">Reset App (Reload)</button>
       </div>
       <div id="wordListsSection" class="modal-section" style="display: none;">
         <label data-i18n="label_active_word_lists">Active Word Lists</label>
         <div id="wordListsOptions" class="word-lists-options"></div>
       </div>
-      <div class="modal-section">
-        <label for="voiceSelect" data-i18n="label_voice">Voice:</label>
-        <select id="voiceSelect" style="width: 100%; padding: 0.5rem;"></select>
-        <div style="display:flex; gap:.5rem; align-items:center; margin-top:.5rem; flex-wrap:wrap;">
-          <button class="btn btn-secondary" id="voiceTestBtn" type="button" data-i18n="btn_test_voice">Test Voice</button>
-          <div id="iosVoiceHint" class="ios-voice-hint" data-i18n="voice_hint_ios" style="display:none; font-size: 0.85em; color: #777;">
-            Tip (iOS): After the first playback, reopen Settings to refresh French voices.
-          </div>
-        </div>
-      </div>
-      <div class="modal-section">
-        <label data-i18n="label_studyMode">Study Mode:</label>
-        <div class="mode-options">
-          <div class="mode-option"><input type="radio" id="modeSimultaneous" name="studyMode" value="simultaneous"><label for="modeSimultaneous" data-i18n="mode_simultaneous">Listen and Read simultaneously</label></div>
-          <div class="mode-option"><input type="radio" id="modeDisplayFirst" name="studyMode" value="displayFirst"><label for="modeDisplayFirst" data-i18n="mode_display_first">Read first, then Listen after</label><input type="number" id="displayFirstDelay" min="0" max="10" value="0" style="width: 50px;"><span data-i18n="label_seconds">seconds</span></div>
-          <div class="mode-option"><input type="radio" id="modeSpeakFirst" name="studyMode" value="speakFirst" checked><label for="modeSpeakFirst" data-i18n="mode_speak_first">Listen first, then Read after</label><input type="number" id="speakFirstDelay" min="0" max="10" value="0" style="width: 50px;"><span data-i18n="label_seconds">seconds</span></div>
-          <div class="mode-option" id="modePrivativeRow"><input type="radio" id="modePrivative" name="studyMode" value="privativePrefix"><label for="modePrivative" data-i18n="mode_privative_prefix">Privative Prefix Quiz (un/une)</label></div>
-          <div class="mode-option"><input type="checkbox" id="shuffleToggle"><label for="shuffleToggle" data-i18n="label_shuffle">Shuffle words</label></div>
-        </div>
-      </div>
     </div>
   </div>
 
   <div id="helpModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header"><h2 data-i18n="help_title">Help</h2><button class="icon-btn close-btn">&times;</button></div>
+    <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
+        <div class="modal-header"><h2 data-i18n="help_title">Help</h2><button class="icon-btn close-btn" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">&times;</button></div>
         <div class="modal-section">
             <h4 data-i18n="help_getting_started">🚀 Getting Started</h4>
             <p data-i18n="help_getting_started_body">Load a word list by dragging one or more <code>.txt</code> files onto the page, or by clicking the welcome screen to browse your files.</p>
@@ -336,27 +411,120 @@
         </div>
         <div class="modal-section">
             <h4 data-i18n="help_panels">↔️ Panels</h4>
-            <p data-i18n="help_panels_body">On desktop, you can click the <b>‹</b> icon on the "Revealed Words" panel to collapse and expand it.</p>
+            <p data-i18n="help_panels_body">On desktop, you can click the <b>‹</b> icon on the "Answers" panel to collapse and expand it.</p>
         </div>
     </div>
   </div>
 
   <div id="wordListModal" class="modal">
-     <div class="modal-content">
-      <div class="modal-header"><h2 data-i18n="word_list_modal_title">Current Word List</h2><button class="icon-btn close-btn">&times;</button></div>
+     <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-header"><h2 data-i18n="word_list_modal_title">Current Word List</h2><button class="icon-btn close-btn" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">&times;</button></div>
       <div class="word-list" id="wordListContent"></div>
     </div>
   </div>
   
   <div id="historyModal" class="modal">
-     <div class="modal-content">
-      <div class="modal-header"><h2 data-i18n="history_title">Revealed Words</h2><button class="icon-btn close-btn">&times;</button></div>
+     <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-header"><h2 data-i18n="history_title">Answers</h2><button class="icon-btn close-btn" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">&times;</button></div>
       <div id="historyModalContent" class="word-list"></div>
     </div>
   </div>
 
+  <!-- App Menu: mobile-friendly hamburger contents -->
+  <div id="menuModal" class="modal">
+    <!-- floating close aligned to hamburger -->
+    <button id="menuCloseOverlay" aria-label="Close" title="Close">✕</button>
+    <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
+      <div class="menu-shell">
+        <section id="menuPanel" class="panel" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="menuPanelTitle">
+          <div class="panel-header">
+            <h2 id="menuPanelTitle" style="margin:0">Menu</h2>
+          </div>
+          <div class="panel-body">
+      <div class="modal-section">
+        <label style="display:block; font-weight:600; margin-bottom:0.25rem;">Language</label>
+        <div class="language-flags" style="display:flex; gap:0.75rem;">
+          <button type="button" class="language-flag" id="menuLangEn" aria-label="English" title="English">🇺🇸</button>
+          <button type="button" class="language-flag" id="menuLangFr" aria-label="Français" title="Français">🇫🇷</button>
+        </div>
+      </div>
+      <div class="modal-section menu-field">
+        <div class="switch-row"><input type="checkbox" id="shuffleToggle"><label for="shuffleToggle" data-i18n="label_shuffle">Shuffle words</label></div>
+      </div>
+      <div class="modal-section menu-field">
+        <label for="studyModeSelect" data-i18n="label_studyMode">Study Mode:</label>
+        <select id="studyModeSelect" style="width:100%; padding:0.5rem;">
+          <option value="listenRead" data-i18n="mode_listen_read">Listen and read</option>
+          <option value="readThenSay" data-i18n="mode_read_then_say">Read then say</option>
+          <option value="listenThenRepeat" data-i18n="mode_listen_then_repeat">Listen then repeat</option>
+          <option value="articlesDef" data-i18n="mode_articles_def">Articles définis (le/la)</option>
+          <option value="articlesIndef" data-i18n="mode_articles_indef">Articles indéfinis (un/une)</option>
+        </select>
+      </div>
+      <div class="modal-section menu-field">
+        <label for="voiceSelect" data-i18n="label_voice">Voice:</label>
+        <select id="voiceSelect" style="width: 100%; padding: 0.5rem;"></select>
+        <div style="display:flex; gap:.5rem; align-items:center; margin-top:.5rem; flex-wrap:wrap;">
+          <button class="btn btn-secondary" id="voiceTestBtn" type="button" data-i18n="btn_test_voice">Test Voice</button>
+          <div id="iosVoiceHint" class="ios-voice-hint" data-i18n="voice_hint_ios" style="display:none; font-size: 0.85em; color: #777;">
+            Tip (iOS): After the first playback, reopen Settings to refresh French voices.
+          </div>
+        </div>
+      </div>
+      <div class="modal-section menu-field">
+        <label>ElevenLabs Voice (optional)</label>
+        <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+          <input id="elevenKeyInput" type="password" placeholder="elevenlabs_api_key" style="flex:1; min-width:220px;"/>
+          <button class="btn btn-secondary" id="elevenSaveBtn" type="button">Save</button>
+          <input type="file" id="elevenKeyFile" accept=".key,.txt" style="display:none;"/>
+          <button class="btn btn-secondary" id="elevenLoadFileBtn" type="button">Load from File</button>
+          <button class="btn btn-secondary" id="elevenClearBtn" type="button">Clear</button>
+        </div>
+        <div id="elevenKeyMasked" style="font-size:0.85em; color:#777; margin-top:0.25rem;"></div>
+        <div style="font-size:0.85em; color:#777; margin-top:0.25rem;">Adds ElevenLabs voices “Josh” (male) and “Bella” (female) to the selector using non‑streaming playback (fr‑FR).</div>
+      </div>
+      <div class="modal-section menu-field">
+        <label>OpenAI Voice (optional)</label>
+        <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+          <input id="openaiKeyInput" type="password" placeholder="sk-..." style="flex:1; min-width:220px;"/>
+          <button class="btn btn-secondary" id="openaiSaveBtn" type="button">Save</button>
+          <input type="file" id="openaiKeyFile" accept=".key,.txt" style="display:none;"/>
+          <button class="btn btn-secondary" id="openaiLoadFileBtn" type="button">Load from File</button>
+          <button class="btn btn-secondary" id="openaiClearBtn" type="button">Clear</button>
+        </div>
+        <div id="openaiKeyMasked" style="font-size:0.85em; color:#777; margin-top:0.25rem;"></div>
+        <div style="font-size:0.85em; color:#777; margin-top:0.25rem;">Adds OpenAI voices “Echo” and “Nova” to the selector using a low‑latency model.</div>
+      </div>
+      <div class="modal-section menu-field">
+        <details id="menuFiles" style="width:100%;">
+          <summary style="cursor:pointer; font-weight:700;">Files</summary>
+          <div id="menuWordListsSection" class="menu-field" style="margin-top:0.5rem;">
+            <label>Active Word Lists</label>
+            <div id="menuWordListsOptions" class="word-lists-options"></div>
+          </div>
+          <div style="margin-top:0.5rem;">
+            <label for="menuFileInput" style="display:block; font-weight:600; margin-bottom:0.25rem;">Add .txt files</label>
+            <input type="file" id="menuFileInput" accept=".txt" multiple />
+            <div style="font-size:0.85em; color:#777; margin-top:0.25rem;">Tip: You can also drag & drop files anywhere on the page.</div>
+          </div>
+        </details>
+      </div>
+      <div class="modal-section" style="margin-top:0.5rem;">
+        <label style="display:block; font-weight:600; margin-bottom:0.5rem;">System</label>
+        <button class="btn btn-secondary" id="resetAppBtn" type="button">Reset App (Reload)</button>
+      </div>
+      <hr/>
+      <div class="menu-bottom" style="margin-top:auto;">
+        <div class="modal-section menu-list" style="margin-top:0;">
+          <button id="menuHelpBtn">Help</button>
+        </div>
+        <div id="menuVersion" class="version-inline" style="padding-bottom:0.5rem;"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="confirmationDialog" class="modal">
-    <div class="modal-content" style="text-align: center;">
+    <div class="modal-content" style="text-align: center;" role="dialog" aria-modal="true" tabindex="-1">
       <h3 data-i18n="confirm_title">Reset Study Progress</h3>
       <p id="confirmationDialogText"></p>
       <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem;">
@@ -370,6 +538,7 @@
   <div id="appVersionCorner" class="app-version-corner"></div>
 
 <script>
+    'use strict';
     const i18n = {
       en: {
         page_title: "🇫🇷 French Listening Study",
@@ -391,14 +560,18 @@
         label_active_word_lists: "Active Word Lists",
         btn_next: "Next (Space)", btn_repeat: "Repeat (R)", btn_show: "Show (S)", btn_toggleVoice: "Voice (V)",
         status_ready: "Ready to start a new session", history_title: "Answers",
-        label_voice: "Voice:", opt_systemVoice: "System Voice", label_studyMode: "Study Mode:",
+        label_voice: "Voice:", label_studyMode: "Study Mode:",
         label_shuffle: "Shuffle words", label_seconds: "seconds",
         mode_simultaneous: "Listen and Read simultaneously",
-        mode_display_first: "Read first, then Listen after",
-        mode_speak_first: "Listen first, then Read after",
-        mode_privative_prefix: "Privative Prefix Quiz (un/une)",
+        mode_listen_read: "Listen and read",
+        mode_read_then_say: "Read then say",
+        mode_listen_then_repeat: "Listen then repeat",
+        mode_articles_def: "Definite articles (le/la)",
+        mode_articles_indef: "Indefinite articles (un/une)",
         btn_prefix_un: "Prefix: un",
         btn_prefix_une: "Prefix: une",
+        btn_prefix_le: "Prefix: le",
+        btn_prefix_la: "Prefix: la",
         prefix_prompt: "Choose the correct prefix (un/une)",
         toast_correct_prefix: "✅ Correct! {prefix} + {base}",
         toast_wrong_prefix: "❌ Not quite. It was {prefix} + {base}",
@@ -417,6 +590,7 @@
         help_panels: "↔️ Panels",
         help_panels_body: "On desktop, you can click the <b>‹</b> icon on the \"Answers\" panel to collapse and expand it.",
         btn_test_voice: "Test Voice",
+        label_close: "Close",
         test_phrase: "Bonjour !",
         voice_hint_ios: "Tip (iOS): After first playback, reopen Settings to refresh French voices.",
         confirm_title: "Reset Study Progress",
@@ -432,6 +606,10 @@
         file_info: "{wordCount} words from {fileCount} file(s)",
         history_empty: "No words have been revealed yet in this session.",
         restart_message: "🎉 Starting over from the beginning.", listening: "Listening...", reveal_prompt: "???", ready_to_start: "Ready to start!",
+        instr_listen: "Listen please.",
+        instr_repeat: "Repeat what you did hear.",
+        instr_read_say: "Say what you read.",
+        instr_skip_next: "You may skip to the next word.",
         session_complete: "🎉 Session Complete!", start_next_session: "Start Next (Space)",
         toast_single_file: "✅ {count} words loaded – ready to study!",
         toast_multi_file: "✅ {wordCount} words from {fileCount} files loaded – ready to study!",
@@ -458,14 +636,18 @@
         label_active_word_lists: "Listes de mots actives",
         btn_next: "Suivant (Espace)", btn_repeat: "Répéter (R)", btn_show: "Afficher (S)", btn_toggleVoice: "Voix (V)",
         status_ready: "Prêt à commencer une nouvelle session", history_title: "Réponses",
-        label_voice: "Voix :", opt_systemVoice: "Voix Système", label_studyMode: "Mode d'étude :",
+        label_voice: "Voix :", label_studyMode: "Mode d'étude :",
         label_shuffle: "Mélanger les mots", label_seconds: "secondes",
         mode_simultaneous: "Écouter et lire simultanément",
-        mode_display_first: "Lire d'abord, puis écouter après",
-        mode_speak_first: "Écouter d'abord, puis lire après",
-        mode_privative_prefix: "Préfixe privatif (un/une)",
+        mode_listen_read: "Écouter et lire",
+        mode_read_then_say: "Lire puis dire",
+        mode_listen_then_repeat: "Écouter puis répéter",
+        mode_articles_def: "Articles définis (le/la)",
+        mode_articles_indef: "Articles indéfinis (un/une)",
         btn_prefix_un: "Préfixe : un",
         btn_prefix_une: "Préfixe : une",
+        btn_prefix_le: "Préfixe : le",
+        btn_prefix_la: "Préfixe : la",
         prefix_prompt: "Choisissez le bon préfixe (un/une)",
         toast_correct_prefix: "✅ Correct ! {prefix} + {base}",
         toast_wrong_prefix: "❌ Pas tout à fait. C'était {prefix} + {base}",
@@ -484,6 +666,7 @@
         help_panels: "↔️ Panneaux",
         help_panels_body: "Sur ordinateur, vous pouvez cliquer sur l'icône <b>‹</b> du panneau \"Réponses\" pour le réduire ou l'agrandir.",
         btn_test_voice: "Tester la voix",
+        label_close: "Fermer",
         test_phrase: "Bonjour !",
         voice_hint_ios: "Astuce (iOS) : Après la première lecture, rouvrez Paramètres pour actualiser les voix françaises.",
         confirm_title: "Réinitialiser la progression d'étude",
@@ -499,6 +682,10 @@
         file_info: "{wordCount} mots de {fileCount} fichier(s)",
         history_empty: "Aucun mot n'a encore été révélé dans cette session.",
         restart_message: "🎉 Reprise depuis le début.", listening: "Écoute...", reveal_prompt: "???", ready_to_start: "Prêt à commencer !",
+        instr_listen: "Veuillez écouter.",
+        instr_repeat: "Répétez ce que vous avez entendu.",
+        instr_read_say: "Dites ce que vous lisez.",
+        instr_skip_next: "Vous pouvez passer au mot suivant.",
         session_complete: "🎉 Session terminée !", start_next_session: "Commencer (Espace)",
         toast_single_file: "✅ {count} mots chargés – prêt à étudier !",
         toast_multi_file: "✅ {wordCount} mots de {fileCount} fichiers chargés – prêt à étudier !",
@@ -511,15 +698,20 @@
     let wordLists = {}; // { filename: { words: [], enabled: true } }
     let words = [], currentIndex = 0, currentWord = "";
     let availableVoices = [], currentVoice = "system", displayHistory = [];
-    let studyMode = "speakFirst";
-    let displayFirstDelay = 0, speakFirstDelay = 0;
+    let studyMode = "listenThenRepeat"; // default
+    // Deprecated timer settings removed
     let countdownInterval = null;
-    let isInSpeakFirstMode = false;
+    let isInSpeakFirstMode = false; // legacy; no longer used for timers
+    let readSayStage = 0; // 0=new word, 1=shown, 2=spoken (advance next)
+    let listenRepeatStage = 0; // 0=new word, 1=awaiting user after speak, 2=word shown awaiting next
     let shuffleEnabled = false;
+    let originalWordOrder = [];
     let isSessionComplete = false;
     const APP_VERSION = 'v1.5.0';
-    // Privative prefix mode state
+    // Articles quiz state
     let prefixWords = [];
+    let prefixWordsIndef = [];
+    let prefixWordsDef = [];
     let prefixIndex = 0;
     let currentBaseWord = "";
     let currentExpectedPrefix = ""; // 'un' or 'une'
@@ -527,6 +719,11 @@
     const synth = window.speechSynthesis;
     let curLang = "en";
     let confirmationCallback = null;
+    // OpenAI TTS integration
+    let openaiKey = null; // stored locally
+    const OPENAI_TTS_MODEL = 'gpt-4o-mini-tts';
+    let openaiAudio = null;
+    let elevenKey = null; // ElevenLabs API key (local)
 
     // --- ENV / BROWSER DETECTION ---
     const UA = navigator.userAgent || '';
@@ -543,7 +740,11 @@
     progressCircle.style.strokeDashoffset = circumference;
     const allModals = document.querySelectorAll('.modal');
     const progressBarFill = document.getElementById('progressBarFill');
+    const countdownTopbarFill = document.getElementById('countdownTopbarFill');
     const nextBtn = document.getElementById('nextBtn');
+    const repeatBtn = document.getElementById('repeatBtn');
+    const showBtn = document.getElementById('showBtn');
+    const voiceBtn = document.getElementById('voiceBtn');
     const welcomeModal = document.getElementById('welcomeModal');
     const settingsModal = document.getElementById('settingsModal');
     const helpModal = document.getElementById('helpModal');
@@ -560,6 +761,10 @@
       curLang = lang;
       document.getElementById('langEn').classList.toggle('active', lang === 'en');
       document.getElementById('langFr').classList.toggle('active', lang === 'fr');
+      // mirror selection in menu flags if present
+      const mEn = document.getElementById('menuLangEn');
+      const mFr = document.getElementById('menuLangFr');
+      if (mEn && mFr) { mEn.classList.toggle('active', lang === 'en'); mFr.classList.toggle('active', lang === 'fr'); }
       document.querySelectorAll("[data-i18n]").forEach(el => {
         const key = el.getAttribute("data-i18n");
         if (i18n[lang] && i18n[lang][key]) {
@@ -575,6 +780,12 @@
         const key = el.getAttribute('data-i18n-title');
         if (i18n[lang] && i18n[lang][key]) {
           el.setAttribute('title', i18n[lang][key]);
+        }
+      });
+      document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+        const key = el.getAttribute('data-i18n-aria-label');
+        if (i18n[lang] && i18n[lang][key]) {
+          el.setAttribute('aria-label', i18n[lang][key]);
         }
       });
       if (words.length > 0) {
@@ -656,6 +867,11 @@
         // don't list potentially poor ones. Only list if we find HQ matches; otherwise keep only System.
         const high = allFrench.filter(v => qualityKeywords.some(k => (v.name || '').toLowerCase().includes(k)));
         toShow = high.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+        // Best-effort: if user previously selected a specific FR voice and it exists, include it
+        if (toShow.length === 0 && currentVoice && currentVoice !== 'system') {
+          const saved = allFrench.find(v => v.name === currentVoice);
+          if (saved) toShow = [saved];
+        }
       } else if (isSafari) {
         // Safari (incl. iOS): list all FR voices, sorted by quality (Siri/Enhanced first)
         toShow = allFrench.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
@@ -671,6 +887,29 @@
         vs.appendChild(opt);
       });
 
+      // Append OpenAI voices when API key is set
+      if (openaiKey) {
+        const group = document.createElement('optgroup');
+        group.label = 'OpenAI TTS';
+        const echo = document.createElement('option'); echo.value = 'openai:echo'; echo.textContent = 'Echo (OpenAI)';
+        const nova = document.createElement('option'); nova.value = 'openai:nova'; nova.textContent = 'Nova (OpenAI)';
+        group.appendChild(echo); group.appendChild(nova);
+        vs.appendChild(group);
+      }
+
+      // Add ElevenLabs voices (fr-FR, non-streaming) when key is present
+      try {
+        if (window._ELEVEN && window._ELEVEN.key) {
+          const group2 = document.createElement('optgroup');
+          group2.label = 'ElevenLabs (fr-FR)';
+          // One male and one female public sample voices
+          const male = document.createElement('option'); male.value = 'eleven:TxGEqnHWrfWFTfGW9XjX'; male.textContent = 'Josh — male (ElevenLabs)';
+          const female = document.createElement('option'); female.value = 'eleven:EXAVITQu4vr4xnSDxMaL'; female.textContent = 'Bella — female (ElevenLabs)';
+          group2.appendChild(male); group2.appendChild(female);
+          vs.appendChild(group2);
+        }
+      } catch (_) {}
+
       // Preserve current selection if possible
       let existingIndex = Array.from(vs.options).findIndex(o => o.value === currentVoice);
       if (existingIndex >= 0) {
@@ -683,57 +922,41 @@
           currentVoice = vs.options[thomasIndex].value;
         } else {
           vs.selectedIndex = 0;
+          currentVoice = 'system';
         }
       } else {
         vs.selectedIndex = 0;
+        currentVoice = 'system';
       }
 
       updateVoiceIndicator();
+      renderVoiceDebug();
     }
 
-    // --- START: MODIFIED FUNCTION FOR DEBUGGING ---
     async function handleFileLoad(files) {
-        console.log('--- handleFileLoad CALLED ---');
-        console.log('Number of files received:', files.length);
-        console.log('Files object:', files); // This will show us the array of file objects
-
         let totalWords = 0;
 
-        const readFile = (file) => {
-            console.log('Attempting to read file:', file.name, 'Size:', file.size, 'Type:', file.type);
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    console.log('FileReader onload event fired for:', file.name);
-                    resolve(event.target.result);
-                };
-                reader.onerror = (error) => {
-                    console.error('FileReader onerror event fired for:', file.name, error);
-                    reject(error);
-                };
-                reader.readAsText(file);
-            });
-        };
+        const readFile = (file) => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => resolve(event.target.result);
+            reader.onerror = (error) => reject(error);
+            reader.readAsText(file);
+        });
 
         for (const file of files) {
             try {
                 const content = await readFile(file);
-                console.log(`Successfully read content from ${file.name}. Content length: ${content.length}`);
                 const fileWords = content.split("\n").filter(w => w.trim());
                 if (fileWords.length > 0) {
                   wordLists[file.name] = { words: fileWords, enabled: true };
                   totalWords += fileWords.length;
                 }
             } catch (err) {
-                console.error(`Failed to process file ${file.name}:`, err);
                 showToast(`Error: Could not load ${file.name}.`);
             }
         }
 
-        console.log('File processing loop finished. Total words found:', totalWords);
-
         if (totalWords > 0) {
-            console.log('Updating UI with new words.');
             generateWordListsUI();
             rebuildActiveWordsList();
             welcomeModal.classList.remove('visible');
@@ -747,11 +970,8 @@
                 toastMessage = i18n[curLang].toast_multi_file.replace('{wordCount}', totalWords).replace('{fileCount}', fileCount);
             }
             showToast(toastMessage);
-        } else {
-            console.log('No words were loaded, UI will not be updated.');
         }
     }
-    // --- END: MODIFIED FUNCTION FOR DEBUGGING ---
     
     function shuffleArray(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } }
 
@@ -759,6 +979,8 @@
       isSessionComplete = false;
       currentIndex = 0;
       currentWord = "";
+      readSayStage = 0;
+      listenRepeatStage = 0;
       prefixIndex = 0;
       currentBaseWord = "";
       currentExpectedPrefix = "";
@@ -767,15 +989,26 @@
       ['nextBtn', 'repeatBtn', 'showBtn', 'voiceBtn', 'historyBtn'].forEach(id => document.getElementById(id).disabled = words.length === 0);
       document.getElementById('viewListBtn').disabled = words.length === 0;
       nextBtn.textContent = i18n[curLang].btn_next;
-      updateStatusInfo(words.length > 0 ? i18n[curLang].ready_to_start : i18n[curLang].status_load_prompt);
+      updateStatusInfo('');
       updateDisplayUpper(i18n[curLang].ready_to_start);
+      updateInstruction('');
       updateHistoryList();
       updateProgressBar();
       document.getElementById('countdownText').textContent = '--';
+      if (countdownTopbarFill) countdownTopbarFill.style.width = '0%';
       // Toggle privative controls visibility
-      document.getElementById('privativeControls').style.display = (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') ? 'flex' : 'none';
-      // Shuffle questions for privative mode according to shuffleEnabled
-      if (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix' && prefixWords.length > 0) {
+      document.getElementById('privativeControls').style.display = (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef') ? 'flex' : 'none';
+      // Set initial labels for prefix buttons according to mode
+      (function(){
+        const unBtnLbl = document.getElementById('prefixUnBtn');
+        const uneBtnLbl = document.getElementById('prefixUneBtn');
+        if (unBtnLbl && uneBtnLbl) {
+          if (getSelectedStudyMode() === 'articlesDef') { unBtnLbl.textContent = i18n[curLang].btn_prefix_le || 'Prefix: le'; uneBtnLbl.textContent = i18n[curLang].btn_prefix_la || 'Prefix: la'; }
+          else { unBtnLbl.textContent = i18n[curLang].btn_prefix_un; uneBtnLbl.textContent = i18n[curLang].btn_prefix_une; }
+        }
+      })();
+      // Shuffle questions for articles mode according to shuffleEnabled
+      if ((getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef') && prefixWords.length > 0) {
         if (shuffleEnabled) shuffleArray(prefixWords);
         else if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
       }
@@ -783,6 +1016,15 @@
 
     function speakWord(w) {
       if (synth.speaking) synth.cancel();
+      // ElevenLabs (non-streaming) selection
+      if (typeof currentVoice === 'string' && currentVoice.startsWith('eleven:')) {
+        const voiceId = currentVoice.split(':')[1] || '';
+        if (voiceId) return speakWithElevenLabs(w, voiceId);
+      }
+      if (openaiKey && typeof currentVoice === 'string' && currentVoice.startsWith('openai:')) {
+        const voice = (currentVoice.split(':')[1] || 'echo');
+        return speakWithOpenAITTS(w, voice);
+      }
       const u = new SpeechSynthesisUtterance(w);
       let selectedVoice = null;
       if (currentVoice && currentVoice !== 'system') {
@@ -818,6 +1060,58 @@
       });
     }
 
+    async function speakWithOpenAITTS(text, voice) {
+      try {
+        if (openaiAudio) { try { openaiAudio.pause(); } catch(_){} }
+        const resp = await fetch('https://api.openai.com/v1/audio/speech', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${openaiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: OPENAI_TTS_MODEL, voice, input: text, format: 'mp3' })
+        });
+        if (!resp.ok) throw new Error('TTS request failed');
+        const buf = await resp.arrayBuffer();
+        const blob = new Blob([buf], { type: 'audio/mpeg' });
+        const url = URL.createObjectURL(blob);
+        openaiAudio = new Audio(url);
+        await openaiAudio.play();
+        return new Promise(resolve => { openaiAudio.onended = resolve; });
+      } catch (e) {
+        showToast('OpenAI TTS error (possibly CORS). Falling back.');
+        const u = new SpeechSynthesisUtterance(text); synth.speak(u); return new Promise(r=>u.onend=r);
+      }
+    }
+
+    // ElevenLabs TTS (non-streaming: Create Speech)
+    async function speakWithElevenLabs(text, voiceId) {
+      try {
+        const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'xi-api-key': (window._ELEVEN && window._ELEVEN.key) || elevenKey || '',
+            'Accept': 'audio/mpeg',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            text,
+            model_id: 'eleven_multilingual_v2',
+            language: 'fr-FR',
+            voice_settings: { stability: 0.5, similarity_boost: 0.7, style: 0.0, use_speaker_boost: true }
+          })
+        });
+        if (!resp.ok) throw new Error('ElevenLabs TTS failed');
+        const buf = await resp.arrayBuffer();
+        const blob = new Blob([buf], { type: 'audio/mpeg' });
+        const urlObj = URL.createObjectURL(blob);
+        const audio = new Audio(urlObj);
+        await audio.play();
+        return new Promise(resolve => { audio.onended = resolve; });
+      } catch (e) {
+        showToast('ElevenLabs TTS error (maybe CORS). Falling back.');
+        const u = new SpeechSynthesisUtterance(text); synth.speak(u); return new Promise(r=>u.onend=r);
+      }
+    }
+
     function startCountdown(seconds) {
       if (countdownInterval) clearInterval(countdownInterval);
       progressCircle.style.transition = 'stroke-dashoffset 0.1s linear';
@@ -825,6 +1119,7 @@
       const countdownTextEl = document.getElementById('countdownText');
       const totalDuration = seconds * 1000;
       let startTime = Date.now();
+      if (countdownTopbarFill) countdownTopbarFill.style.width = '100%';
 
       countdownInterval = setInterval(() => {
         const elapsedTime = Date.now() - startTime;
@@ -832,6 +1127,7 @@
           clearInterval(countdownInterval);
           progressCircle.style.strokeDashoffset = circumference;
           countdownTextEl.textContent = '--';
+          if (countdownTopbarFill) countdownTopbarFill.style.width = '0%';
           if (isInSpeakFirstMode && currentWord) {
             updateDisplayUpper(currentWord);
             addToHistory(currentWord);
@@ -843,6 +1139,7 @@
           progressCircle.style.strokeDashoffset = offset;
           const secondsLeft = Math.ceil((totalDuration - elapsedTime) / 1000);
           countdownTextEl.textContent = `${secondsLeft}s`;
+          if (countdownTopbarFill) countdownTopbarFill.style.width = `${Math.max(0, (1 - progress) * 100)}%`;
         }
       }, 50);
     }
@@ -861,8 +1158,9 @@
     }
 
     function addToHistory(word) {
-      const isPriv = document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix';
-      const indexNum = isPriv ? prefixIndex : currentIndex;
+      const modeNow = getSelectedStudyMode();
+      const isArticles = (modeNow === 'articlesIndef' || modeNow === 'articlesDef');
+      const indexNum = isArticles ? prefixIndex : currentIndex;
       const historyEntry = `${indexNum}: ${word}`;
       if (!displayHistory.includes(historyEntry)) {
         displayHistory.push(historyEntry);
@@ -872,8 +1170,10 @@
 
     async function nextWord() {
       if (!words.length) return;
-      // Privative prefix mode branch
-      if (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') {
+      // Articles mode branch (le/la or un/une)
+      if (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef') {
+        prefixWords = (getSelectedStudyMode() === 'articlesIndef') ? prefixWordsIndef : prefixWordsDef;
+        window.prefixOriginalOrder = (getSelectedStudyMode() === 'articlesIndef') ? window.prefixOriginalOrderIndef : window.prefixOriginalOrderDef;
         if (prefixWords.length === 0) return;
         // If previous question existed and was not answered, record as unanswered
         if (currentBaseWord && !privativeAnswered) {
@@ -904,6 +1204,10 @@
         updateStatusInfo(i18n[curLang].status_word_progress.replace('{current}', prefixIndex).replace('{total}', prefixWords.length));
         return;
       }
+      // For Listen & Repeat: add the previously spoken word to Answers when advancing
+      if (!isSessionComplete && getSelectedStudyMode() === 'listenThenRepeat' && currentWord) {
+        addToHistory(currentWord);
+      }
       if (isSessionComplete) {
         if (shuffleEnabled) shuffleArray(words);
         initializeStudy();
@@ -911,53 +1215,76 @@
       }
 
       if (currentIndex >= words.length) {
-        if (studyMode === "speakFirst" && currentWord) addToHistory(currentWord);
         isSessionComplete = true;
         updateDisplayUpper(i18n[curLang].session_complete, true);
+        updateInstruction('');
         nextBtn.textContent = i18n[curLang].start_next_session;
         updateProgressBar();
         ['repeatBtn', 'showBtn', 'voiceBtn'].forEach(id => document.getElementById(id).disabled = true);
         return;
       }
 
-      if (studyMode === "speakFirst" && currentWord) addToHistory(currentWord);
+      // Handle staged flow for Read & Say: if we are in stages 1 or 2
+      if (getSelectedStudyMode() === 'readThenSay' && currentWord) {
+        if (readSayStage === 1) {
+          await speakWord(currentWord); // speak after the student reads
+          updateInstruction(i18n[curLang].instr_skip_next);
+          readSayStage = 2;
+          return; // wait for another Next to advance
+        } else if (readSayStage === 2) {
+          // proceed to pick the next word
+          readSayStage = 0;
+        }
+      }
+
+      // Handle staged flow for Listen then Repeat
+      if (getSelectedStudyMode() === 'listenThenRepeat' && currentWord) {
+        if (listenRepeatStage === 1) {
+          // Reveal the word after the student repeats and speak it once more
+          updateDisplayUpper(currentWord);
+          await speakWord(currentWord);
+          updateInstruction(i18n[curLang].instr_skip_next);
+          listenRepeatStage = 2; // wait for next press to advance (pre-add will log previous)
+          return;
+        } else if (listenRepeatStage === 2) {
+          // proceed to pick the next word
+          listenRepeatStage = 0;
+        }
+      }
+
       currentWord = words[currentIndex];
       currentIndex++;
       updateProgressBar();
 
-      studyMode = document.querySelector('input[name="studyMode"]:checked').value;
-      displayFirstDelay = parseInt(document.getElementById("displayFirstDelay").value);
-      speakFirstDelay = parseInt(document.getElementById("speakFirstDelay").value);
+      studyMode = getSelectedStudyMode();
 
-      if (studyMode === "simultaneous") {
+      if (studyMode === "listenRead") {
         updateDisplayUpper(currentWord);
         addToHistory(currentWord);
+        updateInstruction('');
         await speakWord(currentWord);
-      } else if (studyMode === "displayFirst") {
+      } else if (studyMode === "readThenSay") {
+        // Stage 1: show the word, wait for student to say it
         updateDisplayUpper(currentWord);
         addToHistory(currentWord);
-        if (displayFirstDelay > 0) {
-          startCountdown(displayFirstDelay);
-          setTimeout(() => speakWord(currentWord), displayFirstDelay * 1000);
-        } else {
-          await speakWord(currentWord);
-        }
-      } else if (studyMode === "speakFirst") {
-        updateDisplayUpper(i18n[curLang].listening);
-        await speakWord(currentWord);
-        if (speakFirstDelay > 0) {
-          isInSpeakFirstMode = true;
-          startCountdown(speakFirstDelay);
-        } else {
-          updateDisplayUpper(i18n[curLang].reveal_prompt);
-        }
+        updateInstruction(i18n[curLang].instr_read_say);
+        readSayStage = 1; // next press will speak
+        updateStatusInfo(i18n[curLang].status_word_progress.replace('{current}', currentIndex).replace('{total}', words.length));
+        return;
+      } else if (studyMode === "listenThenRepeat") {
+        updateDisplayUpper(i18n[curLang].reveal_prompt);
+        updateInstruction(i18n[curLang].instr_listen);
+        await speakWord(currentWord); // speak first
+        updateInstruction(i18n[curLang].instr_repeat);
+        listenRepeatStage = 1; // now wait for user to reveal
+        return;
       }
       updateStatusInfo(i18n[curLang].status_word_progress.replace('{current}', currentIndex).replace('{total}', words.length));
     }
 
     async function repeatWord() { 
       if (!currentWord) return; 
-      if (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix' && currentBaseWord) {
+      if ((getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef') && currentBaseWord) {
         await speakWord(currentBaseWord);
       } else {
         await speakWord(currentWord);
@@ -966,18 +1293,16 @@
 
     function showCurrentWord() {
       if (currentWord) {
-        if (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix' && currentBaseWord) {
-          updateDisplayUpper(`${currentExpectedPrefix} ${currentBaseWord}`);
-          addToHistory(`${currentExpectedPrefix} ${currentBaseWord}`);
+        if ((getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef') && currentBaseWord) {
+          const full = `${currentExpectedPrefix} ${currentBaseWord}`;
+          updateDisplayUpper(full);
+          addToHistory(full);
+          // Speak the full phrase when revealed via Show
+          speakWord(full);
           privativeAnswered = true;
           return;
         }
         updateDisplayUpper(currentWord);
-        if (countdownInterval) {
-            clearInterval(countdownInterval);
-            progressCircle.style.strokeDashoffset = circumference;
-            document.getElementById('countdownText').textContent = '--';
-        }
         isInSpeakFirstMode = false;
         addToHistory(currentWord);
       }
@@ -988,14 +1313,18 @@
       if (vs.options.length === 0) return;
       vs.selectedIndex = (vs.selectedIndex + 1) % vs.options.length;
       currentVoice = vs.value;
+      try { localStorage.setItem('selectedVoice', currentVoice); } catch (_) {}
       updateVoiceIndicator();
+      renderVoiceDebug();
     }
     
     // --- UI UPDATE & MANAGEMENT FUNCTIONS ---
     function updateProgressBar() {
         let progress = 0;
-        if (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') {
-          progress = prefixWords.length > 0 ? (prefixIndex / prefixWords.length) * 100 : 0;
+        const modeNow = getSelectedStudyMode();
+        if (modeNow === 'articlesIndef' || modeNow === 'articlesDef') {
+          const active = (modeNow === 'articlesIndef') ? prefixWordsIndef : prefixWordsDef;
+          progress = active.length > 0 ? (prefixIndex / active.length) * 100 : 0;
         } else {
           progress = words.length > 0 ? (currentIndex / words.length) * 100 : 0;
         }
@@ -1005,26 +1334,47 @@
     function updateVoiceIndicator() {
         const vs = document.getElementById('voiceSelect');
         const selectedOption = vs.selectedOptions[0];
-        if (!selectedOption) { document.getElementById('activeVoiceDisplay').textContent = i18n[curLang].no_voices; return; }
+        const bottomVoice = document.getElementById('bottomVoice');
+        if (!selectedOption) { 
+          document.getElementById('activeVoiceDisplay').textContent = i18n[curLang].no_voices; 
+          if (bottomVoice) bottomVoice.textContent = i18n[curLang].no_voices; 
+          return; 
+        }
         // If "system" is selected, try to show the resolved best French voice name
         if (selectedOption.value === 'system') {
           const resolved = bestFrenchVoice();
           if (resolved) {
             document.getElementById('activeVoiceDisplay').textContent = `🗣️ ${resolved.name} (${resolved.lang})`;
+            if (bottomVoice) bottomVoice.textContent = `${resolved.name} (${resolved.lang})`;
             return;
           }
         }
         document.getElementById('activeVoiceDisplay').textContent = `🗣️ ${selectedOption.text}`;
+        if (bottomVoice) bottomVoice.textContent = selectedOption.text;
+    }
+
+    function getSelectedStudyMode() {
+      const sel = document.getElementById('studyModeSelect');
+      if (sel) return sel.value;
+      // Fallback to legacy radios if present
+      const radio = document.querySelector('input[name="studyMode"]:checked');
+      return radio ? radio.value : 'listenThenRepeat';
     }
 
     function updateStudyModeIndicator() {
-      const mode = document.querySelector('input[name="studyMode"]:checked');
-      const label = document.querySelector(`label[for="${mode.id}"]`);
-      document.getElementById('activeStudyModeDisplay').textContent = `${i18n[curLang].indicator_mode_prefix} ${label.textContent.split(',')[0]}`;
+      const sel = document.getElementById('studyModeSelect');
+      const text = (sel && sel.selectedOptions && sel.selectedOptions[0]) ? sel.selectedOptions[0].text : '';
+      document.getElementById('activeStudyModeDisplay').textContent = `${i18n[curLang].indicator_mode_prefix} ${text}`;
+      const bottomMode = document.getElementById('bottomMode'); if (bottomMode) bottomMode.textContent = text;
     }
 
     function updateShuffleIndicator() {
       document.getElementById('activeShuffleDisplay').textContent = shuffleEnabled ? i18n[curLang].indicator_shuffle_on : i18n[curLang].indicator_shuffle_off;
+      const bottomShuffle = document.getElementById('bottomShuffle');
+      if (bottomShuffle) {
+        bottomShuffle.textContent = '🔀';
+        bottomShuffle.classList.toggle('off', !shuffleEnabled);
+      }
     }
 
     function updateAllIndicators() {
@@ -1033,39 +1383,103 @@
       updateShuffleIndicator();
     }
     
-    function generateWordListsUI() {
-        const container = document.getElementById('wordListsOptions');
-        const section = document.getElementById('wordListsSection');
-        container.innerHTML = '';
-        const filenames = Object.keys(wordLists);
-        if (filenames.length > 1) {
-            section.style.display = 'block';
-            filenames.forEach(name => {
-                const item = document.createElement('div');
-                item.className = 'mode-option';
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.checked = wordLists[name].enabled;
-                checkbox.id = `file--${name}`;
-                checkbox.dataset.filename = name;
-                checkbox.addEventListener('change', () => {
-                    confirmationCallback = () => {
-                        wordLists[name].enabled = checkbox.checked;
-                        rebuildActiveWordsList();
-                    };
-                    document.getElementById('confirmationDialogText').textContent = i18n[curLang].confirm_word_list;
-                    confirmationDialog.classList.add('visible');
-                });
-                const label = document.createElement('label');
-                label.htmlFor = `file--${name}`;
-                label.textContent = `${name} (${wordLists[name].words.length} ${i18n[curLang].words_lower})`;
-                item.appendChild(checkbox);
-                item.appendChild(label);
-                container.appendChild(item);
-            });
-        } else {
-            section.style.display = 'none';
+    // --- Voice Debug Helper (feature-flagged) ---
+    function isVoiceDebugEnabled() {
+      try {
+        const hash = (location.hash || '').toLowerCase();
+        if (hash.includes('voicedebug')) return true;
+      } catch (_) {}
+      try {
+        const params = new URLSearchParams(location.search || '');
+        if (params.has('voicedebug')) {
+          const val = (params.get('voicedebug') || '').toLowerCase();
+          if (val === '' || val === '1' || val === 'true' || val === 'yes') return true;
         }
+      } catch (_) {}
+      try { return localStorage.getItem('voiceDebug') === '1'; } catch (_) { return false; }
+    }
+
+    function ensureVoiceDebugEl() {
+      let el = document.getElementById('voiceDebug');
+      if (!el) {
+        const host = document.getElementById('bottomStatus') || document.body;
+        el = document.createElement('div');
+        el.id = 'voiceDebug';
+        el.className = '';
+        el.style.opacity = '0.7';
+        el.style.fontSize = '0.85em';
+        host.appendChild(el);
+      }
+      return el;
+    }
+
+    function renderVoiceDebug() {
+      const enabled = isVoiceDebugEnabled();
+      const el = ensureVoiceDebugEl();
+      if (!enabled) { el.style.display = 'none'; return; }
+
+      // Gather info
+      const all = Array.isArray(availableVoices) ? availableVoices : [];
+      const fr = all.filter(v => (v.lang || '').toLowerCase().startsWith('fr'));
+      const engine = isSafari ? 'Safari' : (isChromium ? 'Chromium' : (isFirefox ? 'Firefox' : 'Other'));
+      const vs = document.getElementById('voiceSelect');
+      const selectedVal = (vs && vs.value) ? vs.value : currentVoice || 'system';
+      let selectedText = 'System';
+      if (vs && vs.selectedOptions && vs.selectedOptions[0]) {
+        selectedText = vs.selectedOptions[0].value === 'system' ? 'System' : vs.selectedOptions[0].text;
+      } else if (selectedVal && selectedVal !== 'system') {
+        const vo = fr.find(v => v.name === selectedVal);
+        selectedText = vo ? `${vo.name} (${vo.lang})` : selectedVal;
+      }
+      const best = bestFrenchVoice();
+      const resolvedText = best ? `${best.name} (${best.lang})` : '—';
+
+      el.textContent = `Voice Debug — Selected: ${selectedText} | Resolved: ${resolvedText} | Engine: ${engine} | FR: ${fr.length}/${all.length}`;
+      el.style.display = 'block';
+    }
+
+    // Expose toggles for convenience during testing
+    window.enableVoiceDebug = function() { try { localStorage.setItem('voiceDebug', '1'); } catch (_) {} renderVoiceDebug(); };
+    window.disableVoiceDebug = function() { try { localStorage.removeItem('voiceDebug'); } catch (_) {} renderVoiceDebug(); };
+    
+    function generateWordListsUI() {
+        const containers = [
+          { container: document.getElementById('wordListsOptions'), section: document.getElementById('wordListsSection') },
+          { container: document.getElementById('menuWordListsOptions'), section: document.getElementById('menuWordListsSection') },
+        ];
+        containers.forEach(({container, section}) => { if (container) container.innerHTML = ''; });
+        const filenames = Object.keys(wordLists);
+        containers.forEach(({container, section}) => {
+          if (!container || !section) return;
+          if (filenames.length > 1) {
+              section.style.display = 'block';
+              filenames.forEach(name => {
+                  const item = document.createElement('div');
+                  item.className = 'mode-option';
+                  const checkbox = document.createElement('input');
+                  checkbox.type = 'checkbox';
+                  checkbox.checked = wordLists[name].enabled;
+                  checkbox.id = `file--${name}`;
+                  checkbox.dataset.filename = name;
+                  checkbox.addEventListener('change', () => {
+                      confirmationCallback = () => {
+                          wordLists[name].enabled = checkbox.checked;
+                          rebuildActiveWordsList();
+                      };
+                      document.getElementById('confirmationDialogText').textContent = i18n[curLang].confirm_word_list;
+                      confirmationDialog.classList.add('visible');
+                  });
+                  const label = document.createElement('label');
+                  label.htmlFor = `file--${name}`;
+                  label.textContent = `${name} (${wordLists[name].words.length} ${i18n[curLang].words_lower})`;
+                  item.appendChild(checkbox);
+                  item.appendChild(label);
+                  container.appendChild(item);
+              });
+          } else {
+              section.style.display = 'none';
+          }
+        });
     }
 
     function rebuildActiveWordsList() {
@@ -1079,28 +1493,44 @@
         }
         words = newWordList;
         originalWordOrder = [...words]; // Update original order for unshuffling
-        document.getElementById('fileInfo').textContent = i18n[curLang].file_info.replace('{wordCount}', words.length).replace('{fileCount}', fileCount);
-        // Build privative prefix pool
-        const pattern = /^(un|une)[\s-]+(.+)$/i;
-        prefixWords = words
+        const bottomIcon = document.getElementById('bottomFileStatus');
+        if (bottomIcon) {
+          if (words.length > 0) {
+            bottomIcon.textContent = '✅';
+            bottomIcon.classList.remove('status-alert');
+            bottomIcon.classList.add('status-ok');
+          } else {
+            bottomIcon.textContent = '❌';
+            bottomIcon.classList.remove('status-ok');
+            bottomIcon.classList.add('status-alert');
+          }
+        }
+        // Build articles pools (indef: un/une, def: le/la)
+        const indepPattern = /^(un|une)[\s-]+(.+)$/i;
+        const defPattern = /^(le|la)[\s-]+(.+)$/i;
+        prefixWordsIndef = words
           .map(w => w.trim())
           .filter(Boolean)
-          .filter(w => pattern.test(w))
-          .map(w => {
-            const m = w.match(pattern);
-            return { full: w, prefix: m[1].toLowerCase(), base: m[2].trim() };
-          });
-        window.prefixOriginalOrder = [...prefixWords];
-        // Enable/disable privative mode option (do not hide)
-        const privRadio = document.getElementById('modePrivative');
-        if (privRadio) {
-          const hasPool = prefixWords.length > 0;
-          privRadio.disabled = !hasPool;
-          // If currently selected but no pool, switch back to speakFirst
-          if (!hasPool && privRadio.checked) {
-            const fallback = document.getElementById('modeSpeakFirst');
-            if (fallback) fallback.checked = true;
-          }
+          .filter(w => indepPattern.test(w))
+          .map(w => { const m = w.match(indepPattern); return { full: w, prefix: m[1].toLowerCase(), base: m[2].trim() }; });
+        prefixWordsDef = words
+          .map(w => w.trim())
+          .filter(Boolean)
+          .filter(w => defPattern.test(w))
+          .map(w => { const m = w.match(defPattern); return { full: w, prefix: m[1].toLowerCase(), base: m[2].trim() }; });
+        window.prefixOriginalOrderIndef = [...prefixWordsIndef];
+        window.prefixOriginalOrderDef = [...prefixWordsDef];
+        // Enable/disable articles options in dropdown
+        const sel = document.getElementById('studyModeSelect');
+        if (sel) {
+          const hasIndef = prefixWordsIndef.length > 0;
+          const hasDef = prefixWordsDef.length > 0;
+          const optIndef = sel.querySelector('option[value="articlesIndef"]');
+          const optDef = sel.querySelector('option[value="articlesDef"]');
+          if (optIndef) optIndef.disabled = !hasIndef;
+          if (optDef) optDef.disabled = !hasDef;
+          if (sel.value === 'articlesIndef' && !hasIndef) sel.value = 'listenThenRepeat';
+          if (sel.value === 'articlesDef' && !hasDef) sel.value = 'listenThenRepeat';
         }
         initializeStudy();
     }
@@ -1118,7 +1548,21 @@
         el.textContent = t;
         el.classList.toggle('session-complete-message', isComplete);
     }
-    function updateStatusInfo(m) { document.getElementById("statusInfo").textContent = m; }
+    function updateInstruction(t='') {
+        const el = document.getElementById('displayInstruction');
+        if (el) el.textContent = t || '';
+    }
+    function updateStatusInfo(m) { 
+        const el = document.getElementById("statusInfo");
+        if (!el) return;
+        // Do not print the generic ready/empty prompts; keep bottom bar compact
+        if (!m || m === i18n[curLang].ready_to_start || m === i18n[curLang].status_load_prompt) {
+          el.textContent = '';
+          return;
+        }
+        el.textContent = m; 
+        el.classList.remove('status-ok','status-alert');
+    }
     
     // --- EVENT LISTENERS ---
     // Modals
@@ -1134,11 +1578,92 @@
     }
 
     document.getElementById('settingsBtn').addEventListener('click', () => { 
-      settingsModal.classList.add('visible'); 
+      // Open Menu for one-click access to controls
+      menuModal.classList.add('visible');
+      document.getElementById('menuBtn')?.setAttribute('aria-expanded','true');
       if (isSafari) primeVoices();
-      populateVoiceList(); 
+      populateVoiceList();
+      const mc = menuModal.querySelector('.modal-content'); if (mc) mc.focus();
     });
-    document.getElementById('helpBtn').addEventListener('click', () => helpModal.classList.add('visible'));
+    // Language flags
+    const langEnEl = document.getElementById('langEn');
+    const langFrEl = document.getElementById('langFr');
+    if (langEnEl) langEnEl.addEventListener('click', () => setLanguage('en'));
+    if (langFrEl) langFrEl.addEventListener('click', () => setLanguage('fr'));
+
+    // Primary controls
+    if (nextBtn) nextBtn.addEventListener('click', () => { if (!nextBtn.disabled) nextWord(); });
+    if (repeatBtn) repeatBtn.addEventListener('click', () => { if (!repeatBtn.disabled) repeatWord(); });
+    if (showBtn) showBtn.addEventListener('click', () => { if (!showBtn.disabled) showCurrentWord(); });
+    if (voiceBtn) voiceBtn.addEventListener('click', () => { if (!voiceBtn.disabled) toggleVoice(); });
+    document.getElementById('helpBtn').addEventListener('click', () => { helpModal.classList.add('visible'); const mc = helpModal.querySelector('.modal-content'); if (mc) mc.focus(); });
+    // Hamburger menu
+    const menuModal = document.getElementById('menuModal');
+    const menuBtn = document.getElementById('menuBtn');
+    if (menuBtn) menuBtn.addEventListener('click', () => { 
+      if (menuModal) { 
+        menuModal.classList.add('visible'); 
+        menuBtn.setAttribute('aria-expanded','true'); 
+        bodyScrollLock(true);
+        const closeOverlay = document.getElementById('menuCloseOverlay');
+        if (closeOverlay) {
+          const rect = menuBtn.getBoundingClientRect();
+          closeOverlay.style.top = `${rect.top}px`;
+          closeOverlay.style.left = `${rect.left}px`;
+          closeOverlay.style.width = `${rect.width}px`;
+          closeOverlay.style.height = `${rect.height}px`;
+          closeOverlay.style.display = 'block';
+        }
+        openMenuPanel({ target: menuBtn });
+        const mc = menuModal.querySelector('.modal-content'); if (mc) mc.focus(); 
+      }
+    });
+    const menuCloseOverlay = document.getElementById('menuCloseOverlay');
+    if (menuCloseOverlay) menuCloseOverlay.addEventListener('click', () => { 
+      menuModal.classList.remove('visible'); 
+      menuBtn.setAttribute('aria-expanded','false'); 
+      menuCloseOverlay.style.display = 'none';
+      const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
+      bodyScrollLock(false);
+    });
+    const menuLangEn = document.getElementById('menuLangEn');
+    const menuLangFr = document.getElementById('menuLangFr');
+    if (menuLangEn) menuLangEn.addEventListener('click', () => { setLanguage('en'); });
+    if (menuLangFr) menuLangFr.addEventListener('click', () => { setLanguage('fr'); });
+    const menuHelpBtn = document.getElementById('menuHelpBtn');
+    if (menuHelpBtn) menuHelpBtn.addEventListener('click', () => { menuModal.classList.remove('visible'); helpModal.classList.add('visible'); const mc = helpModal.querySelector('.modal-content'); if (mc) mc.focus(); });
+    const menuSettingsBtn = document.getElementById('menuSettingsBtn');
+    if (menuSettingsBtn) menuSettingsBtn.addEventListener('click', () => { menuModal.classList.remove('visible'); settingsModal.classList.add('visible'); if (isSafari) primeVoices(); populateVoiceList(); const mc = settingsModal.querySelector('.modal-content'); if (mc) mc.focus(); });
+    // Left-rail expanding panel behavior
+    const menuPanel = document.getElementById('menuPanel');
+    let menuLastTrigger = null;
+    function isReducedMotion() { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+    function bodyScrollLock(on) { document.body.style.overflow = on ? 'hidden' : ''; }
+    function getFocusableElements(root) { return Array.from(root.querySelectorAll('a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])')).filter(el => !el.disabled && el.offsetParent !== null); }
+    function openMenuPanel(trigger) {
+      if (!menuPanel) return;
+      if (trigger && trigger.target) menuLastTrigger = trigger.target;
+      menuPanel.setAttribute('aria-hidden','false');
+      const els = getFocusableElements(menuPanel);
+      if (els[0]) els[0].focus();
+    }
+    function closeMenuPanel() {
+      if (!menuPanel) return;
+      menuPanel.setAttribute('aria-hidden','true');
+      if (menuLastTrigger && typeof menuLastTrigger.focus === 'function') menuLastTrigger.focus();
+    }
+    function toggleMenuPanel() {
+      if (!menuPanel) return;
+      const open = menuPanel.getAttribute('aria-hidden') === 'false';
+      if (open) closeMenuPanel(); else openMenuPanel();
+    }
+    // Directly open the panel (no rail)
+    const menuPanelClose = menuPanel ? menuPanel.querySelector('.close-btn') : null;
+    if (menuPanelClose) menuPanelClose.addEventListener('click', closeMenuPanel);
+    // Alt+M shortcut
+    document.addEventListener('keydown', e => {
+      if (e.altKey && (e.key === 'm' || e.key === 'M')) { e.preventDefault(); if (!menuModal.classList.contains('visible')) { menuModal.classList.add('visible'); menuBtn?.setAttribute('aria-expanded','true'); bodyScrollLock(true); openMenuPanel(); } else { toggleMenuPanel(); } }
+    });
     
     historyBtn.addEventListener('click', () => {
         historyModalContent.innerHTML = ""; // Clear previous content
@@ -1153,6 +1678,7 @@
             });
         }
         historyModal.classList.add('visible');
+        const mc = historyModal.querySelector('.modal-content'); if (mc) mc.focus();
     });
 
     const wordListContent = document.getElementById("wordListContent");
@@ -1166,6 +1692,7 @@
             wordListContent.appendChild(wordItem);
         });
         wordListModal.classList.add('visible');
+        const mc2 = wordListModal.querySelector('.modal-content'); if (mc2) mc2.focus();
     });
     
     // Confirmation Dialog & Shuffle Logic
@@ -1205,17 +1732,11 @@
     const fileInput = document.createElement('input');
     fileInput.type = 'file'; fileInput.accept = '.txt'; fileInput.multiple = true;
     
-    // --- START: MODIFIED EVENT LISTENER FOR DEBUGGING ---
     fileInput.addEventListener('change', e => {
-      console.log('--- HIDDEN <input> "change" EVENT FIRED ---');
       if (e.target.files && e.target.files.length > 0) {
-        console.log('Files detected in event. Calling handleFileLoad.');
         handleFileLoad(Array.from(e.target.files));
-      } else {
-        console.warn('Change event fired, but no files were found in e.target.files.');
       }
     });
-    // --- END: MODIFIED EVENT LISTENER FOR DEBUGGING ---
 
     if (!isIOS) {
       document.getElementById('welcomeBrowseBtn').addEventListener('click', () => fileInput.click());
@@ -1249,12 +1770,27 @@
       const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.txt'));
       if (files.length > 0) handleFileLoad(files);
     });
+    // Menu file input handler
+    (function(){
+      const menuFileInput = document.getElementById('menuFileInput');
+      if (menuFileInput) menuFileInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files || []).filter(f => f.name.endsWith('.txt'));
+        if (files.length > 0) handleFileLoad(files);
+        e.target.value = '';
+      });
+    })();
     
     document.getElementById('historyToggleBtn').addEventListener('click', () => document.querySelector('.container').classList.toggle('history-hidden'));
 
     // Keyboard Shortcuts & Modal Closing
     document.addEventListener("keydown", e => {
-      if (e.key === 'Escape') allModals.forEach(modal => modal.classList.remove('visible'));
+      if (e.key === 'Escape') { 
+        allModals.forEach(modal => modal.classList.remove('visible'));
+        document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
+        const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'none';
+        const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
+        bodyScrollLock(false);
+      }
       if (e.target.tagName.toLowerCase() === 'input' || document.querySelector('.modal.visible')) return;
       const btnId = { ' ': 'nextBtn', 'r': 'repeatBtn', 's': 'showBtn', 'v': 'voiceBtn' }[e.key.toLowerCase()];
       if (btnId && !e.metaKey && !e.ctrlKey && !e.altKey) {
@@ -1265,52 +1801,131 @@
     });
     
     allModals.forEach(modal => {
-        modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('visible'); });
+        modal.addEventListener('click', e => { 
+          if (e.target === modal) { 
+            modal.classList.remove('visible'); 
+            if (modal.id === 'menuModal') { 
+              document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
+              const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'none';
+              // Ensure panel is reset and scrolling unlocked
+              const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
+              bodyScrollLock(false);
+            }
+          }
+        });
         const closeBtn = modal.querySelector('.close-btn');
-        if(closeBtn) closeBtn.addEventListener('click', () => modal.classList.remove('visible'));
+        if(closeBtn) closeBtn.addEventListener('click', () => { 
+          modal.classList.remove('visible'); 
+          if (modal.id === 'menuModal') { 
+            document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
+            const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'none';
+            const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
+            bodyScrollLock(false);
+          }
+        });
     });
-    // Privative controls handlers
+    // Articles/Privative controls handlers
     const unBtn = document.getElementById('prefixUnBtn');
     const uneBtn = document.getElementById('prefixUneBtn');
     if (unBtn) unBtn.addEventListener('click', () => {
       if (!currentBaseWord) return;
-      const correct = currentExpectedPrefix === 'un';
+      const mode = getSelectedStudyMode();
+      const choice = (mode === 'articlesDef') ? 'le' : 'un';
+      const correct = currentExpectedPrefix === choice;
       const msg = (correct ? i18n[curLang].toast_correct_prefix : i18n[curLang].toast_wrong_prefix)
         .replace('{prefix}', currentExpectedPrefix)
         .replace('{base}', currentBaseWord);
       showToast(msg);
       updateDisplayUpper(`${currentExpectedPrefix} ${currentBaseWord}`);
       addToHistory(`${currentExpectedPrefix} ${currentBaseWord}`);
+      // Speak the full phrase after answer provided
+      speakWord(`${currentExpectedPrefix} ${currentBaseWord}`);
       privativeAnswered = true;
     });
     if (uneBtn) uneBtn.addEventListener('click', () => {
       if (!currentBaseWord) return;
-      const correct = currentExpectedPrefix === 'une';
+      const mode = getSelectedStudyMode();
+      const choice = (mode === 'articlesDef') ? 'la' : 'une';
+      const correct = currentExpectedPrefix === choice;
       const msg = (correct ? i18n[curLang].toast_correct_prefix : i18n[curLang].toast_wrong_prefix)
         .replace('{prefix}', currentExpectedPrefix)
         .replace('{base}', currentBaseWord);
       showToast(msg);
       updateDisplayUpper(`${currentExpectedPrefix} ${currentBaseWord}`);
       addToHistory(`${currentExpectedPrefix} ${currentBaseWord}`);
+      // Speak the full phrase after answer provided
+      speakWord(`${currentExpectedPrefix} ${currentBaseWord}`);
       privativeAnswered = true;
     });
     
-    document.getElementById('voiceSelect').addEventListener('change', e => { currentVoice = e.target.value; updateVoiceIndicator(); });
+    document.getElementById('voiceSelect').addEventListener('change', e => { 
+      currentVoice = e.target.value; 
+      try { localStorage.setItem('selectedVoice', currentVoice); } catch (_) {}
+      updateVoiceIndicator(); 
+      renderVoiceDebug();
+    });
     document.getElementById('voiceSelect').addEventListener('focus', populateVoiceList);
     const voiceTestBtn = document.getElementById('voiceTestBtn');
     if (voiceTestBtn) voiceTestBtn.addEventListener('click', () => { speakWord(i18n[curLang].test_phrase); });
-    document.querySelectorAll('input[name="studyMode"]').forEach(radio => radio.addEventListener('change', () => {
+    // ElevenLabs API key handlers
+    function setElevenKey(k) {
+      elevenKey = (k || '').trim();
+      try { if (elevenKey) localStorage.setItem('eleven_api_key', elevenKey); else localStorage.removeItem('eleven_api_key'); } catch(_) {}
+      window._ELEVEN = window._ELEVEN || {}; window._ELEVEN.key = elevenKey;
+      const m = document.getElementById('elevenKeyMasked'); if (m) m.textContent = elevenKey ? ('Key: ' + (elevenKey.length>16 ? (elevenKey.slice(0,10)+'…'+elevenKey.slice(-6)) : elevenKey.replace(/.(?=.{4})/g,'•'))) : 'No key set';
+      populateVoiceList();
+    }
+    try { const savedEl = localStorage.getItem('eleven_api_key'); if (savedEl) { setElevenKey(savedEl); } } catch(_) {}
+    const elevenSaveBtn = document.getElementById('elevenSaveBtn'); if (elevenSaveBtn) elevenSaveBtn.addEventListener('click', () => { const inp = document.getElementById('elevenKeyInput'); if (inp && inp.value.trim()) { setElevenKey(inp.value); inp.value=''; showToast('ElevenLabs key saved'); } });
+    const elevenClearBtn = document.getElementById('elevenClearBtn'); if (elevenClearBtn) elevenClearBtn.addEventListener('click', () => { setElevenKey(''); showToast('ElevenLabs key cleared'); });
+    const elevenLoadFileBtn = document.getElementById('elevenLoadFileBtn'); const elevenKeyFile = document.getElementById('elevenKeyFile');
+    if (elevenLoadFileBtn && elevenKeyFile) { elevenLoadFileBtn.addEventListener('click', () => elevenKeyFile.click()); elevenKeyFile.addEventListener('change', () => { const f = elevenKeyFile.files && elevenKeyFile.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { setElevenKey(String(r.result||'').trim()); showToast('Key loaded from file'); elevenKeyFile.value=''; }; r.readAsText(f); }); }
+    // OpenAI API key handlers
+    function maskKey(k){ if(!k) return ''; return k.length>16 ? (k.slice(0,10)+'…'+k.slice(-6)) : k.replace(/.(?=.{4})/g,'•'); }
+    function setOpenAIKey(k){ openaiKey = (k||'').trim(); try{ if(openaiKey) localStorage.setItem('openai_api_key', openaiKey); else localStorage.removeItem('openai_api_key'); }catch(_){}; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent = openaiKey? ('Key: '+maskKey(openaiKey)) : 'No key set'; populateVoiceList(); }
+    try{ const saved=localStorage.getItem('openai_api_key'); if(saved){ openaiKey=saved; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent='Key: '+maskKey(openaiKey);} }catch(_){}
+    const openaiSaveBtn=document.getElementById('openaiSaveBtn'); if(openaiSaveBtn) openaiSaveBtn.addEventListener('click',()=>{ const inp=document.getElementById('openaiKeyInput'); if(inp && inp.value.trim()) { setOpenAIKey(inp.value); inp.value=''; showToast('OpenAI key saved'); }});
+    const openaiClearBtn=document.getElementById('openaiClearBtn'); if(openaiClearBtn) openaiClearBtn.addEventListener('click',()=>{ setOpenAIKey(''); showToast('OpenAI key cleared'); });
+    const openaiLoadFileBtn=document.getElementById('openaiLoadFileBtn'); const openaiKeyFile=document.getElementById('openaiKeyFile');
+    if(openaiLoadFileBtn && openaiKeyFile){ openaiLoadFileBtn.addEventListener('click',()=>openaiKeyFile.click()); openaiKeyFile.addEventListener('change',()=>{ const f=openaiKeyFile.files&&openaiKeyFile.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ setOpenAIKey(String(r.result||'').trim()); showToast('Key loaded from file'); openaiKeyFile.value=''; }; r.readAsText(f); }); }
+    const studyModeSelect = document.getElementById('studyModeSelect');
+    if (studyModeSelect) studyModeSelect.addEventListener('change', () => {
       updateStudyModeIndicator();
-      document.getElementById('privativeControls').style.display = (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') ? 'flex' : 'none';
+      const isArticles = (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef');
+      document.getElementById('privativeControls').style.display = isArticles ? 'flex' : 'none';
+      // Update prefix buttons for selected articles mode
+      const unBtnLbl = document.getElementById('prefixUnBtn');
+      const uneBtnLbl = document.getElementById('prefixUneBtn');
+      if (unBtnLbl && uneBtnLbl) {
+        if (getSelectedStudyMode() === 'articlesDef') { unBtnLbl.textContent = i18n[curLang].btn_prefix_le || 'Prefix: le'; uneBtnLbl.textContent = i18n[curLang].btn_prefix_la || 'Prefix: la'; }
+        else { unBtnLbl.textContent = i18n[curLang].btn_prefix_un; uneBtnLbl.textContent = i18n[curLang].btn_prefix_une; }
+      }
       updateProgressBar();
-    }));
+      try { localStorage.setItem('studyMode', studyModeSelect.value); } catch (_) {}
+    });
 
     // --- INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', () => {
-        populateVoiceList(); // Use the new robust function
+        // Restore preferences
+        try {
+          const savedVoice = localStorage.getItem('selectedVoice');
+          if (savedVoice) currentVoice = savedVoice;
+        } catch (_) {}
+        try {
+          const savedMode = localStorage.getItem('studyMode');
+          const validModes = new Set(['listenRead','readThenSay','listenThenRepeat','articlesDef','articlesIndef']);
+          const fallback = 'listenThenRepeat';
+          const modeToUse = validModes.has(savedMode) ? savedMode : fallback;
+          const sel = document.getElementById('studyModeSelect');
+          if (sel) sel.value = modeToUse;
+        } catch (_) {}
+
+        populateVoiceList(); // Use the (restored) currentVoice where possible
         setLanguage("en");
         updateAllIndicators();
         welcomeModal.classList.add('visible');
+        // Initialize voice debug if enabled
+        renderVoiceDebug();
         // Apply iOS-only layout tweaks
         if (isIOS) { document.body.classList.add('is-ios'); document.documentElement.classList.add('is-ios'); }
         // Adjust welcome area text for iOS
@@ -1322,8 +1937,8 @@
           if (orP) orP.style.display = 'none';
           if (browseBtn) browseBtn.style.display = 'none';
         }
-        // Initialize privative controls visibility on load
-        document.getElementById('privativeControls').style.display = (document.querySelector('input[name="studyMode"]:checked')?.value === 'privativePrefix') ? 'flex' : 'none';
+        // Initialize articles controls visibility on load
+        document.getElementById('privativeControls').style.display = (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef') ? 'flex' : 'none';
         // Show iOS-specific voice hint
         try {
           const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && 'ontouchend' in document);
@@ -1335,8 +1950,77 @@
         // Set version displays
         const verCorner = document.getElementById('appVersionCorner');
         const verWelcome = document.getElementById('welcomeVersion');
+        const verMenu = document.getElementById('menuVersion');
+        const verBottom = document.getElementById('bottomVersion');
         if (verCorner) verCorner.textContent = APP_VERSION;
         if (verWelcome) verWelcome.textContent = APP_VERSION;
+        if (verMenu) verMenu.textContent = APP_VERSION;
+        if (verBottom) verBottom.textContent = APP_VERSION;
+
+        // Inline handlers are used for control buttons and language flags
+
+        // Register Service Worker for PWA (https/localhost only)
+        try {
+          const isLocal = ['localhost','127.0.0.1'].includes(location.hostname);
+          const isSecure = location.protocol === 'https:' || isLocal;
+          if ('serviceWorker' in navigator && isSecure) {
+            const SW_CODE = `const CACHE='study-app-v1';const CORE=['./','./index.html'];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()))});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.map(k=>k===CACHE?null:caches.delete(k)))).then(()=>self.clients.claim()))});self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET'||!r.url.startsWith(self.location.origin))return;e.respondWith(caches.match(r).then(c=>c||fetch(r).then(resp=>{const cp=resp.clone();caches.open(CACHE).then(cc=>cc.put(r,cp));return resp}).catch(()=>c)))})`;
+            const swBlob = new Blob([SW_CODE], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(swBlob);
+            navigator.serviceWorker.register(swUrl);
+          }
+        } catch (_) {}
+
+        // Inject manifest from inline JSON (with data-URI icons)
+        try {
+          function makeFlagPng(size, circular){
+            const c=document.createElement('canvas'); c.width=size; c.height=size; const ctx=c.getContext('2d');
+            if(circular){ ctx.save(); ctx.beginPath(); ctx.arc(size/2,size/2,size/2,0,Math.PI*2); ctx.closePath(); ctx.clip(); }
+            ctx.fillStyle='#0055A4'; ctx.fillRect(0,0,size/3,size);
+            ctx.fillStyle='#FFFFFF'; ctx.fillRect(size/3,0,size/3,size);
+            ctx.fillStyle='#EF4135'; ctx.fillRect(2*size/3,0,size/3,size);
+            if(circular){ ctx.restore(); }
+            return c.toDataURL('image/png');
+          }
+          const icon180 = makeFlagPng(180,true);
+          const icon192 = makeFlagPng(192,true);
+          const icon512 = makeFlagPng(512,true);
+          // Set apple touch icon to PNG (iOS requires PNG)
+          const apple = document.getElementById('appleIcon'); if (apple) apple.setAttribute('href', icon180);
+          // Build manifest with PNG icons
+          const manifestJson = {
+            name: 'French Study', short_name: 'Study', start_url: './?source=pwa', display: 'standalone',
+            background_color: '#F7F7F7', theme_color: '#4A90E2',
+            icons: [ { src: icon192, sizes: '192x192', type: 'image/png' }, { src: icon512, sizes: '512x512', type: 'image/png' } ]
+          };
+          const manifestBlob = new Blob([JSON.stringify(manifestJson)], { type: 'application/manifest+json' });
+          const manifestUrl = URL.createObjectURL(manifestBlob);
+          const link = document.getElementById('manifestLink'); if (link) link.setAttribute('href', manifestUrl);
+        } catch (_) {}
+
+        // Standalone detection for safe-area padding
+        try {
+          const standalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+          if (standalone) { document.documentElement.classList.add('is-standalone'); document.body.classList.add('is-standalone'); }
+        } catch (_) {}
+
+        // Settings: reset app button
+        try {
+          const resetBtn = document.getElementById('resetAppBtn');
+          if (resetBtn) resetBtn.addEventListener('click', async () => {
+            try {
+              if ('serviceWorker' in navigator) {
+                const regs = await navigator.serviceWorker.getRegistrations();
+                await Promise.all(regs.map(r => r.unregister()));
+                const keys = await caches.keys();
+                await Promise.all(keys.map(k => caches.delete(k)));
+              }
+              localStorage.clear();
+              sessionStorage.clear();
+            } catch (_) {}
+            location.reload();
+          });
+        } catch (_) {}
     });
   </script>
 </body>

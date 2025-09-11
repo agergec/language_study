@@ -196,9 +196,7 @@
       z-index: 2000;
       font-weight: 600;
     }
-    .toast.visible {
-      bottom: 20px;
-    }
+    .toast.visible { bottom: 20px; }
     /* iOS Safari adjustments: allow scroll and safe-area padding only on iOS */
     html.is-ios, body.is-ios {
       height: auto;
@@ -223,38 +221,16 @@
     html.is-ios .display-container { padding-bottom: 1rem; }
     html.is-ios .countdown-wrapper { bottom: calc(12px + env(safe-area-inset-bottom)); }
 
-    /* Right-Side Drawer Menu (cross-browser) */
-    /* Make the modal act as a backdrop with a right-aligned drawer. */
-    #menuModal { align-items: stretch; justify-content: flex-end; z-index: 2500; overflow: hidden; }
-    #menuModal .modal-content {
-      position: relative;
-      width: min(560px, 92vw);
-      height: 100vh;
-      margin: 0;
-      border-radius: 0;
-      background: var(--background-color);
-      box-shadow: -12px 0 28px rgba(0,0,0,0.2);
-      border: 0;
-      display: block;
-      padding: 0;
-      overflow: hidden; /* internal panels handle their own scrolling */
-      transform: translateX(100%);
-      transition: transform 220ms cubic-bezier(.2,.8,.2,1);
-      will-change: transform;
-    }
-    #menuModal.visible .modal-content { transform: translateX(0); }
+    /* Mobile Menu (drawer from right) */
+    /* Menu shell turns right-drawer into left-rail + expanding panel */
+    #menuModal .modal-content { width: 100vw; max-width: none; height: 100vh; margin: 0; border-radius: 0; background: transparent; box-shadow: none; border: 0; transform: none; display: block; }
+    #menuModal.visible .modal-content { transform: none; }
     #menuModal .menu-shell { position: relative; height: 100%; }
-    /* Panels live inside the drawer; slide subpanels horizontally */
-    #menuModal .panel {
-      position: absolute;
-      inset: 0;
-      background: var(--background-color);
-      transform: translateX(0);
-      transition: transform 220ms cubic-bezier(.2,.8,.2,1);
-    }
+    /* Panel animates from right->left to full-screen */
+    #menuModal .panel { position: fixed; inset: 0; background: var(--background-color); transform-origin: right center; transform: translateX(8px) scaleX(0.07); opacity: 0; transition: transform 220ms cubic-bezier(.2,.8,.2,1), opacity 180ms ease; }
     #menuModal .panel[aria-hidden="true"] { pointer-events: none; }
-    #menuModal .panel[aria-hidden="false"] { pointer-events: auto; }
-    @media (prefers-reduced-motion: reduce) { #menuModal .panel, #menuModal .modal-content { transition-duration: 1ms; } }
+    #menuModal .panel[aria-hidden="false"] { transform: translateX(0) scaleX(1); opacity: 1; }
+    @media (prefers-reduced-motion: reduce) { #menuModal .panel { transition-duration: 1ms; } }
     #menuModal .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); }
     #menuModal .panel-body { padding: 1rem; height: calc(100% - 56px); overflow: auto; background: #f2f2f7; }
     #menuModal .modal-header { display:none; }
@@ -301,6 +277,8 @@
     .settings-chevron { color: #c7c7cc; margin-left: 8px; font-weight: 700; }
     .settings-danger { color: #ff3b30; font-weight: 700; }
     .settings-footer { color: #8e8e93; font-size: 0.85rem; text-align: center; padding: 0.75rem 0; }
+    .trash-btn { background: none; border: none; font-size: 1.1rem; color: #ff3b30; cursor: pointer; padding: 4px; line-height: 1; }
+    .trash-btn:hover { opacity: 0.85; }
     /* Overlay selects turn rows into native pickers while showing value text */
     .overlay-select { position: absolute; inset: 0; opacity: 0; -webkit-appearance: none; appearance: none; width: 100%; height: 100%; border: none; background: transparent; cursor: pointer; }
     /* iOS switch */
@@ -311,8 +289,7 @@
     /* Hide legacy holders when grouped mockup is used */
     #legacyMenuContent { display: none; }
     /* Subpanels (push navigation) */
-    /* Subpanels slide over the main panel within the drawer */
-    #menuModal .subpanel { position: absolute; inset: 0; background: var(--background-color); transform: translateX(100%); transition: transform 220ms cubic-bezier(.2,.8,.2,1); z-index: 2; }
+    #menuModal .subpanel { position: fixed; inset: 0; background: var(--background-color); transform: translateX(100%); transition: transform 220ms cubic-bezier(.2,.8,.2,1); z-index: 1400; }
     #menuModal .subpanel[aria-hidden="false"] { transform: translateX(0); }
     #menuModal .subpanel .panel-body { background: #f2f2f7; }
     .panel-back { background: none; border: 0; font-size: 1rem; color: var(--primary-color); padding: 8px; }
@@ -632,7 +609,10 @@
                 <div class="settings-section-title">Integrations → ElevenLabs</div>
                 <div class="settings-card">
                   <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:8px;">
-                    <div class="settings-label" style="font-weight:700;">API Key</div>
+                    <div class="label-row" style="display:flex; align-items:center; justify-content:space-between;">
+                      <div class="settings-label" style="font-weight:700;">API Key</div>
+                      <button id="elevenDeleteBtn" class="trash-btn" type="button" title="Remove key" aria-label="Remove ElevenLabs key">🗑️</button>
+                    </div>
                     <input id="elevenKeyInput" type="password" placeholder="elevenlabs_api_key" style="flex:1; min-width:220px; padding:.5rem;"/>
                     <div id="elevenKeyMasked" class="settings-note">No key set</div>
                   </div>
@@ -643,11 +623,7 @@
                     <input type="file" id="elevenKeyFile" accept=".key,.txt" style="display:none;"/>
                   </div>
                 </div>
-                <div class="settings-card" style="margin-top:12px;">
-                  <div class="settings-item" style="justify-content:center;">
-                    <button class="btn-destructive" id="elevenClearBtn" type="button" style="font-size: 3em; line-height: 1;">Delete Key</button>
-                  </div>
-                </div>
+                
                 <div class="settings-note">Adds ElevenLabs voices “Josh” (male) and “Bella” (female) to the selector using non‑streaming playback (fr‑FR).</div>
               </div>
             </section>
@@ -663,7 +639,10 @@
                 <div class="settings-section-title">Integrations → OpenAI</div>
                 <div class="settings-card">
                   <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:8px;">
-                    <div class="settings-label" style="font-weight:700;">API Key</div>
+                    <div class="label-row" style="display:flex; align-items:center; justify-content:space-between;">
+                      <div class="settings-label" style="font-weight:700;">API Key</div>
+                      <button id="openaiDeleteBtn" class="trash-btn" type="button" title="Remove key" aria-label="Remove OpenAI key">🗑️</button>
+                    </div>
                     <input id="openaiKeyInput" type="password" placeholder="sk-..." style="flex:1; min-width:220px; padding:.5rem;"/>
                     <div id="openaiKeyMasked" class="settings-note">No key set</div>
                   </div>
@@ -674,11 +653,7 @@
                     <input type="file" id="openaiKeyFile" accept=".key,.txt" style="display:none;"/>
                   </div>
                 </div>
-                <div class="settings-card" style="margin-top:12px;">
-                  <div class="settings-item" style="justify-content:center;">
-                    <button class="btn-destructive" id="openaiClearBtn" type="button" style="font-size: 3em; line-height: 1;">Delete Key</button>
-                  </div>
-                </div>
+                
                 <div class="settings-note">Adds OpenAI voices “Echo” and “Nova” to the selector using a low‑latency model.</div>
               </div>
             </section>
@@ -2130,7 +2105,7 @@
     function isValidOpenAIKey(k) { return typeof k === 'string' && /^sk-proj-[A-Za-z0-9_-]{8,}/.test(k); }
     function setElevenKey(k) {
       const v = (k || '').trim();
-      if (v && !isValidElevenKey(v)) { showToast('Invalid ElevenLabs key format'); return; }
+      if (v && !isValidElevenKey(v)) { return; }
       elevenKey = v;
       try { if (elevenKey) localStorage.setItem('eleven_api_key', elevenKey); else localStorage.removeItem('eleven_api_key'); } catch(_) {}
       window._ELEVEN = window._ELEVEN || {}; window._ELEVEN.key = elevenKey;
@@ -2175,32 +2150,21 @@
     (function(){
       const inp = document.getElementById('elevenKeyInput');
       if (inp) {
-        const saveIfValue = (hard=false) => { const v = (inp.value||'').trim(); if (!v) return; if (isValidElevenKey(v)) { setElevenKey(v); showToast('ElevenLabs key saved'); } else if (hard) { showToast('Invalid ElevenLabs key format'); } };
+        const saveIfValue = (hard=false) => { const v = (inp.value||'').trim(); if (!v) return; if (isValidElevenKey(v)) { setElevenKey(v); } };
         inp.addEventListener('input', () => saveIfValue(false));
         inp.addEventListener('change', () => saveIfValue(true));
         inp.addEventListener('paste', () => setTimeout(()=>saveIfValue(true), 0));
       }
-      const clearBtn = document.getElementById('elevenClearBtn');
-      if (clearBtn) {
-        // Ensure immediate confirmation on desktop by using mousedown to open dialog
-        const openConfirm = (e) => {
-          e.preventDefault(); e.stopPropagation();
-          confirmationCallback = () => { setElevenKey(''); showToast('ElevenLabs key deleted'); updateIntegrationIndicators(); };
-          const ctext = document.getElementById('confirmationDialogText'); if (ctext) ctext.textContent = 'Delete ElevenLabs API key?';
-          confirmationDialog.classList.add('visible');
-        };
-        clearBtn.addEventListener('mousedown', openConfirm);
-        clearBtn.addEventListener('touchstart', openConfirm, { passive: false });
-        // Fallback for keyboard activation
-        clearBtn.addEventListener('click', openConfirm);
-      }
+      // Inline delete via trash icon
+      const delBtn = document.getElementById('elevenDeleteBtn');
+      if (delBtn) delBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); setElevenKey(''); updateIntegrationIndicators(); });
       const loadBtn = document.getElementById('elevenLoadFileBtn'); const keyFile = document.getElementById('elevenKeyFile');
       if (loadBtn && keyFile) {
         loadBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); keyFile.click(); });
         keyFile.addEventListener('change', () => {
           const f = keyFile.files && keyFile.files[0]; if (!f) return; const r = new FileReader();
           r.onload = () => { const v=String(r.result||'').trim(); if (!v) { keyFile.value=''; return; }
-            if (isValidElevenKey(v)) { setElevenKey(v); showToast('ElevenLabs key saved'); } else { showToast('Invalid ElevenLabs key format'); }
+            if (isValidElevenKey(v)) { setElevenKey(v); }
             keyFile.value=''; updateIntegrationIndicators(); };
           r.readAsText(f);
         });
@@ -2208,7 +2172,7 @@
     })();
     // OpenAI API key handlers
     function maskKey(k){ if(!k) return ''; return k.length>16 ? (k.slice(0,10)+'…'+k.slice(-6)) : k.replace(/.(?=.{4})/g,'•'); }
-    function setOpenAIKey(k){ const v=(k||'').trim(); if(v && !isValidOpenAIKey(v)) { showToast('Invalid OpenAI key format'); return; } openaiKey = v; try{ if(openaiKey) localStorage.setItem('openai_api_key', openaiKey); else localStorage.removeItem('openai_api_key'); }catch(_){}; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent = openaiKey? ('Key: '+maskKey(openaiKey)) : 'No key set'; populateVoiceList(); updateIntegrationIndicators(); }
+    function setOpenAIKey(k){ const v=(k||'').trim(); if(v && !isValidOpenAIKey(v)) { return; } openaiKey = v; try{ if(openaiKey) localStorage.setItem('openai_api_key', openaiKey); else localStorage.removeItem('openai_api_key'); }catch(_){}; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent = openaiKey? ('Key: '+maskKey(openaiKey)) : 'No key set'; populateVoiceList(); updateIntegrationIndicators(); }
     try{ const saved=localStorage.getItem('openai_api_key'); if(saved){ openaiKey=saved; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent='Key: '+maskKey(openaiKey);} }catch(_){}
     // Initialize integration indicators on load
     updateIntegrationIndicators();
@@ -2216,25 +2180,20 @@
     (function(){
       const inp = document.getElementById('openaiKeyInput');
       if (inp) {
-        const saveIfValue = (hard=false) => { const v = (inp.value||'').trim(); if (!v) return; if (isValidOpenAIKey(v)) { setOpenAIKey(v); showToast('OpenAI key saved'); } else if (hard) { showToast('Invalid OpenAI key format'); } };
+        const saveIfValue = (hard=false) => { const v = (inp.value||'').trim(); if (!v) return; if (isValidOpenAIKey(v)) { setOpenAIKey(v); } };
         inp.addEventListener('input', () => saveIfValue(false));
         inp.addEventListener('change', () => saveIfValue(true));
         inp.addEventListener('paste', () => setTimeout(()=>saveIfValue(true), 0));
       }
-      const clearBtn = document.getElementById('openaiClearBtn');
-      if (clearBtn) clearBtn.addEventListener('click', (e) => {
-        e.preventDefault(); e.stopPropagation();
-        confirmationCallback = () => { setOpenAIKey(''); showToast('OpenAI key deleted'); updateIntegrationIndicators(); };
-        const ctext = document.getElementById('confirmationDialogText'); if (ctext) ctext.textContent = 'Delete OpenAI API key?';
-        confirmationDialog.classList.add('visible');
-      });
+      const delBtn2 = document.getElementById('openaiDeleteBtn');
+      if (delBtn2) delBtn2.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); setOpenAIKey(''); updateIntegrationIndicators(); });
       const loadBtn = document.getElementById('openaiLoadFileBtn'); const keyFile = document.getElementById('openaiKeyFile');
       if (loadBtn && keyFile) {
         loadBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); keyFile.click(); });
         keyFile.addEventListener('change', () => {
           const f = keyFile.files && keyFile.files[0]; if (!f) return; const r = new FileReader();
           r.onload = () => { const v=String(r.result||'').trim(); if (!v) { keyFile.value=''; return; }
-            if (isValidOpenAIKey(v)) { setOpenAIKey(v); showToast('OpenAI key saved'); } else { showToast('Invalid OpenAI key format'); }
+            if (isValidOpenAIKey(v)) { setOpenAIKey(v); }
             keyFile.value=''; updateIntegrationIndicators(); };
           r.readAsText(f);
         });

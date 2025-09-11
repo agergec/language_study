@@ -295,6 +295,7 @@
     .panel-back { background: none; border: 0; font-size: 1rem; color: var(--primary-color); padding: 8px; }
     .panel-actions { display:flex; align-items:center; gap: 8px; min-width: 44px; justify-content: flex-end; }
     .panel-link { background: none; border: 0; color: var(--primary-color); font-weight: 700; padding: 6px 8px; font-size: 0.98rem; }
+    .panel-link.link-disabled { opacity: .45; pointer-events: none; }
     .settings-check { color: var(--primary-color); font-weight: 800; margin-left: auto; }
     html.is-ios #menuModal .subpanel .panel-header { padding-top: calc(0.75rem + env(safe-area-inset-top)); }
     /* Hide main header when a subpanel is open to avoid overlap */
@@ -325,7 +326,7 @@
             <button type="button" class="language-flag active" id="langEn" aria-label="English" title="English">🇺🇸</button>
             <button type="button" class="language-flag" id="langFr" aria-label="Français" title="Français">🇫🇷</button>
           </div>
-          <button id="menuBtn" class="icon-btn" aria-label="Menu" title="Menu" aria-controls="menuModal" aria-expanded="false">☰</button>
+          <button id="menuBtn" class="icon-btn" aria-label="Settings" title="Settings" aria-controls="menuModal" aria-expanded="false">☰</button>
         </div>
       </div>
       <div class="progress-bar">
@@ -486,7 +487,7 @@
       <div class="menu-shell">
         <section id="menuPanel" class="panel" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="menuPanelTitle">
           <div class="panel-header">
-            <h2 id="menuPanelTitle" style="margin:0">Menu</h2>
+            <h2 id="menuPanelTitle" style="margin:0">Settings</h2>
           </div>
           <div class="panel-body">
             <!-- Grouped settings mockup (iOS-style) -->
@@ -541,12 +542,12 @@
               <div class="settings-card">
                 <div class="settings-item" id="rowEleven" role="button" tabindex="0">
                   <div class="settings-label">ElevenLabs</div>
-                  <div class="key-dot" id="dotEleven"></div>
+                  <div class="settings-value" id="elevenStatus"></div>
                   <div class="settings-chevron">›</div>
                 </div>
                 <div class="settings-item" id="rowOpenAI" role="button" tabindex="0">
                   <div class="settings-label">OpenAI</div>
-                  <div class="key-dot" id="dotOpenAI"></div>
+                  <div class="settings-value" id="openaiStatus"></div>
                   <div class="settings-chevron">›</div>
                 </div>
               </div>
@@ -621,7 +622,7 @@
                 </div>
                 <div class="settings-card" style="margin-top:12px;">
                   <div class="settings-item" style="justify-content:center;">
-                    <button class="btn-destructive" id="elevenClearBtn" type="button" style="font-size: 3em; line-height: 1;">Clear Key</button>
+                    <button class="btn-destructive" id="elevenClearBtn" type="button" style="font-size: 3em; line-height: 1;">Delete Key</button>
                   </div>
                 </div>
                 <div class="settings-note">Adds ElevenLabs voices “Josh” (male) and “Bella” (female) to the selector using non‑streaming playback (fr‑FR).</div>
@@ -652,7 +653,7 @@
                 </div>
                 <div class="settings-card" style="margin-top:12px;">
                   <div class="settings-item" style="justify-content:center;">
-                    <button class="btn-destructive" id="openaiClearBtn" type="button" style="font-size: 3em; line-height: 1;">Clear Key</button>
+                    <button class="btn-destructive" id="openaiClearBtn" type="button" style="font-size: 3em; line-height: 1;">Delete Key</button>
                   </div>
                 </div>
                 <div class="settings-note">Adds OpenAI voices “Echo” and “Nova” to the selector using a low‑latency model.</div>
@@ -873,7 +874,7 @@
     let shuffleEnabled = false;
     let originalWordOrder = [];
     let isSessionComplete = false;
-    const APP_VERSION = 'v1.5.1-beta';
+    const APP_VERSION = 'v1.6.1-beta';
     // Articles quiz state
     let prefixWords = [];
     let prefixWordsIndef = [];
@@ -2102,50 +2103,82 @@
     const voiceTestBtn = document.getElementById('voiceTestBtn');
     if (voiceTestBtn) voiceTestBtn.addEventListener('click', () => { speakWord(i18n[curLang].test_phrase); });
     // ElevenLabs API key handlers
+    function isValidElevenKey(k) { return typeof k === 'string' && /^sk_[A-Za-z0-9]{8,}/.test(k); }
+    function isValidOpenAIKey(k) { return typeof k === 'string' && /^sk-proj-[A-Za-z0-9_-]{8,}/.test(k); }
     function setElevenKey(k) {
-      elevenKey = (k || '').trim();
+      const v = (k || '').trim();
+      if (v && !isValidElevenKey(v)) { showToast('Invalid ElevenLabs key format'); return; }
+      elevenKey = v;
       try { if (elevenKey) localStorage.setItem('eleven_api_key', elevenKey); else localStorage.removeItem('eleven_api_key'); } catch(_) {}
       window._ELEVEN = window._ELEVEN || {}; window._ELEVEN.key = elevenKey;
       const m = document.getElementById('elevenKeyMasked'); if (m) m.textContent = elevenKey ? ('Key: ' + (elevenKey.length>16 ? (elevenKey.slice(0,10)+'…'+elevenKey.slice(-6)) : elevenKey.replace(/.(?=.{4})/g,'•'))) : 'No key set';
       populateVoiceList();
+      updateIntegrationIndicators();
     }
-    try { const savedEl = localStorage.getItem('eleven_api_key'); if (savedEl) { setElevenKey(savedEl); } } catch(_) {}
+    try {
+      const savedEl = localStorage.getItem('eleven_api_key');
+      if (savedEl) {
+        elevenKey = String(savedEl).trim();
+        window._ELEVEN = window._ELEVEN || {}; window._ELEVEN.key = elevenKey;
+        const m = document.getElementById('elevenKeyMasked'); if (m) m.textContent = 'Key: ' + (elevenKey.length>16 ? (elevenKey.slice(0,10)+'…'+elevenKey.slice(-6)) : elevenKey.replace(/.(?=.{4})/g,'•'));
+        populateVoiceList();
+        updateIntegrationIndicators();
+      }
+    } catch(_) {}
     function updateIntegrationIndicators(){
-      const dotEleven = document.getElementById('dotEleven');
-      const dotOpenAI = document.getElementById('dotOpenAI');
-      if (dotEleven) {
-        const ok = typeof elevenKey === 'string' && elevenKey.startsWith('sk_');
-        dotEleven.classList.toggle('on', !!ok);
+      const elevenOk = typeof elevenKey === 'string' && elevenKey.startsWith('sk_');
+      const openaiOk = typeof openaiKey === 'string' && openaiKey.startsWith('sk-proj-');
+      const es = document.getElementById('elevenStatus'); if (es) es.textContent = elevenOk ? 'Configured' : '';
+      const os = document.getElementById('openaiStatus'); if (os) os.textContent = openaiOk ? 'Configured' : '';
+      // Disable/enable fields and file pickers based on state
+      const eInput = document.getElementById('elevenKeyInput');
+      const eLoad = document.getElementById('elevenLoadFileBtn');
+      if (eInput) {
+        eInput.disabled = !!elevenOk;
+        eInput.value = '';
+        eInput.placeholder = elevenOk ? 'Remove ElevenLabs key before load a new one.' : 'Paste a valid API Key';
       }
-      if (dotOpenAI) {
-        const ok2 = typeof openaiKey === 'string' && openaiKey.startsWith('sk-proj-');
-        dotOpenAI.classList.toggle('on', !!ok2);
+      if (eLoad) eLoad.classList.toggle('link-disabled', !!elevenOk);
+      const oInput = document.getElementById('openaiKeyInput');
+      const oLoad = document.getElementById('openaiLoadFileBtn');
+      if (oInput) {
+        oInput.disabled = !!openaiOk;
+        oInput.value = '';
+        oInput.placeholder = openaiOk ? 'OpenAI key is loaded. Remove the previous key to load a new one.' : 'Paste a valid API Key';
       }
+      if (oLoad) oLoad.classList.toggle('link-disabled', !!openaiOk);
     }
     // Auto-save Eleven key on input (non-empty only)
     (function(){
       const inp = document.getElementById('elevenKeyInput');
       if (inp) {
-        const saveIfValue = () => { const v = (inp.value||'').trim(); if (v) { setElevenKey(v); showToast('ElevenLabs key saved'); } };
-        inp.addEventListener('input', saveIfValue);
-        inp.addEventListener('change', saveIfValue);
-        inp.addEventListener('paste', () => setTimeout(saveIfValue, 0));
+        const saveIfValue = (hard=false) => { const v = (inp.value||'').trim(); if (!v) return; if (isValidElevenKey(v)) { setElevenKey(v); showToast('ElevenLabs key saved'); } else if (hard) { showToast('Invalid ElevenLabs key format'); } };
+        inp.addEventListener('input', () => saveIfValue(false));
+        inp.addEventListener('change', () => saveIfValue(true));
+        inp.addEventListener('paste', () => setTimeout(()=>saveIfValue(true), 0));
       }
       const clearBtn = document.getElementById('elevenClearBtn');
-      if (clearBtn) clearBtn.addEventListener('click', () => {
-        confirmationCallback = () => { setElevenKey(''); showToast('ElevenLabs key cleared'); };
-        const ctext = document.getElementById('confirmationDialogText'); if (ctext) ctext.textContent = 'Clear ElevenLabs API key?';
+      if (clearBtn) clearBtn.addEventListener('click', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        confirmationCallback = () => { setElevenKey(''); showToast('ElevenLabs key deleted'); updateIntegrationIndicators(); };
+        const ctext = document.getElementById('confirmationDialogText'); if (ctext) ctext.textContent = 'Delete ElevenLabs API key?';
         confirmationDialog.classList.add('visible');
       });
       const loadBtn = document.getElementById('elevenLoadFileBtn'); const keyFile = document.getElementById('elevenKeyFile');
       if (loadBtn && keyFile) {
-        loadBtn.addEventListener('click', () => keyFile.click());
-        keyFile.addEventListener('change', () => { const f = keyFile.files && keyFile.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const v=String(r.result||'').trim(); if (v) { setElevenKey(v); showToast('Key loaded from file'); } keyFile.value=''; updateIntegrationIndicators(); }; r.readAsText(f); });
+        loadBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); keyFile.click(); });
+        keyFile.addEventListener('change', () => {
+          const f = keyFile.files && keyFile.files[0]; if (!f) return; const r = new FileReader();
+          r.onload = () => { const v=String(r.result||'').trim(); if (!v) { keyFile.value=''; return; }
+            if (isValidElevenKey(v)) { setElevenKey(v); showToast('ElevenLabs key saved'); } else { showToast('Invalid ElevenLabs key format'); }
+            keyFile.value=''; updateIntegrationIndicators(); };
+          r.readAsText(f);
+        });
       }
     })();
     // OpenAI API key handlers
     function maskKey(k){ if(!k) return ''; return k.length>16 ? (k.slice(0,10)+'…'+k.slice(-6)) : k.replace(/.(?=.{4})/g,'•'); }
-    function setOpenAIKey(k){ openaiKey = (k||'').trim(); try{ if(openaiKey) localStorage.setItem('openai_api_key', openaiKey); else localStorage.removeItem('openai_api_key'); }catch(_){}; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent = openaiKey? ('Key: '+maskKey(openaiKey)) : 'No key set'; populateVoiceList(); }
+    function setOpenAIKey(k){ const v=(k||'').trim(); if(v && !isValidOpenAIKey(v)) { showToast('Invalid OpenAI key format'); return; } openaiKey = v; try{ if(openaiKey) localStorage.setItem('openai_api_key', openaiKey); else localStorage.removeItem('openai_api_key'); }catch(_){}; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent = openaiKey? ('Key: '+maskKey(openaiKey)) : 'No key set'; populateVoiceList(); updateIntegrationIndicators(); }
     try{ const saved=localStorage.getItem('openai_api_key'); if(saved){ openaiKey=saved; const m=document.getElementById('openaiKeyMasked'); if(m) m.textContent='Key: '+maskKey(openaiKey);} }catch(_){}
     // Initialize integration indicators on load
     updateIntegrationIndicators();
@@ -2153,21 +2186,28 @@
     (function(){
       const inp = document.getElementById('openaiKeyInput');
       if (inp) {
-        const saveIfValue = () => { const v = (inp.value||'').trim(); if (v) { setOpenAIKey(v); showToast('OpenAI key saved'); } };
-        inp.addEventListener('input', saveIfValue);
-        inp.addEventListener('change', saveIfValue);
-        inp.addEventListener('paste', () => setTimeout(saveIfValue, 0));
+        const saveIfValue = (hard=false) => { const v = (inp.value||'').trim(); if (!v) return; if (isValidOpenAIKey(v)) { setOpenAIKey(v); showToast('OpenAI key saved'); } else if (hard) { showToast('Invalid OpenAI key format'); } };
+        inp.addEventListener('input', () => saveIfValue(false));
+        inp.addEventListener('change', () => saveIfValue(true));
+        inp.addEventListener('paste', () => setTimeout(()=>saveIfValue(true), 0));
       }
       const clearBtn = document.getElementById('openaiClearBtn');
-      if (clearBtn) clearBtn.addEventListener('click', () => {
-        confirmationCallback = () => { setOpenAIKey(''); showToast('OpenAI key cleared'); };
-        const ctext = document.getElementById('confirmationDialogText'); if (ctext) ctext.textContent = 'Clear OpenAI API key?';
+      if (clearBtn) clearBtn.addEventListener('click', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        confirmationCallback = () => { setOpenAIKey(''); showToast('OpenAI key deleted'); updateIntegrationIndicators(); };
+        const ctext = document.getElementById('confirmationDialogText'); if (ctext) ctext.textContent = 'Delete OpenAI API key?';
         confirmationDialog.classList.add('visible');
       });
       const loadBtn = document.getElementById('openaiLoadFileBtn'); const keyFile = document.getElementById('openaiKeyFile');
       if (loadBtn && keyFile) {
-        loadBtn.addEventListener('click', () => keyFile.click());
-        keyFile.addEventListener('change', () => { const f = keyFile.files && keyFile.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const v=String(r.result||'').trim(); if (v) { setOpenAIKey(v); showToast('Key loaded from file'); } keyFile.value=''; updateIntegrationIndicators(); }; r.readAsText(f); });
+        loadBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); keyFile.click(); });
+        keyFile.addEventListener('change', () => {
+          const f = keyFile.files && keyFile.files[0]; if (!f) return; const r = new FileReader();
+          r.onload = () => { const v=String(r.result||'').trim(); if (!v) { keyFile.value=''; return; }
+            if (isValidOpenAIKey(v)) { setOpenAIKey(v); showToast('OpenAI key saved'); } else { showToast('Invalid OpenAI key format'); }
+            keyFile.value=''; updateIntegrationIndicators(); };
+          r.readAsText(f);
+        });
       }
     })();
     const studyModeSelect = document.getElementById('studyModeSelect');

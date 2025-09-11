@@ -223,7 +223,9 @@
 
     /* Mobile Menu (drawer from right) */
     /* Menu shell turns right-drawer into left-rail + expanding panel */
-    #menuModal .modal-content { width: 100vw; max-width: none; height: 100vh; margin: 0; border-radius: 0; background: transparent; box-shadow: none; border: 0; transform: none; display: block; }
+    /* Avoid 100vw/100vh to prevent horizontal overflow with scrollbars on Firefox/Chromium */
+    #menuModal { overflow: hidden; }
+    #menuModal .modal-content { width: 100%; max-width: none; height: 100%; margin: 0; border-radius: 0; background: transparent; box-shadow: none; border: 0; transform: none; display: block; }
     #menuModal.visible .modal-content { transform: none; }
     #menuModal .menu-shell { position: relative; height: 100%; }
     /* Panel animates from right->left to full-screen */

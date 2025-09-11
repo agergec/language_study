@@ -1173,6 +1173,8 @@
             if (!opts.suppressToast && !inFilesPanel) {
               showToast(toastMessage);
             }
+            // Ask to persist to IndexedDB (one-time per session unless accepted)
+            maybePromptPersist();
         }
     }
     
@@ -1215,6 +1217,115 @@
         if (shuffleEnabled) shuffleArray(prefixWords);
         else if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
       }
+    }
+
+    // --- Persistent Storage (IndexedDB) for Word Lists ---
+    const IDB_DB_NAME = 'studyApp';
+    const IDB_DB_VERSION = 1;
+    const IDB_STORE = 'wordlists';
+
+    function idbOpen() {
+      return new Promise((resolve, reject) => {
+        try {
+          if (!('indexedDB' in window)) return reject(new Error('IndexedDB not supported'));
+          const req = indexedDB.open(IDB_DB_NAME, IDB_DB_VERSION);
+          req.onupgradeneeded = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE, { keyPath: 'filename' });
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error || new Error('IndexedDB open failed'));
+        } catch (e) { reject(e); }
+      });
+    }
+
+    async function persistAllWordListsToIDB() {
+      try {
+        const db = await idbOpen();
+        const tx = db.transaction(IDB_STORE, 'readwrite');
+        const store = tx.objectStore(IDB_STORE);
+        store.clear();
+        for (const name of Object.keys(wordLists)) {
+          const rec = { filename: name, words: wordLists[name].words || [], enabled: !!wordLists[name].enabled, updated: Date.now() };
+          store.put(rec);
+        }
+        return new Promise((resolve, reject) => {
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => reject(tx.error);
+          tx.onabort = () => reject(tx.error || new Error('IDB tx aborted'));
+        });
+      } catch (_) { /* ignore */ }
+      return false;
+    }
+
+    async function loadWordListsFromIDB() {
+      try {
+        const db = await idbOpen();
+        const tx = db.transaction(IDB_STORE, 'readonly');
+        const store = tx.objectStore(IDB_STORE);
+        const req = store.getAll();
+        return await new Promise((resolve, reject) => {
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+      } catch (_) { return []; }
+    }
+
+    function persistIfConsented() {
+      try { if (localStorage.getItem('persistConsent') === '1') persistAllWordListsToIDB(); } catch (_) {}
+    }
+
+    function maybePromptPersist(anchorEl) {
+      try {
+        if (!('indexedDB' in window)) return;
+        if (localStorage.getItem('persistConsent') === '1') { persistAllWordListsToIDB(); return; }
+        if (sessionStorage.getItem('persistPrompted') === '1') return;
+        sessionStorage.setItem('persistPrompted', '1');
+        // Build mini confirm near anchor (bottom file icon if present)
+        const anchor = anchorEl || document.getElementById('bottomFileStatus') || document.body;
+        const mini = document.createElement('div');
+        mini.className = 'mini-confirm';
+        mini.textContent = 'Save word lists on this device for next time?';
+        const actions = document.createElement('div'); actions.className = 'mini-actions';
+        const yes = document.createElement('button'); yes.className = 'mini-btn primary'; yes.textContent = (i18n[curLang]?.confirm_yes_continue) || 'Yes';
+        const no = document.createElement('button'); no.className = 'mini-btn'; no.textContent = (i18n[curLang]?.confirm_cancel) || 'Cancel';
+        actions.appendChild(yes); actions.appendChild(no); mini.appendChild(actions);
+        document.body.appendChild(mini);
+        // position
+        const r = anchor.getBoundingClientRect(); const vw = window.innerWidth; const vh = window.innerHeight;
+        mini.style.visibility = 'hidden'; mini.style.left = '0px'; mini.style.top = '0px';
+        const mh = mini.offsetHeight; const mw = mini.offsetWidth;
+        let left = Math.min(Math.max(r.left, 8), vw - mw - 8);
+        let top; const spaceBelow = vh - r.bottom; const spaceAbove = r.top;
+        if (spaceBelow >= mh + 8) top = r.bottom + 6; else if (spaceAbove >= mh + 8) top = r.top - mh - 6; else top = Math.max(8, Math.min(vh - mh - 8, r.bottom + 6));
+        mini.style.left = `${left}px`; mini.style.top = `${top}px`; mini.style.visibility = 'visible';
+        const cleanup = () => { document.removeEventListener('pointerdown', outside, true); window.removeEventListener('resize', destroy); window.removeEventListener('scroll', destroy, true); mini.remove(); };
+        const outside = (e) => { if (!mini.contains(e.target)) cleanup(); };
+        const destroy = () => cleanup();
+        setTimeout(() => { document.addEventListener('pointerdown', outside, true); window.addEventListener('resize', destroy); window.addEventListener('scroll', destroy, true); }, 0);
+        yes.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); try { localStorage.setItem('persistConsent', '1'); } catch (_) {} persistAllWordListsToIDB(); cleanup(); });
+        no.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); cleanup(); });
+      } catch (_) { /* no-op */ }
+    }
+
+    async function deleteWordList(name) {
+      try {
+        // Remove from in-memory list
+        if (wordLists && Object.prototype.hasOwnProperty.call(wordLists, name)) {
+          delete wordLists[name];
+        }
+        // Remove single record from IDB (best-effort)
+        try {
+          const db = await idbOpen();
+          const tx = db.transaction(IDB_STORE, 'readwrite');
+          tx.objectStore(IDB_STORE).delete(name);
+          await new Promise((resolve, reject) => { tx.oncomplete = resolve; tx.onerror = reject; tx.onabort = reject; });
+        } catch (_) { /* ignore */ }
+        // Rebuild UI/state
+        generateWordListsUI();
+        rebuildActiveWordsList();
+        persistIfConsented();
+      } catch (_) { /* noop */ }
     }
 
     function speakWord(w) {
@@ -2024,6 +2135,14 @@
             filenames.forEach(name => {
               const row = document.createElement('div');
               row.className = 'settings-item';
+              // Delete (X) button on the left
+              const del = document.createElement('button');
+              del.type = 'button';
+              del.textContent = '×';
+              del.title = 'Remove';
+              del.style.cssText = 'background:none;border:0;color:#c62828;font-weight:700;font-size:1.1rem;padding:4px 6px;line-height:1;cursor:pointer;';
+              del.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); deleteWordList(name); });
+              row.appendChild(del);
               const label = document.createElement('div');
               label.className = 'settings-label';
               label.textContent = name;
@@ -2040,13 +2159,9 @@
                 toggle.checked = !!wordLists[name].enabled;
                 toggle.dataset.filename = name;
                 toggle.addEventListener('change', () => {
-                  confirmationCallback = () => {
-                    wordLists[name].enabled = toggle.checked;
-                    rebuildActiveWordsList();
-                  };
-                  const ctext = document.getElementById('confirmationDialogText');
-                  if (ctext) ctext.textContent = i18n[curLang].confirm_word_list;
-                  confirmationDialog.classList.add('visible');
+                  wordLists[name].enabled = toggle.checked;
+                  rebuildActiveWordsList();
+                  persistIfConsented();
                 });
                 row.appendChild(toggle);
               }
@@ -2059,22 +2174,26 @@
               filenames.forEach(name => {
                 const item = document.createElement('div');
                 item.className = 'mode-option';
+                const del = document.createElement('button');
+                del.type = 'button';
+                del.textContent = '×';
+                del.title = 'Remove';
+                del.style.cssText = 'background:none;border:0;color:#c62828;font-weight:700;font-size:1.1rem;padding:4px 6px;line-height:1;cursor:pointer;';
+                del.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); deleteWordList(name); });
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.checked = wordLists[name].enabled;
                 checkbox.id = `file--${name}`;
                 checkbox.dataset.filename = name;
                 checkbox.addEventListener('change', () => {
-                  confirmationCallback = () => {
-                    wordLists[name].enabled = checkbox.checked;
-                    rebuildActiveWordsList();
-                  };
-                  document.getElementById('confirmationDialogText').textContent = i18n[curLang].confirm_word_list;
-                  confirmationDialog.classList.add('visible');
+                  wordLists[name].enabled = checkbox.checked;
+                  rebuildActiveWordsList();
+                  persistIfConsented();
                 });
                 const label = document.createElement('label');
                 label.htmlFor = `file--${name}`;
                 label.textContent = `${name} (${wordLists[name].words.length} ${i18n[curLang].words_lower})`;
+                item.appendChild(del);
                 item.appendChild(checkbox);
                 item.appendChild(label);
                 container.appendChild(item);
@@ -2637,6 +2756,19 @@
         setLanguage("en");
         updateAllIndicators();
         welcomeModal.classList.add('visible');
+        // Try restore from IndexedDB (even for small files)
+        (async () => {
+          const recs = await loadWordListsFromIDB();
+          if (Array.isArray(recs) && recs.length > 0) {
+            try {
+              wordLists = {};
+              recs.forEach(r => { if (r && r.filename) { wordLists[r.filename] = { words: Array.isArray(r.words)? r.words : [], enabled: !!r.enabled }; } });
+              generateWordListsUI();
+              rebuildActiveWordsList();
+              welcomeModal.classList.remove('visible');
+            } catch (_) {}
+          }
+        })();
         // Initialize voice debug if enabled
         renderVoiceDebug();
         // Apply iOS-only layout tweaks
@@ -2732,6 +2864,13 @@
                   }
                   localStorage.clear();
                   sessionStorage.clear();
+                  // Also clear IndexedDB word lists
+                  try {
+                    const db = await idbOpen();
+                    const tx = db.transaction(IDB_STORE, 'readwrite');
+                    tx.objectStore(IDB_STORE).clear();
+                    await new Promise((resolve, reject) => { tx.oncomplete = resolve; tx.onerror = reject; tx.onabort = reject; });
+                  } catch (_) {}
                 } catch (_) {}
                 location.reload();
               };

@@ -234,7 +234,7 @@
     #menuModal .panel[aria-hidden="false"] { transform: translateX(0) scaleX(1); opacity: 1; }
     @media (prefers-reduced-motion: reduce) { #menuModal .panel { transition-duration: 1ms; } }
     #menuModal .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); }
-    #menuModal .panel-body { padding: 1rem; height: calc(100% - 56px); overflow: auto; }
+    #menuModal .panel-body { padding: 1rem; height: calc(100% - 56px); overflow: auto; background: #f2f2f7; }
     #menuModal .modal-header { display:none; }
     #menuModal .modal-section { border: none; padding-bottom: 0; margin-bottom: 0.75rem; }
     #menuModal .menu-list button { display: block; width: 100%; text-align: left; padding: 0.75rem 0; background: none; border: none; font-size: 1rem; font-weight: 700; color: var(--text-color); }
@@ -269,6 +269,31 @@
     /* Thin red countdown bar at top of main display */
     .countdown-topbar { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.25); }
     .countdown-topbar-fill { height: 100%; width: 0%; background: #ff3b30; transition: width 0.1s linear; }
+    /* iOS-style grouped Settings mockup */
+    .settings-section-title { font-weight: 800; font-size: 0.8rem; color: #8e8e93; letter-spacing: .04em; margin: 0.75rem 0 0.5rem; padding-left: .25rem; text-transform: uppercase; }
+    .settings-card { background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 0 rgba(0,0,0,0.04); }
+    .settings-item { position: relative; display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #ececec; font-size: 1rem; }
+    .settings-item:last-child { border-bottom: none; }
+    .settings-label { flex: 1; color: #000; }
+    .settings-value { color: #8e8e93; margin-left: auto; }
+    .settings-chevron { color: #c7c7cc; margin-left: 8px; font-weight: 700; }
+    .settings-danger { color: #ff3b30; font-weight: 700; }
+    .settings-footer { color: #8e8e93; font-size: 0.85rem; text-align: center; padding: 0.75rem 0; }
+    /* Overlay selects turn rows into native pickers while showing value text */
+    .overlay-select { position: absolute; inset: 0; opacity: 0; -webkit-appearance: none; appearance: none; width: 100%; height: 100%; border: none; background: transparent; cursor: pointer; }
+    /* iOS switch */
+    .ios-switch { -webkit-appearance: none; appearance: none; width: 51px; height: 31px; background: #e9e9ea; border-radius: 999px; position: relative; outline: none; cursor: pointer; transition: background .2s ease; flex: 0 0 auto; }
+    .ios-switch::before { content: ''; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; background: #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s ease; }
+    .ios-switch:checked { background: #34c759; }
+    .ios-switch:checked::before { transform: translateX(20px); }
+    /* Hide legacy holders when grouped mockup is used */
+    #legacyMenuContent { display: none; }
+    /* Subpanels (push navigation) */
+    #menuModal .subpanel { position: fixed; inset: 0; background: var(--background-color); transform: translateX(100%); transition: transform 220ms cubic-bezier(.2,.8,.2,1); }
+    #menuModal .subpanel[aria-hidden="false"] { transform: translateX(0); }
+    #menuModal .subpanel .panel-body { background: #f2f2f7; }
+    .panel-back { background: none; border: 0; font-size: 1rem; color: var(--primary-color); padding: 8px; }
+    .settings-check { color: var(--primary-color); font-weight: 800; margin-left: auto; }
   </style>
 </head>
 <body>
@@ -441,86 +466,184 @@
             <h2 id="menuPanelTitle" style="margin:0">Menu</h2>
           </div>
           <div class="panel-body">
-      <div class="modal-section">
-        <label style="display:block; font-weight:600; margin-bottom:0.25rem;">Language</label>
-        <div class="language-flags" style="display:flex; gap:0.75rem;">
-          <button type="button" class="language-flag" id="menuLangEn" aria-label="English" title="English">🇺🇸</button>
-          <button type="button" class="language-flag" id="menuLangFr" aria-label="Français" title="Français">🇫🇷</button>
-        </div>
-      </div>
-      <div class="modal-section menu-field">
-        <div class="switch-row"><input type="checkbox" id="shuffleToggle"><label for="shuffleToggle" data-i18n="label_shuffle">Shuffle words</label></div>
-      </div>
-      <div class="modal-section menu-field">
-        <label for="studyModeSelect" data-i18n="label_studyMode">Study Mode:</label>
-        <select id="studyModeSelect" style="width:100%; padding:0.5rem;">
-          <option value="listenRead" data-i18n="mode_listen_read">Listen and read</option>
-          <option value="readThenSay" data-i18n="mode_read_then_say">Read then say</option>
-          <option value="listenThenRepeat" data-i18n="mode_listen_then_repeat">Listen then repeat</option>
-          <option value="articlesDef" data-i18n="mode_articles_def">Articles définis (le/la)</option>
-          <option value="articlesIndef" data-i18n="mode_articles_indef">Articles indéfinis (un/une)</option>
-        </select>
-      </div>
-      <div class="modal-section menu-field">
-        <label for="voiceSelect" data-i18n="label_voice">Voice:</label>
-        <select id="voiceSelect" style="width: 100%; padding: 0.5rem;"></select>
-        <div style="display:flex; gap:.5rem; align-items:center; margin-top:.5rem; flex-wrap:wrap;">
-          <button class="btn btn-secondary" id="voiceTestBtn" type="button" data-i18n="btn_test_voice">Test Voice</button>
-          <div id="iosVoiceHint" class="ios-voice-hint" data-i18n="voice_hint_ios" style="display:none; font-size: 0.85em; color: #777;">
-            Tip (iOS): After the first playback, reopen Settings to refresh French voices.
+            <!-- Grouped settings mockup (iOS-style) -->
+            <div class="settings-section">
+              <div class="settings-section-title">GENERAL</div>
+              <div class="settings-card">
+                <div class="settings-item" id="rowLanguage" role="button" tabindex="0">
+                  <div class="settings-label">Language</div>
+                  <div class="settings-value" id="settingsLangValue">English</div>
+                  <div class="settings-chevron">›</div>
+                  <!-- Keep original language buttons hidden for logic -->
+                  <div style="position:absolute; right:10px; top:50%; transform:translateY(-50%); display:none; gap:.5rem;">
+                    <button type="button" class="language-flag" id="menuLangEn" aria-label="English" title="English">🇺🇸</button>
+                    <button type="button" class="language-flag" id="menuLangFr" aria-label="Français" title="Français">🇫🇷</button>
+                  </div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label" data-i18n="label_shuffle">Shuffle Words</div>
+                  <input type="checkbox" id="shuffleToggle" class="ios-switch" />
+                </div>
+                <div class="settings-item" style="position:relative;">
+                  <div class="settings-label">Study Mode</div>
+                  <div class="settings-value" id="settingsModeValue">Listen then repeat</div>
+                  <div class="settings-chevron">›</div>
+                  <select id="studyModeSelect" class="overlay-select">
+                    <option value="listenRead" data-i18n="mode_listen_read">Listen and read</option>
+                    <option value="readThenSay" data-i18n="mode_read_then_say">Read then say</option>
+                    <option value="listenThenRepeat" data-i18n="mode_listen_then_repeat" selected>Listen then repeat</option>
+                    <option value="articlesDef" data-i18n="mode_articles_def">Articles définis (le/la)</option>
+                    <option value="articlesIndef" data-i18n="mode_articles_indef">Articles indéfinis (un/une)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="settings-section-title">VOICE CONFIGURATION</div>
+              <div class="settings-card">
+                <div class="settings-item" style="position:relative;">
+                  <div class="settings-label">Voice</div>
+                  <div class="settings-value" id="settingsVoiceValue">—</div>
+                  <div class="settings-chevron">›</div>
+                  <select id="voiceSelect" class="overlay-select"></select>
+                  <button class="btn btn-secondary" id="voiceTestBtn" type="button" style="display:none">Test Voice</button>
+                  <div id="iosVoiceHint" class="ios-voice-hint" style="display:none;"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="settings-section-title">INTEGRATIONS</div>
+              <div class="settings-card">
+                <div class="settings-item" id="rowEleven" role="button" tabindex="0">
+                  <div class="settings-label">ElevenLabs</div>
+                  <div class="settings-chevron">›</div>
+                </div>
+                <div class="settings-item" id="rowOpenAI" role="button" tabindex="0">
+                  <div class="settings-label">OpenAI</div>
+                  <div class="settings-chevron">›</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="settings-section-title">DATA & SYSTEM</div>
+              <div class="settings-card">
+                <div class="settings-item" id="rowFiles" role="button" tabindex="0">
+                  <div class="settings-label">Active Word Lists</div>
+                  <div class="settings-value" id="settingsActiveListsCount">0</div>
+                  <div class="settings-chevron">›</div>
+                </div>
+                <div class="settings-item">
+                  <button id="menuResetAppBtn" class="settings-danger" style="background:none;border:0;font:inherit;padding:0;margin:0;">Reset App (Reload)</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-footer">
+              <div id="menuVersion" class="version-inline" style="display:inline-block; padding:0; margin:0;"></div>
+            </div>
+
+            <!-- Subpanel: Language -->
+            <section id="langPanel" class="panel subpanel" aria-hidden="true" aria-labelledby="langPanelTitle">
+              <div class="panel-header">
+                <button class="panel-back" data-back="langPanel">‹ Back</button>
+                <h2 id="langPanelTitle" style="margin:0">Language</h2>
+                <div style="width:44px"></div>
+              </div>
+              <div class="panel-body">
+                <div class="settings-card">
+                  <div class="settings-item" id="langOptionEn" role="button" tabindex="0">
+                    <div class="settings-label">English</div>
+                    <div class="settings-check" id="langCheckEn" style="display:none;">✓</div>
+                  </div>
+                  <div class="settings-item" id="langOptionFr" role="button" tabindex="0">
+                    <div class="settings-label">Français</div>
+                    <div class="settings-check" id="langCheckFr" style="display:none;">✓</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Subpanel: ElevenLabs -->
+            <section id="elevenPanel" class="panel subpanel" aria-hidden="true" aria-labelledby="elevenPanelTitle">
+              <div class="panel-header">
+                <button class="panel-back" data-back="elevenPanel">‹ Back</button>
+                <h2 id="elevenPanelTitle" style="margin:0">ElevenLabs</h2>
+                <div style="width:44px"></div>
+              </div>
+              <div class="panel-body">
+                <div class="settings-card">
+                  <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:8px;">
+                    <div class="settings-label" style="font-weight:700;">API Key</div>
+                    <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; width:100%;">
+                      <input id="elevenKeyInput" type="password" placeholder="elevenlabs_api_key" style="flex:1; min-width:220px; padding:.5rem;"/>
+                      <button class="btn btn-secondary" id="elevenSaveBtn" type="button">Save</button>
+                      <input type="file" id="elevenKeyFile" accept=".key,.txt" style="display:none;"/>
+                      <button class="btn btn-secondary" id="elevenLoadFileBtn" type="button">Load from File</button>
+                      <button class="btn btn-secondary" id="elevenClearBtn" type="button">Clear</button>
+                    </div>
+                    <div id="elevenKeyMasked" style="font-size:0.9em; color:#777;">No key set</div>
+                    <div style="font-size:0.85em; color:#777;">Adds ElevenLabs voices “Josh” (male) and “Bella” (female) to the selector using non‑streaming playback (fr‑FR).</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Subpanel: OpenAI -->
+            <section id="openaiPanel" class="panel subpanel" aria-hidden="true" aria-labelledby="openaiPanelTitle">
+              <div class="panel-header">
+                <button class="panel-back" data-back="openaiPanel">‹ Back</button>
+                <h2 id="openaiPanelTitle" style="margin:0">OpenAI</h2>
+                <div style="width:44px"></div>
+              </div>
+              <div class="panel-body">
+                <div class="settings-card">
+                  <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:8px;">
+                    <div class="settings-label" style="font-weight:700;">API Key</div>
+                    <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; width:100%;">
+                      <input id="openaiKeyInput" type="password" placeholder="sk-..." style="flex:1; min-width:220px; padding:.5rem;"/>
+                      <button class="btn btn-secondary" id="openaiSaveBtn" type="button">Save</button>
+                      <input type="file" id="openaiKeyFile" accept=".key,.txt" style="display:none;"/>
+                      <button class="btn btn-secondary" id="openaiLoadFileBtn" type="button">Load from File</button>
+                      <button class="btn btn-secondary" id="openaiClearBtn" type="button">Clear</button>
+                    </div>
+                    <div id="openaiKeyMasked" style="font-size:0.9em; color:#777;">No key set</div>
+                    <div style="font-size:0.85em; color:#777;">Adds OpenAI voices “Echo” and “Nova” to the selector using a low‑latency model.</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Subpanel: Files -->
+            <section id="filesPanel" class="panel subpanel" aria-hidden="true" aria-labelledby="filesPanelTitle">
+              <div class="panel-header">
+                <button class="panel-back" data-back="filesPanel">‹ Back</button>
+                <h2 id="filesPanelTitle" style="margin:0">Files</h2>
+                <div style="width:44px"></div>
+              </div>
+              <div class="panel-body">
+                <div class="settings-section">
+                  <div class="settings-section-title">Active Word Lists</div>
+                  <div class="settings-card">
+                    <div id="menuWordListsSection" class="menu-field" style="margin:0; padding:0; width:100%;">
+                      <div id="menuWordListsOptions" class="word-lists-options" style="padding: 8px 12px;"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-section">
+                  <div class="settings-section-title">Add .txt files</div>
+                  <div class="settings-card">
+                    <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:8px;">
+                      <input type="file" id="menuFileInput" accept=".txt" multiple />
+                      <div style="font-size:0.85em; color:#777;">Tip: You can also drag & drop files anywhere on the page.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
-        </div>
-      </div>
-      <div class="modal-section menu-field">
-        <label>ElevenLabs Voice (optional)</label>
-        <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
-          <input id="elevenKeyInput" type="password" placeholder="elevenlabs_api_key" style="flex:1; min-width:220px;"/>
-          <button class="btn btn-secondary" id="elevenSaveBtn" type="button">Save</button>
-          <input type="file" id="elevenKeyFile" accept=".key,.txt" style="display:none;"/>
-          <button class="btn btn-secondary" id="elevenLoadFileBtn" type="button">Load from File</button>
-          <button class="btn btn-secondary" id="elevenClearBtn" type="button">Clear</button>
-        </div>
-        <div id="elevenKeyMasked" style="font-size:0.85em; color:#777; margin-top:0.25rem;"></div>
-        <div style="font-size:0.85em; color:#777; margin-top:0.25rem;">Adds ElevenLabs voices “Josh” (male) and “Bella” (female) to the selector using non‑streaming playback (fr‑FR).</div>
-      </div>
-      <div class="modal-section menu-field">
-        <label>OpenAI Voice (optional)</label>
-        <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
-          <input id="openaiKeyInput" type="password" placeholder="sk-..." style="flex:1; min-width:220px;"/>
-          <button class="btn btn-secondary" id="openaiSaveBtn" type="button">Save</button>
-          <input type="file" id="openaiKeyFile" accept=".key,.txt" style="display:none;"/>
-          <button class="btn btn-secondary" id="openaiLoadFileBtn" type="button">Load from File</button>
-          <button class="btn btn-secondary" id="openaiClearBtn" type="button">Clear</button>
-        </div>
-        <div id="openaiKeyMasked" style="font-size:0.85em; color:#777; margin-top:0.25rem;"></div>
-        <div style="font-size:0.85em; color:#777; margin-top:0.25rem;">Adds OpenAI voices “Echo” and “Nova” to the selector using a low‑latency model.</div>
-      </div>
-      <div class="modal-section menu-field">
-        <details id="menuFiles" style="width:100%;">
-          <summary style="cursor:pointer; font-weight:700;">Files</summary>
-          <div id="menuWordListsSection" class="menu-field" style="margin-top:0.5rem;">
-            <label>Active Word Lists</label>
-            <div id="menuWordListsOptions" class="word-lists-options"></div>
-          </div>
-          <div style="margin-top:0.5rem;">
-            <label for="menuFileInput" style="display:block; font-weight:600; margin-bottom:0.25rem;">Add .txt files</label>
-            <input type="file" id="menuFileInput" accept=".txt" multiple />
-            <div style="font-size:0.85em; color:#777; margin-top:0.25rem;">Tip: You can also drag & drop files anywhere on the page.</div>
-          </div>
-        </details>
-      </div>
-      <div class="modal-section" style="margin-top:0.5rem;">
-        <label style="display:block; font-weight:600; margin-bottom:0.5rem;">System</label>
-        <button class="btn btn-secondary" id="menuResetAppBtn" type="button">Reset App (Reload)</button>
-      </div>
-      <hr/>
-      <div class="menu-bottom" style="margin-top:auto;">
-        <div class="modal-section menu-list" style="margin-top:0;">
-          <button id="menuHelpBtn">Help</button>
-        </div>
-        <div id="menuVersion" class="version-inline" style="padding-bottom:0.5rem;"></div>
-      </div>
-    </div>
   </div>
 
   <div id="confirmationDialog" class="modal">
@@ -560,7 +683,7 @@
         label_active_word_lists: "Active Word Lists",
         btn_next: "Next (Space)", btn_repeat: "Repeat (R)", btn_show: "Show (S)", btn_toggleVoice: "Voice (V)",
         status_ready: "Ready to start a new session", history_title: "Answers",
-        label_voice: "Voice:", label_studyMode: "Study Mode:",
+        label_voice: "Voice:", label_studyMode: "Study Mode",
         label_shuffle: "Shuffle words", label_seconds: "seconds",
         mode_simultaneous: "Listen and Read simultaneously",
         mode_listen_read: "Listen and read",
@@ -637,7 +760,7 @@
         label_active_word_lists: "Listes de mots actives",
         btn_next: "Suivant (Espace)", btn_repeat: "Répéter (R)", btn_show: "Afficher (S)", btn_toggleVoice: "Voix (V)",
         status_ready: "Prêt à commencer une nouvelle session", history_title: "Réponses",
-        label_voice: "Voix :", label_studyMode: "Mode d'étude :",
+        label_voice: "Voix :", label_studyMode: "Mode d'étude",
         label_shuffle: "Mélanger les mots", label_seconds: "secondes",
         mode_simultaneous: "Écouter et lire simultanément",
         mode_listen_read: "Écouter et lire",
@@ -767,6 +890,9 @@
       const mEn = document.getElementById('menuLangEn');
       const mFr = document.getElementById('menuLangFr');
       if (mEn && mFr) { mEn.classList.toggle('active', lang === 'en'); mFr.classList.toggle('active', lang === 'fr'); }
+      // update grouped settings value label
+      const settingsLangValue = document.getElementById('settingsLangValue');
+      if (settingsLangValue) settingsLangValue.textContent = (lang === 'en') ? 'English' : 'Français';
       document.querySelectorAll("[data-i18n]").forEach(el => {
         const key = el.getAttribute("data-i18n");
         if (i18n[lang] && i18n[lang][key]) {
@@ -1337,9 +1463,11 @@
         const vs = document.getElementById('voiceSelect');
         const selectedOption = vs.selectedOptions[0];
         const bottomVoice = document.getElementById('bottomVoice');
+        const settingsVoiceValue = document.getElementById('settingsVoiceValue');
         if (!selectedOption) { 
           document.getElementById('activeVoiceDisplay').textContent = i18n[curLang].no_voices; 
           if (bottomVoice) bottomVoice.textContent = i18n[curLang].no_voices; 
+          if (settingsVoiceValue) settingsVoiceValue.textContent = '—';
           return; 
         }
         // If "system" is selected, try to show the resolved best French voice name
@@ -1348,11 +1476,13 @@
           if (resolved) {
             document.getElementById('activeVoiceDisplay').textContent = `🗣️ ${resolved.name} (${resolved.lang})`;
             if (bottomVoice) bottomVoice.textContent = `${resolved.name} (${resolved.lang})`;
+            if (settingsVoiceValue) settingsVoiceValue.textContent = `${resolved.name}`;
             return;
           }
         }
         document.getElementById('activeVoiceDisplay').textContent = `🗣️ ${selectedOption.text}`;
         if (bottomVoice) bottomVoice.textContent = selectedOption.text;
+        if (settingsVoiceValue) settingsVoiceValue.textContent = selectedOption.text;
     }
 
     function getSelectedStudyMode() {
@@ -1368,6 +1498,7 @@
       const text = (sel && sel.selectedOptions && sel.selectedOptions[0]) ? sel.selectedOptions[0].text : '';
       document.getElementById('activeStudyModeDisplay').textContent = `${i18n[curLang].indicator_mode_prefix} ${text}`;
       const bottomMode = document.getElementById('bottomMode'); if (bottomMode) bottomMode.textContent = text;
+      const settingsModeValue = document.getElementById('settingsModeValue'); if (settingsModeValue) settingsModeValue.textContent = text || settingsModeValue.textContent;
     }
 
     function updateShuffleIndicator() {
@@ -1493,6 +1624,9 @@
                 fileCount++;
             }
         }
+        // Update grouped settings count if present
+        const activeCountEl = document.getElementById('settingsActiveListsCount');
+        if (activeCountEl) activeCountEl.textContent = String(fileCount);
         words = newWordList;
         originalWordOrder = [...words]; // Update original order for unshuffling
         const bottomIcon = document.getElementById('bottomFileStatus');
@@ -1607,6 +1741,9 @@
         menuModal.classList.add('visible'); 
         menuBtn.setAttribute('aria-expanded','true'); 
         bodyScrollLock(true);
+        // Sync grouped UI controls on open
+        const st = document.getElementById('shuffleToggle'); if (st) st.checked = shuffleEnabled;
+        updateAllIndicators();
         const closeOverlay = document.getElementById('menuCloseOverlay');
         if (closeOverlay) {
           const rect = menuBtn.getBoundingClientRect();
@@ -1632,6 +1769,19 @@
     const menuLangFr = document.getElementById('menuLangFr');
     if (menuLangEn) menuLangEn.addEventListener('click', () => { setLanguage('en'); });
     if (menuLangFr) menuLangFr.addEventListener('click', () => { setLanguage('fr'); });
+    // Row navigation to subpanels
+    function openSubpanel(id){ const el=document.getElementById(id); if(!el) return; el.setAttribute('aria-hidden','false'); }
+    function closeSubpanel(id){ const el=document.getElementById(id); if(!el) return; el.setAttribute('aria-hidden','true'); }
+    const rowLanguage = document.getElementById('rowLanguage'); if(rowLanguage){ const fn=()=>{ openSubpanel('langPanel'); updateLangChecks(); }; rowLanguage.addEventListener('click', fn); rowLanguage.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
+    const rowEleven = document.getElementById('rowEleven'); if(rowEleven){ const fn=()=>openSubpanel('elevenPanel'); rowEleven.addEventListener('click', fn); rowEleven.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
+    const rowOpenAI = document.getElementById('rowOpenAI'); if(rowOpenAI){ const fn=()=>openSubpanel('openaiPanel'); rowOpenAI.addEventListener('click', fn); rowOpenAI.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
+    const rowFiles = document.getElementById('rowFiles'); if(rowFiles){ const fn=()=>{ openSubpanel('filesPanel'); generateWordListsUI(); }; rowFiles.addEventListener('click', fn); rowFiles.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
+    // Back buttons
+    document.querySelectorAll('.panel-back').forEach(btn=>{ btn.addEventListener('click',()=>{ const id=btn.getAttribute('data-back'); if(id) closeSubpanel(id); }); });
+    // Language sheet handlers
+    function updateLangChecks(){ const en=document.getElementById('langCheckEn'); const fr=document.getElementById('langCheckFr'); if(en&&fr){ en.style.display = (curLang==='en')?'block':'none'; fr.style.display = (curLang==='fr')?'block':'none'; } }
+    const langOptionEn = document.getElementById('langOptionEn'); if(langOptionEn){ langOptionEn.addEventListener('click',()=>{ setLanguage('en'); updateLangChecks(); closeSubpanel('langPanel'); }); }
+    const langOptionFr = document.getElementById('langOptionFr'); if(langOptionFr){ langOptionFr.addEventListener('click',()=>{ setLanguage('fr'); updateLangChecks(); closeSubpanel('langPanel'); }); }
     const menuHelpBtn = document.getElementById('menuHelpBtn');
     if (menuHelpBtn) menuHelpBtn.addEventListener('click', () => { menuModal.classList.remove('visible'); helpModal.classList.add('visible'); const mc = helpModal.querySelector('.modal-content'); if (mc) mc.focus(); });
     const menuSettingsBtn = document.getElementById('menuSettingsBtn');

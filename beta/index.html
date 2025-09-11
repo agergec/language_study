@@ -276,11 +276,14 @@
     .settings-item:last-child { border-bottom: none; }
     .settings-label { flex: 1; color: #000; }
     .settings-value { color: #8e8e93; margin-left: auto; }
-    .settings-chevron { color: #c7c7cc; margin-left: 8px; font-weight: 700; }
+    .settings-chevron { color: #c7c7cc; margin-left: 8px; font-weight: 700; font-size: 1.35rem; }
     .settings-danger { color: #ff3b30; font-weight: 700; }
     .settings-footer { color: #8e8e93; font-size: 0.85rem; text-align: center; padding: 0.75rem 0; }
     .trash-btn { background: none; border: none; font-size: 1.1rem; color: #ff3b30; cursor: pointer; padding: 4px; line-height: 1; }
     .trash-btn:hover { opacity: 0.85; }
+    .key-mask-wrap { position: relative; }
+    .key-mask-wrap .settings-note { padding-right: 32px; }
+    .key-mask-wrap .trash-btn { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); }
     /* Overlay selects turn rows into native pickers while showing value text */
     .overlay-select { position: absolute; inset: 0; opacity: 0; -webkit-appearance: none; appearance: none; width: 100%; height: 100%; border: none; background: transparent; cursor: pointer; }
     /* iOS switch */
@@ -294,7 +297,7 @@
     #menuModal .subpanel { position: fixed; inset: 0; background: var(--background-color); transform: translateX(100%); transition: transform 220ms cubic-bezier(.2,.8,.2,1); z-index: 1400; }
     #menuModal .subpanel[aria-hidden="false"] { transform: translateX(0); }
     #menuModal .subpanel .panel-body { background: #f2f2f7; }
-    .panel-back { background: none; border: 0; font-size: 1rem; color: var(--primary-color); padding: 8px; }
+    .panel-back { background: none; border: 0; font-size: 1.35rem; color: var(--primary-color); padding: 8px; }
     .panel-actions { display:flex; align-items:center; gap: 8px; min-width: 44px; justify-content: flex-end; }
     .panel-link { background: none; border: 0; color: var(--primary-color); font-weight: 700; padding: 6px 8px; font-size: 0.98rem; }
     .panel-link.link-disabled { opacity: .45; pointer-events: none; }
@@ -613,10 +616,12 @@
                   <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:8px;">
                     <div class="label-row" style="display:flex; align-items:center; justify-content:space-between;">
                       <div class="settings-label" style="font-weight:700;">API Key</div>
-                      <button id="elevenDeleteBtn" class="trash-btn" type="button" title="Remove key" aria-label="Remove ElevenLabs key">🗑️</button>
                     </div>
                     <input id="elevenKeyInput" type="password" placeholder="elevenlabs_api_key" style="flex:1; min-width:220px; padding:.5rem;"/>
-                    <div id="elevenKeyMasked" class="settings-note">No key set</div>
+                    <div class="key-mask-wrap">
+                      <div id="elevenKeyMasked" class="settings-note">No key set</div>
+                      <button id="elevenDeleteBtn" class="trash-btn" type="button" title="Remove key" aria-label="Remove ElevenLabs key">🗑️</button>
+                    </div>
                   </div>
                 </div>
                 <div class="settings-card" style="margin-top:12px;">
@@ -643,10 +648,12 @@
                   <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:8px;">
                     <div class="label-row" style="display:flex; align-items:center; justify-content:space-between;">
                       <div class="settings-label" style="font-weight:700;">API Key</div>
-                      <button id="openaiDeleteBtn" class="trash-btn" type="button" title="Remove key" aria-label="Remove OpenAI key">🗑️</button>
                     </div>
                     <input id="openaiKeyInput" type="password" placeholder="sk-..." style="flex:1; min-width:220px; padding:.5rem;"/>
-                    <div id="openaiKeyMasked" class="settings-note">No key set</div>
+                    <div class="key-mask-wrap">
+                      <div id="openaiKeyMasked" class="settings-note">No key set</div>
+                      <button id="openaiDeleteBtn" class="trash-btn" type="button" title="Remove key" aria-label="Remove OpenAI key">🗑️</button>
+                    </div>
                   </div>
                 </div>
                 <div class="settings-card" style="margin-top:12px;">

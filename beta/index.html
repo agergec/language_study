@@ -481,7 +481,7 @@
           <button class="btn btn-secondary" id="elevenClearBtn" type="button">Clear</button>
         </div>
         <div id="elevenKeyMasked" style="font-size:0.85em; color:#777; margin-top:0.25rem;"></div>
-        <div style="font-size:0.85em; color:#777; margin-top:0.25rem;">Adds ElevenLabs voices “Rachel” and “Bella” to the selector (model: turbo v2). Streaming from the browser may be limited by CORS; falls back to fast download-and-play.</div>
+        <div style="font-size:0.85em; color:#777; margin-top:0.25rem;">Adds ElevenLabs voices “Josh” (male) and “Bella” (female) to the selector using non‑streaming playback (fr‑FR).</div>
       </div>
       <div class="modal-section menu-field">
         <label>OpenAI Voice (optional)</label>
@@ -707,7 +707,7 @@
     let shuffleEnabled = false;
     let originalWordOrder = [];
     let isSessionComplete = false;
-    const APP_VERSION = 'v1.1.8-beta';
+    const APP_VERSION = 'v1.5.0-beta';
     // Articles quiz state
     let prefixWords = [];
     let prefixWordsIndef = [];
@@ -897,14 +897,16 @@
         vs.appendChild(group);
       }
 
-      // Add ElevenLabs voices when key is present
+      // Add ElevenLabs voices (fr-FR, non-streaming) when key is present
       try {
         if (window._ELEVEN && window._ELEVEN.key) {
           const group2 = document.createElement('optgroup');
-          group2.label = 'ElevenLabs';
-          const r = document.createElement('option'); r.value = 'eleven:21m00Tcm4TlvDq8ikWAM'; r.textContent = 'Rachel (ElevenLabs)';
-          const b = document.createElement('option'); b.value = 'eleven:EXAVITQu4vr4xnSDxMaL'; b.textContent = 'Bella (ElevenLabs)';
-          group2.appendChild(r); group2.appendChild(b); vs.appendChild(group2);
+          group2.label = 'ElevenLabs (fr-FR)';
+          // One male and one female public sample voices
+          const male = document.createElement('option'); male.value = 'eleven:TxGEqnHWrfWFTfGW9XjX'; male.textContent = 'Josh — male (ElevenLabs)';
+          const female = document.createElement('option'); female.value = 'eleven:EXAVITQu4vr4xnSDxMaL'; female.textContent = 'Bella — female (ElevenLabs)';
+          group2.appendChild(male); group2.appendChild(female);
+          vs.appendChild(group2);
         }
       } catch (_) {}
 
@@ -1014,6 +1016,11 @@
 
     function speakWord(w) {
       if (synth.speaking) synth.cancel();
+      // ElevenLabs (non-streaming) selection
+      if (typeof currentVoice === 'string' && currentVoice.startsWith('eleven:')) {
+        const voiceId = currentVoice.split(':')[1] || '';
+        if (voiceId) return speakWithElevenLabs(w, voiceId);
+      }
       if (openaiKey && typeof currentVoice === 'string' && currentVoice.startsWith('openai:')) {
         const voice = (currentVoice.split(':')[1] || 'echo');
         return speakWithOpenAITTS(w, voice);
@@ -1074,10 +1081,10 @@
       }
     }
 
-    // ElevenLabs TTS (download-then-play; streaming proxy recommended for production)
+    // ElevenLabs TTS (non-streaming: Create Speech)
     async function speakWithElevenLabs(text, voiceId) {
       try {
-        const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`;
+        const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
         const resp = await fetch(url, {
           method: 'POST',
           headers: {
@@ -1087,8 +1094,7 @@
           },
           body: JSON.stringify({
             text,
-            model_id: 'eleven_turbo_v2',
-            optimize_streaming_latency: 2,
+            model_id: 'eleven_multilingual_v2',
             language: 'fr-FR',
             voice_settings: { stability: 0.5, similarity_boost: 0.7, style: 0.0, use_speaker_boost: true }
           })

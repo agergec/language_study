@@ -149,6 +149,9 @@
     .bottom-status .off { opacity: 0.3; filter: grayscale(1); }
     .bottom-status span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #bottomVoice, #bottomMode { min-width: 0; }
+    /* Allow bottomVoice to wrap like bottomMode */
+    #bottomVoice { white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.15; }
+    @media (max-width: 480px) { #bottomVoice { font-size: 0.9em; } }
     /* Allow mode to wrap on small screens to avoid horizontal scroll */
     #bottomMode { flex: 1; white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.15; }
     /* Slightly smaller font for wrapped mode names on narrow screens */
@@ -1591,6 +1594,8 @@
 
       function buildMenu() {
         if (menuEl) menuEl.remove();
+        // Close any other quick menus
+        document.querySelectorAll('.mode-quick-menu').forEach(el => el.remove());
         menuEl = document.createElement('div');
         menuEl.className = 'mode-quick-menu';
         menuEl.setAttribute('role','listbox');
@@ -1681,6 +1686,194 @@
       bottomModeEl.title = 'Change Study Mode';
       bottomModeEl.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); toggleMenu(); });
       bottomModeEl.addEventListener('touchend', (e) => { e.preventDefault(); toggleMenu(); }, { passive: false });
+    })();
+
+    // --- Bottom Voice Quick Menu ---
+    (function initBottomVoiceQuickMenu(){
+      const bottomVoiceEl = document.getElementById('bottomVoice');
+      if (!bottomVoiceEl) return;
+      let menuEl = null;
+
+      function buildMenu() {
+        if (menuEl) menuEl.remove();
+        document.querySelectorAll('.mode-quick-menu').forEach(el => el.remove());
+        // Ensure voice list is up to date
+        try { populateVoiceList(); } catch (_) {}
+        const vs = document.getElementById('voiceSelect');
+        menuEl = document.createElement('div');
+        menuEl.className = 'mode-quick-menu';
+        menuEl.setAttribute('role','listbox');
+        const cur = vs && vs.value ? vs.value : 'system';
+        const opts = vs ? Array.from(vs.options) : [];
+        opts.forEach(o => {
+          if (!o.value) return; // skip placeholders
+          const item = document.createElement('div');
+          item.className = 'mode-quick-item' + (o.disabled ? ' disabled' : '');
+          item.setAttribute('role','option');
+          item.dataset.value = o.value;
+          item.textContent = o.text;
+          if (o.value === cur) {
+            const check = document.createElement('span');
+            check.className = 'mode-quick-check';
+            check.textContent = '✓';
+            item.appendChild(check);
+          }
+          item.addEventListener('click', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            if (o.disabled) return;
+            if (vs) {
+              vs.value = o.value;
+              vs.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            closeMenu();
+          });
+          menuEl.appendChild(item);
+        });
+        document.body.appendChild(menuEl);
+      }
+
+      function positionMenu() {
+        if (!menuEl) return;
+        const r = bottomVoiceEl.getBoundingClientRect();
+        const vw = window.innerWidth; const vh = window.innerHeight;
+        menuEl.style.visibility = 'hidden';
+        menuEl.style.top = '0px'; menuEl.style.left = '0px';
+        const mh = menuEl.offsetHeight; const mw = menuEl.offsetWidth;
+        let left = Math.min(Math.max(r.left, 8), vw - mw - 8);
+        let top;
+        const spaceBelow = vh - r.bottom;
+        const spaceAbove = r.top;
+        if (spaceBelow >= mh + 8) { top = r.bottom + 6; }
+        else if (spaceAbove >= mh + 8) { top = r.top - mh - 6; }
+        else { top = Math.max(8, Math.min(vh - mh - 8, r.bottom + 6)); }
+        menuEl.style.left = `${left}px`;
+        menuEl.style.top = `${top}px`;
+        menuEl.style.visibility = 'visible';
+      }
+
+      function closeMenu() {
+        if (!menuEl) return;
+        document.removeEventListener('pointerdown', onDocDown, true);
+        window.removeEventListener('resize', closeMenu);
+        window.removeEventListener('scroll', closeMenu, true);
+        menuEl.remove();
+        menuEl = null;
+      }
+
+      function onDocDown(e) {
+        if (!menuEl) return;
+        if (menuEl.contains(e.target) || bottomVoiceEl.contains(e.target)) return;
+        closeMenu();
+      }
+
+      function toggleMenu() {
+        if (menuEl) { closeMenu(); return; }
+        buildMenu();
+        positionMenu();
+        setTimeout(() => {
+          document.addEventListener('pointerdown', onDocDown, true);
+          window.addEventListener('resize', closeMenu);
+          window.addEventListener('scroll', closeMenu, true);
+        }, 0);
+      }
+
+      bottomVoiceEl.style.cursor = 'pointer';
+      bottomVoiceEl.title = 'Change Voice';
+      bottomVoiceEl.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); toggleMenu(); });
+      bottomVoiceEl.addEventListener('touchend', (e) => { e.preventDefault(); toggleMenu(); }, { passive: false });
+    })();
+
+    // --- Bottom File List Quick Menu ---
+    (function initBottomFilesQuickMenu(){
+      const fileIcon = document.getElementById('bottomFileStatus');
+      if (!fileIcon) return;
+      let menuEl = null;
+
+      function buildMenu() {
+        if (menuEl) menuEl.remove();
+        document.querySelectorAll('.mode-quick-menu').forEach(el => el.remove());
+        menuEl = document.createElement('div');
+        menuEl.className = 'mode-quick-menu';
+        menuEl.setAttribute('role','listbox');
+        const filenames = Object.keys(wordLists || {});
+        if (filenames.length === 0) {
+          const item = document.createElement('div');
+          item.className = 'mode-quick-item disabled';
+          item.textContent = i18n[curLang].file_info_none || 'No file loaded.';
+          menuEl.appendChild(item);
+        } else {
+          filenames.forEach(name => {
+            const item = document.createElement('div');
+            item.className = 'mode-quick-item';
+            const wc = (wordLists[name] && wordLists[name].words) ? wordLists[name].words.length : 0;
+            item.textContent = `${name} (${wc} ${i18n[curLang].words_lower})`;
+            menuEl.appendChild(item);
+          });
+        }
+        document.body.appendChild(menuEl);
+      }
+
+      function positionMenu() {
+        if (!menuEl) return;
+        const r = fileIcon.getBoundingClientRect();
+        const vw = window.innerWidth; const vh = window.innerHeight;
+        menuEl.style.visibility = 'hidden';
+        menuEl.style.top = '0px'; menuEl.style.left = '0px';
+        const mh = menuEl.offsetHeight; const mw = menuEl.offsetWidth;
+        let left = Math.min(Math.max(r.left, 8), vw - mw - 8);
+        let top;
+        const spaceBelow = vh - r.bottom;
+        const spaceAbove = r.top;
+        if (spaceBelow >= mh + 8) { top = r.bottom + 6; }
+        else if (spaceAbove >= mh + 8) { top = r.top - mh - 6; }
+        else { top = Math.max(8, Math.min(vh - mh - 8, r.bottom + 6)); }
+        menuEl.style.left = `${left}px`;
+        menuEl.style.top = `${top}px`;
+        menuEl.style.visibility = 'visible';
+      }
+
+      function closeMenu() {
+        if (!menuEl) return;
+        document.removeEventListener('pointerdown', onDocDown, true);
+        window.removeEventListener('resize', closeMenu);
+        window.removeEventListener('scroll', closeMenu, true);
+        menuEl.remove();
+        menuEl = null;
+      }
+
+      function onDocDown(e) {
+        if (!menuEl) return;
+        if (menuEl.contains(e.target) || fileIcon.contains(e.target)) return;
+        closeMenu();
+      }
+
+      function toggleMenu() {
+        if (menuEl) { closeMenu(); return; }
+        buildMenu();
+        positionMenu();
+        setTimeout(() => {
+          document.addEventListener('pointerdown', onDocDown, true);
+          window.addEventListener('resize', closeMenu);
+          window.addEventListener('scroll', closeMenu, true);
+        }, 0);
+      }
+
+      fileIcon.style.cursor = 'pointer';
+      fileIcon.title = 'Show Files';
+      fileIcon.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); toggleMenu(); });
+      fileIcon.addEventListener('touchend', (e) => { e.preventDefault(); toggleMenu(); }, { passive: false });
+    })();
+
+    // --- Bottom Shuffle Toggle ---
+    (function initBottomShuffleToggle(){
+      const shuf = document.getElementById('bottomShuffle');
+      const st = document.getElementById('shuffleToggle');
+      if (!shuf || !st) return;
+      shuf.style.cursor = 'pointer';
+      shuf.title = 'Toggle Shuffle';
+      const trigger = (e) => { e && e.preventDefault(); e && e.stopPropagation(); st.dispatchEvent(new Event('change', { bubbles: true })); };
+      shuf.addEventListener('click', trigger);
+      shuf.addEventListener('touchend', (e) => { trigger(e); }, { passive: false });
     })();
     
     // --- Voice Debug Helper (feature-flagged) ---

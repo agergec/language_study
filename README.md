@@ -194,6 +194,58 @@ This document provides a low‑level technical design for the single‑page Fren
 - Local testing: open over `http://localhost` or `https://` to enable SW; test on desktop and mobile browsers.
 - Release process: copy `beta/index.html` → `index.html` (already in place) and publish.
 
+### CI/CD with GitHub Actions (GitHub Pages)
+
+This repo includes CI + deployment workflows under `.github/workflows/`:
+
+- `ci.yml` — runs on pushes and pull requests to `main`. Uses Lychee to check links in HTML and README.
+- `pages.yml` — builds and deploys to GitHub Pages on push to `main` (and via manual dispatch).
+- `beta-deploy.yml` — builds and deploys the beta variant (from `beta/`) to a separate repository on push to the `beta` branch (publishes to that repo’s `gh-pages` branch).
+
+Steps to enable:
+- In your repository: Settings → Pages → “Build and deployment” → Source: GitHub Actions.
+- Optional: Protect `main` with required status checks and require the “CI” workflow to pass before merging.
+
+What it deploys:
+- Copies `index.html` and, if present, the `beta/` folder into a `dist/` directory and publishes that as the site root. You can add other asset folders named `assets/`, `static/`, or `public/` and they’ll be included automatically.
+
+Customizing tests:
+- You can add more checks (HTML validation, ESLint, Prettier, etc.). Add a `package.json` with the tools and extend `ci.yml` to install and run them.
+- To tighten link checks, edit the `args` in `ci.yml` (e.g., remove `--accept 403,429`, add `--exclude` patterns, or restrict to local links only).
+
+### HTML Linting
+
+CI runs `HTMLHint` against `index.html` to catch malformed markup. Rules are in `.htmlhintrc`. To lint all HTML (including `beta/`) once it’s stable, change the CI step to:
+
+```
+npx --yes htmlhint --config .htmlhintrc "**/*.html"
+```
+
+### Option B — Separate Beta Repository
+
+Use a second repository for your beta site, published independently of production.
+
+1) Create a new repo (example): `yourname/language_study_beta`
+   - In the beta repo: Settings → Pages → “Build and deployment” → Source: Deploy from a branch → Branch: `gh-pages` / folder: `/ (root)`.
+
+2) In THIS repo, add two secrets (Settings → Secrets and variables → Actions → New repository secret):
+   - `BETA_REPOSITORY`: set to `yourname/language_study_beta` (owner/repo)
+   - `BETA_PAGES_TOKEN`: a Personal Access Token (classic) with `repo` scope from your account that has push access to the beta repo
+
+3) Workflow behavior (`.github/workflows/beta-deploy.yml`):
+   - Triggers on push to the `beta` branch (and manual dispatch)
+   - Builds a `dist/` that uses `beta/index.html` as the site root
+   - Pushes `dist/` to the external repo’s `gh-pages` branch using `peaceiris/actions-gh-pages`
+
+4) Usage:
+   - Branching model: develop beta changes on the `beta` branch here; pushing updates the beta site.
+   - Production: merge to `main`; Pages workflow deploys the production site from `index.html` here.
+
+Notes:
+- This repo is configured to publish beta to the external repo’s `gh-pages` branch by default. Ensure the beta repo’s Pages source is set to `gh-pages` (as above).
+- Keep your PAT safe; you can rotate it anytime and update the secret.
+
+
 ---
 
 ## File Map (key runtime components)
@@ -217,4 +269,3 @@ This document provides a low‑level technical design for the single‑page Fren
 - Additional languages and TTS voices.
 - More granular accessibility testing and focus trapping within modals.
 - Optional compression for large word lists before saving to IDB.
-

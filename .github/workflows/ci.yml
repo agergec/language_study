@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  link-check:
+    name: Link Check (Lychee)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # Check HTML files and README; tolerate common external 403/429 responses
+          args: >-
+            --verbose --no-progress --accept 403,429
+            --timeout 20 --max-concurrency 5
+            './**/*.html' './README.md'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  html-lint:
+    name: HTML Lint (HTMLHint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Lint HTML (all *.html)
+        run: npx --yes htmlhint --config .htmlhintrc "**/*.html"

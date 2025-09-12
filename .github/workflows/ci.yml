@@ -17,9 +17,11 @@ jobs:
         uses: lycheeverse/lychee-action@v2
         with:
           # Accept 2xx by default, plus 403/429 for sites that rate-limit/bounce CI
+          # Exclude data: URIs to avoid unsupported scheme noise
           args: >-
             --verbose --no-progress
             --accept 200..=299,403,429
+            --exclude "data:*"
             --timeout 20 --max-concurrency 5
             './**/*.html' './README.md'
         env:

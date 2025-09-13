@@ -168,6 +168,10 @@
     .mode-quick-item:hover { background: var(--light-gray); }
     .mode-quick-item.disabled { opacity: 0.45; pointer-events: none; }
     .mode-quick-check { margin-left: auto; opacity: 0.7; }
+    /* Voice quick menu: strictly compact with dividers */
+    .voice-quick-menu .mode-quick-item { padding: 6px 8px; line-height: 1.1; font-size: 0.95rem; border-radius: 6px; }
+    .voice-quick-menu .group-header { font-weight: 800; font-size: 0.8rem; letter-spacing: .02em; color: #8e8e93; padding: 4px 2px; margin: 4px 2px; text-transform: uppercase; }
+    .voice-quick-menu .divider { height: 1px; background: var(--border-color); margin: 6px 0; opacity: .8; }
     /* Mini confirm near status items */
     .mini-confirm { position: fixed; z-index: 1900; background: #fff; color: var(--text-color); border: 1px solid var(--border-color); box-shadow: 0 8px 24px rgba(0,0,0,0.12); border-radius: 12px; padding: 8px 10px; display: flex; align-items: center; gap: 10px; max-width: 80vw; }
     .mini-confirm .mini-actions { margin-left: auto; display: flex; gap: 8px; }
@@ -1319,6 +1323,13 @@
       const allFrench = availableVoices.filter(v => (v.lang || '').toLowerCase().startsWith('fr'));
       const qualityKeywords = ['siri', 'enhanced', 'premium', 'neural', 'hq', 'audrey', 'amelie', 'amélie', 'thomas'];
 
+      // Helper: normalize a name for dedup (remove case/diacritics)
+      const norm = (s) => (s || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // strip combining marks
+        .toLowerCase()
+        .trim();
+
       let toShow = [];
       if (isSafari) {
         // Apple platforms: show only specific system voices (Audrey, Amélie, Thomas)
@@ -1326,47 +1337,49 @@
           const n = (v.name || '').toLowerCase();
           return n.includes('thomas') || n.includes('audrey') || n.includes('amelie') || n.includes('amélie');
         };
-        toShow = allFrench.filter(isAllowedApple).sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+        toShow = allFrench.filter(isAllowedApple);
       } else if (isFirefox) {
         // Firefox: prefer high-quality filtered list; fallback to all FR
         const high = allFrench.filter(v => qualityKeywords.some(k => (v.name || '').toLowerCase().includes(k)));
-        toShow = (high.length ? high : allFrench).sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+        toShow = (high.length ? high : allFrench);
       } else if (isChromium) {
         // Chromium: only show clearly high-quality voices to avoid poor defaults
         const high = allFrench.filter(v => qualityKeywords.some(k => (v.name || '').toLowerCase().includes(k)));
-        toShow = high.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+        toShow = high;
         if (toShow.length === 0 && currentVoice && currentVoice !== 'system') {
           const saved = allFrench.find(v => v.name === currentVoice);
           if (saved) toShow = [saved];
         }
       } else {
-        toShow = allFrench.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
+        toShow = allFrench;
       }
 
-      toShow.forEach(voice => {
+      // Deduplicate by normalized name; keep highest scoring variant
+      const byName = new Map();
+      toShow.forEach(v => {
+        const key = norm(v.name);
+        const prev = byName.get(key);
+        if (!prev || scoreFrenchVoice(v) > scoreFrenchVoice(prev)) byName.set(key, v);
+      });
+      // Sort alphabetically (display) per resource requirement
+      Array.from(byName.values())
+        .sort((a,b) => (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' }))
+        .forEach(voice => {
         const opt = document.createElement("option");
         opt.value = voice.name;
         opt.textContent = `${voice.name} (${voice.lang})`;
         vs.appendChild(opt);
       });
 
-      // Append OpenAI voices when API key is set
-      if (openaiKey) {
-        const group = document.createElement('optgroup');
-        group.label = 'OpenAI TTS';
-        const echo = document.createElement('option'); echo.value = 'openai:echo'; echo.textContent = 'Echo (OpenAI)';
-        const nova = document.createElement('option'); nova.value = 'openai:nova'; nova.textContent = 'Nova (OpenAI)';
-        group.appendChild(echo); group.appendChild(nova);
-        vs.appendChild(group);
-      }
-
       // Append Google Cloud TTS voices when API key is set
       if (googleKey) {
         const groupG = document.createElement('optgroup');
         groupG.label = 'Google Cloud TTS (fr-FR)';
-        const gF = document.createElement('option'); gF.value = 'google:fr-FR-Neural2-F'; gF.textContent = 'Neural2 - Female (Google)';
-        const gG = document.createElement('option'); gG.value = 'google:fr-FR-Neural2-G'; gG.textContent = 'Neural2 - Male (Google)';
-        groupG.appendChild(gF); groupG.appendChild(gG);
+        const gOptions = [
+          { value: 'google:fr-FR-Neural2-F', text: 'Neural2 - Female (Google)' },
+          { value: 'google:fr-FR-Neural2-G', text: 'Neural2 - Male (Google)' }
+        ].sort((a,b) => a.text.localeCompare(b.text, 'fr', { sensitivity: 'base' }));
+        gOptions.forEach(o => { const opt = document.createElement('option'); opt.value = o.value; opt.textContent = o.text; groupG.appendChild(opt); });
         vs.appendChild(groupG);
       }
 
@@ -1375,13 +1388,27 @@
         if (window._ELEVEN && window._ELEVEN.key) {
           const group2 = document.createElement('optgroup');
           group2.label = 'ElevenLabs (fr-FR)';
-          // One male and one female public sample voices
-          const male = document.createElement('option'); male.value = 'eleven:TxGEqnHWrfWFTfGW9XjX'; male.textContent = 'Josh — male (ElevenLabs)';
-          const female = document.createElement('option'); female.value = 'eleven:EXAVITQu4vr4xnSDxMaL'; female.textContent = 'Bella — female (ElevenLabs)';
-          group2.appendChild(male); group2.appendChild(female);
+          // Public sample voices
+          const eOptions = [
+            { value: 'eleven:EXAVITQu4vr4xnSDxMaL', text: 'Bella — female (ElevenLabs)' },
+            { value: 'eleven:TxGEqnHWrfWFTfGW9XjX', text: 'Josh — male (ElevenLabs)' }
+          ].sort((a,b) => a.text.localeCompare(b.text, 'fr', { sensitivity: 'base' }));
+          eOptions.forEach(o => { const opt = document.createElement('option'); opt.value = o.value; opt.textContent = o.text; group2.appendChild(opt); });
           vs.appendChild(group2);
         }
       } catch (_) {}
+
+      // Append OpenAI voices when API key is set (after Google/ElevenLabs)
+      if (openaiKey) {
+        const group = document.createElement('optgroup');
+        group.label = 'OpenAI TTS';
+        const oa = [
+          { value: 'openai:echo', text: 'Echo (OpenAI)' },
+          { value: 'openai:nova', text: 'Nova (OpenAI)' }
+        ].sort((a,b) => a.text.localeCompare(b.text, 'fr', { sensitivity: 'base' }));
+        oa.forEach(o => { const opt = document.createElement('option'); opt.value = o.value; opt.textContent = o.text; group.appendChild(opt); });
+        vs.appendChild(group);
+      }
 
       // Preserve current selection if possible
       let existingIndex = Array.from(vs.options).findIndex(o => o.value === currentVoice);
@@ -2186,18 +2213,28 @@
         try { populateVoiceList(); } catch (_) {}
         const vs = document.getElementById('voiceSelect');
         menuEl = document.createElement('div');
-        menuEl.className = 'mode-quick-menu';
+        menuEl.className = 'mode-quick-menu voice-quick-menu';
         menuEl.setAttribute('role','listbox');
         const cur = vs && vs.value ? vs.value : 'system';
-        const opts = vs ? Array.from(vs.options) : [];
-        opts.forEach(o => {
-          if (!o.value) return; // skip placeholders
+
+        const appendDivider = () => {
+          const div = document.createElement('div');
+          div.className = 'divider';
+          menuEl.appendChild(div);
+        };
+        const appendHeader = (label) => {
+          const h = document.createElement('div');
+          h.className = 'group-header';
+          h.textContent = label;
+          menuEl.appendChild(h);
+        };
+        const appendItem = (opt) => {
           const item = document.createElement('div');
-          item.className = 'mode-quick-item' + (o.disabled ? ' disabled' : '');
+          item.className = 'mode-quick-item' + (opt.disabled ? ' disabled' : '');
           item.setAttribute('role','option');
-          item.dataset.value = o.value;
-          item.textContent = o.text;
-          if (o.value === cur) {
+          item.dataset.value = opt.value;
+          item.textContent = opt.text;
+          if (opt.value === cur) {
             const check = document.createElement('span');
             check.className = 'mode-quick-check';
             check.textContent = '✓';
@@ -2205,15 +2242,37 @@
           }
           item.addEventListener('click', (e) => {
             e.preventDefault(); e.stopPropagation();
-            if (o.disabled) return;
+            if (opt.disabled) return;
             if (vs) {
-              vs.value = o.value;
+              vs.value = opt.value;
               vs.dispatchEvent(new Event('change', { bubbles: true }));
             }
             closeMenu();
           });
           menuEl.appendChild(item);
-        });
+        };
+
+        if (vs) {
+          let isFirstGroup = true;
+          // System: all OPTIONs before the first OPTGROUP
+          const children = Array.from(vs.children || []);
+          const firstGroupIndex = children.findIndex(c => c.tagName === 'OPTGROUP');
+          const systemOptions = (firstGroupIndex === -1 ? children : children.slice(0, firstGroupIndex))
+            .filter(c => c.tagName === 'OPTION');
+          if (systemOptions.length) {
+            appendHeader('System Voices');
+            systemOptions.forEach(o => appendItem(o));
+            isFirstGroup = false;
+          }
+          // Then each OPTGROUP with a divider between sources
+          children.filter(c => c.tagName === 'OPTGROUP').forEach((grp) => {
+            if (!isFirstGroup) appendDivider();
+            appendHeader(grp.label || 'Voices');
+            const opts = Array.from(grp.children || []);
+            opts.forEach(o => appendItem(o));
+            isFirstGroup = false;
+          });
+        }
         document.body.appendChild(menuEl);
       }
 

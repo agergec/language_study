@@ -688,6 +688,11 @@
                   <div class="settings-value" id="openaiStatus"></div>
                   <div class="settings-chevron">›</div>
                 </div>
+                <div class="settings-item" id="rowGoogle" role="button" tabindex="0">
+                  <div class="settings-label">Google Cloud TTS</div>
+                  <div class="settings-value" id="googleStatus"></div>
+                  <div class="settings-chevron">›</div>
+                </div>
               </div>
             </div>
 
@@ -801,6 +806,38 @@
                 </div>
                 
                 <div class="settings-note">Adds OpenAI voices “Echo” and “Nova” to the selector using a low‑latency model.</div>
+              </div>
+            </section>
+
+            <!-- Subpanel: Google Cloud TTS -->
+            <section id="googlePanel" class="panel subpanel" aria-hidden="true" aria-labelledby="googlePanelTitle">
+              <div class="panel-header">
+                <button class="panel-back" data-back="googlePanel">‹ Back</button>
+                <h2 id="googlePanelTitle" style="margin:0">Google Cloud TTS</h2>
+                <div style="width:44px"></div>
+              </div>
+              <div class="panel-body">
+                <div class="settings-section-title">Integrations → Google Cloud TTS</div>
+                <div class="settings-card">
+                  <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:8px;">
+                    <div class="label-row" style="display:flex; align-items:center; justify-content:space-between;">
+                      <div class="settings-label" style="font-weight:700;">API Key</div>
+                    </div>
+                    <input id="googleKeyInput" type="password" placeholder="AIza..." style="flex:1; min-width:220px; padding:.5rem;"/>
+                    <div class="key-mask-wrap">
+                      <div id="googleKeyMasked" class="settings-note">No key set</div>
+                      <button id="googleDeleteBtn" class="trash-btn" type="button" title="Remove key" aria-label="Remove Google key">🗑️</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-card" style="margin-top:12px;">
+                  <div class="settings-item" style="justify-content:center; gap: 12px;">
+                    <button class="panel-link" id="googleLoadFileBtn" type="button">Choose Key File…</button>
+                    <input type="file" id="googleKeyFile" accept=".key" style="display:none;"/>
+                  </div>
+                </div>
+
+                <div class="settings-note">Adds Google voices “fr‑FR‑Neural2‑F/G” using header‑based API key (no query string). Note: client‑side keys are visible to users.</div>
               </div>
             </section>
 
@@ -1146,6 +1183,7 @@
     const OPENAI_TTS_MODEL = 'gpt-4o-mini-tts';
     let openaiAudio = null;
     let elevenKey = null; // ElevenLabs API key (local)
+    let googleKey = null; // Google Cloud TTS API key (local)
 
     // --- ENV / BROWSER DETECTION ---
     const UA = navigator.userAgent || '';
@@ -1320,6 +1358,16 @@
         const nova = document.createElement('option'); nova.value = 'openai:nova'; nova.textContent = 'Nova (OpenAI)';
         group.appendChild(echo); group.appendChild(nova);
         vs.appendChild(group);
+      }
+
+      // Append Google Cloud TTS voices when API key is set
+      if (googleKey) {
+        const groupG = document.createElement('optgroup');
+        groupG.label = 'Google Cloud TTS (fr-FR)';
+        const gF = document.createElement('option'); gF.value = 'google:fr-FR-Neural2-F'; gF.textContent = 'fr-FR-Neural2-F (Google)';
+        const gG = document.createElement('option'); gG.value = 'google:fr-FR-Neural2-G'; gG.textContent = 'fr-FR-Neural2-G (Google)';
+        groupG.appendChild(gF); groupG.appendChild(gG);
+        vs.appendChild(groupG);
       }
 
       // Add ElevenLabs voices (fr-FR, non-streaming) when key is present
@@ -1588,6 +1636,10 @@
         const voice = (currentVoice.split(':')[1] || 'echo');
         return speakWithOpenAITTS(w, voice);
       }
+      if (googleKey && typeof currentVoice === 'string' && currentVoice.startsWith('google:')) {
+        const voiceName = currentVoice.split(':')[1] || 'fr-FR-Neural2-F';
+        return speakWithGoogleTTS(w, voiceName);
+      }
       const u = new SpeechSynthesisUtterance(w);
       let selectedVoice = null;
       if (currentVoice && currentVoice !== 'system') {
@@ -1649,6 +1701,47 @@
         return new Promise(resolve => { openaiAudio.onended = resolve; });
       } catch (e) {
         showToast('OpenAI TTS error (possibly CORS). Falling back.');
+        const u = new SpeechSynthesisUtterance(text); synth.speak(u); return new Promise(r=>u.onend=r);
+      }
+    }
+
+    async function speakWithGoogleTTS(text, voiceName) {
+      try {
+        // Play from short-term cache if available
+        const cached = getAudioCache('google', voiceName, text);
+        if (cached) {
+          const a = new Audio(cached);
+          await a.play();
+          return new Promise(resolve => { a.onended = resolve; });
+        }
+        const resp = await fetch('https://texttospeech.googleapis.com/v1/text:synthesize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': googleKey
+          },
+          body: JSON.stringify({
+            input: { text },
+            voice: { languageCode: 'fr-FR', name: voiceName },
+            audioConfig: { audioEncoding: 'MP3', speakingRate: 0.9 }
+          })
+        });
+        if (!resp.ok) throw new Error('Google TTS request failed');
+        const data = await resp.json();
+        const b64 = data && data.audioContent;
+        if (!b64) throw new Error('No audioContent');
+        const byteChars = atob(b64);
+        const byteNums = new Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
+        const byteArray = new Uint8Array(byteNums);
+        const blob = new Blob([byteArray], { type: 'audio/mpeg' });
+        blobToDataURL(blob).then((dataUrl)=>{ if (dataUrl) setAudioCache('google', voiceName, text, dataUrl, blob.type); });
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        await audio.play();
+        return new Promise(resolve => { audio.onended = resolve; });
+      } catch (e) {
+        showToast('Google TTS error (maybe CORS). Falling back.');
         const u = new SpeechSynthesisUtterance(text); synth.speak(u); return new Promise(r=>u.onend=r);
       }
     }
@@ -1866,7 +1959,7 @@
       if (!currentWord) return; 
       const isArticles = (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef');
       const text = (isArticles && currentBaseWord) ? currentBaseWord : currentWord;
-      // Use cached audio for OpenAI/Eleven replays if available
+      // Use cached audio for OpenAI/Eleven/Google replays if available
       if (typeof currentVoice === 'string') {
         if (currentVoice.startsWith('openai:')) {
           const v = currentVoice.split(':')[1] || 'echo';
@@ -1875,6 +1968,10 @@
         } else if (currentVoice.startsWith('eleven:')) {
           const v = currentVoice.split(':')[1] || '';
           if (v) { const cached = getAudioCache('eleven', v, text); if (cached) { const a = new Audio(cached); await a.play(); return; } }
+        } else if (currentVoice.startsWith('google:')) {
+          const v = currentVoice.split(':')[1] || 'fr-FR-Neural2-F';
+          const cached = getAudioCache('google', v, text);
+          if (cached) { const a = new Audio(cached); await a.play(); return; }
         }
       }
       await speakWord(text);
@@ -2657,6 +2754,7 @@
     const rowLanguage = document.getElementById('rowLanguage'); if(rowLanguage){ const fn=()=>{ openSubpanel('langPanel'); updateLangChecks(); }; rowLanguage.addEventListener('click', fn); rowLanguage.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
     const rowEleven = document.getElementById('rowEleven'); if(rowEleven){ const fn=()=>openSubpanel('elevenPanel'); rowEleven.addEventListener('click', fn); rowEleven.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
     const rowOpenAI = document.getElementById('rowOpenAI'); if(rowOpenAI){ const fn=()=>openSubpanel('openaiPanel'); rowOpenAI.addEventListener('click', fn); rowOpenAI.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
+    const rowGoogle = document.getElementById('rowGoogle'); if(rowGoogle){ const fn=()=>openSubpanel('googlePanel'); rowGoogle.addEventListener('click', fn); rowGoogle.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
     const rowFiles = document.getElementById('rowFiles'); if(rowFiles){ const fn=()=>{ openSubpanel('filesPanel'); generateWordListsUI(); }; rowFiles.addEventListener('click', fn); rowFiles.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
     // Back buttons
     document.querySelectorAll('.panel-back').forEach(btn=>{ btn.addEventListener('click',()=>{ const id=btn.getAttribute('data-back'); if(id) closeSubpanel(id); }); });
@@ -2966,6 +3064,7 @@
     // ElevenLabs API key handlers
     function isValidElevenKey(k) { return typeof k === 'string' && /^sk_[A-Za-z0-9]{8,}/.test(k); }
     function isValidOpenAIKey(k) { return typeof k === 'string' && /^sk-proj-[A-Za-z0-9_-]{8,}/.test(k); }
+    function isValidGoogleKey(k) { return typeof k === 'string' && /^AIza[0-9A-Za-z_\-]{8,}/.test(k); }
     function setElevenKey(k) {
       const v = (k || '').trim();
       if (v && !isValidElevenKey(v)) { return; }
@@ -2990,8 +3089,10 @@
     function updateIntegrationIndicators(){
       const elevenOk = typeof elevenKey === 'string' && elevenKey.startsWith('sk_');
       const openaiOk = typeof openaiKey === 'string' && openaiKey.startsWith('sk-proj-');
+      const googleOk = typeof googleKey === 'string' && googleKey.startsWith('AIza');
       const es = document.getElementById('elevenStatus'); if (es) es.textContent = elevenOk ? 'Configured' : '';
       const os = document.getElementById('openaiStatus'); if (os) os.textContent = openaiOk ? 'Configured' : '';
+      const gs = document.getElementById('googleStatus'); if (gs) gs.textContent = googleOk ? 'Configured' : '';
       // Disable/enable fields and file pickers based on state
       const eInput = document.getElementById('elevenKeyInput');
       const eLoad = document.getElementById('elevenLoadFileBtn');
@@ -3009,6 +3110,14 @@
         oInput.placeholder = openaiOk ? 'OpenAI key is loaded. Remove the previous key to load a new one.' : 'Paste a valid API Key';
       }
       if (oLoad) oLoad.classList.toggle('link-disabled', !!openaiOk);
+      const gInput = document.getElementById('googleKeyInput');
+      const gLoad = document.getElementById('googleLoadFileBtn');
+      if (gInput) {
+        gInput.disabled = !!googleOk;
+        gInput.value = '';
+        gInput.placeholder = googleOk ? 'Google key is loaded. Remove it to change.' : 'Paste a valid API Key';
+      }
+      if (gLoad) gLoad.classList.toggle('link-disabled', !!googleOk);
     }
     // Auto-save Eleven key on input (non-empty only)
     (function(){
@@ -3058,6 +3167,32 @@
           const f = keyFile.files && keyFile.files[0]; if (!f) return; if (!/\.key$/i.test(f.name)) { keyFile.value=''; return; } const r = new FileReader();
           r.onload = () => { const v=String(r.result||'').trim(); if (!v) { keyFile.value=''; return; }
             if (isValidOpenAIKey(v)) { setOpenAIKey(v); }
+            keyFile.value=''; updateIntegrationIndicators(); };
+          r.readAsText(f);
+        });
+      }
+    })();
+
+    // Google Cloud TTS API key handlers
+    function setGoogleKey(k){ const v=(k||'').trim(); if(v && !isValidGoogleKey(v)) { return; } googleKey = v; try{ if(googleKey) localStorage.setItem('google_tts_api_key', googleKey); else localStorage.removeItem('google_tts_api_key'); }catch(_){}; const m=document.getElementById('googleKeyMasked'); if(m) m.textContent = googleKey? ('Key: '+maskKey(googleKey)) : 'No key set'; populateVoiceList(); updateIntegrationIndicators(); clearAudioCache(); }
+    try{ const saved=localStorage.getItem('google_tts_api_key'); if(saved){ googleKey=saved; const m=document.getElementById('googleKeyMasked'); if(m) m.textContent='Key: '+maskKey(googleKey);} }catch(_){}
+    (function(){
+      const inp = document.getElementById('googleKeyInput');
+      if (inp) {
+        const saveIfValue = (hard=false) => { const v = (inp.value||'').trim(); if (!v) return; if (isValidGoogleKey(v)) { setGoogleKey(v); } };
+        inp.addEventListener('input', () => saveIfValue(false));
+        inp.addEventListener('change', () => saveIfValue(true));
+        inp.addEventListener('paste', () => setTimeout(()=>saveIfValue(true), 0));
+      }
+      const delBtn = document.getElementById('googleDeleteBtn');
+      if (delBtn) delBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); setGoogleKey(''); updateIntegrationIndicators(); });
+      const loadBtn = document.getElementById('googleLoadFileBtn'); const keyFile = document.getElementById('googleKeyFile');
+      if (loadBtn && keyFile) {
+        loadBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); keyFile.click(); });
+        keyFile.addEventListener('change', () => {
+          const f = keyFile.files && keyFile.files[0]; if (!f) return; if (!/\.key$/i.test(f.name)) { keyFile.value=''; return; } const r = new FileReader();
+          r.onload = () => { const v=String(r.result||'').trim(); if (!v) { keyFile.value=''; return; }
+            if (isValidGoogleKey(v)) { setGoogleKey(v); }
             keyFile.value=''; updateIntegrationIndicators(); };
           r.readAsText(f);
         });

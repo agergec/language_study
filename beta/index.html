@@ -444,6 +444,11 @@
                 <button id="welcomeAddBtn" class="panel-link">Add Word List…</button>
               </div>
             </div>
+            <div class="settings-card" style="margin-top:12px;">
+              <div class="settings-item" style="justify-content:center;">
+                <a id="chatgptLinkWelcome" class="panel-link" href="#">Open in ChatGPT</a>
+              </div>
+            </div>
             <div class="settings-note">Tip: You can also drag & drop files anywhere on the page.</div>
           </div>
           <div id="iosFilePickerRow" style="display:none; margin-top: 0.75rem;">
@@ -883,6 +888,11 @@
                     <input type="file" id="menuFileInput" accept=".txt" multiple style="display:none;" />
                   </div>
                 </div>
+                <div class="settings-card" style="margin-top:12px;">
+                  <div class="settings-item" style="justify-content:center;">
+                    <a id="chatgptLinkFiles" class="panel-link" href="#">Open in ChatGPT</a>
+                  </div>
+                </div>
               <div class="settings-note">Tip: You can also drag & drop files anywhere on the page.</div>
               </div>
             </section>
@@ -1211,6 +1221,21 @@
     const isFirefox = /Firefox\/\d+/.test(UA);
     const isChromium = !isIOS && /(Chrome|Chromium|Edg|Brave)\//.test(UA) && !/OPR\//.test(UA);
     const isSafari = !isChromium && (/Safari\//.test(UA) || isIOS);
+
+    // Set ChatGPT deep link (iOS) vs web link
+    (function(){
+      const deep = 'chatgpt://chatgpt.com/g/g-68c40be064c08191b28e256531f837a3-fransizca-kelime-calismasi';
+      const web = 'https://chatgpt.com/g/g-68c40be064c08191b28e256531f837a3-fransizca-kelime-calismasi';
+      const setLink = (id) => {
+        const a = document.getElementById(id);
+        if (!a) return;
+        a.href = isIOS ? deep : web;
+        if (!isIOS) a.target = '_blank';
+        a.rel = 'noopener';
+      };
+      setLink('chatgptLinkWelcome');
+      setLink('chatgptLinkFiles');
+    })();
 
     // --- DOM ELEMENTS ---
     const progressCircle = document.querySelector('.progress-ring__circle');

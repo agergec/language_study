@@ -40,6 +40,8 @@
       --font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       --border-radius: 12px;
       --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      /* Safe area defaults */
+      --safe-top: 0px; --safe-right: 0px; --safe-bottom: 0px; --safe-left: 0px;
     }
 
     /* --- Base Layout (Viewport App) --- */
@@ -235,6 +237,8 @@
     }
     /* Standalone (PWA) safe-area padding */
     html.is-standalone .container { padding-top: calc(0.75rem + env(safe-area-inset-top)); padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
+    /* Standalone safe-area CSS variables */
+    html.is-standalone { --safe-top: env(safe-area-inset-top); --safe-right: env(safe-area-inset-right); --safe-bottom: env(safe-area-inset-bottom); --safe-left: env(safe-area-inset-left); }
     /* App version tags */
     .app-version-corner { display: none; }
 
@@ -256,6 +260,11 @@
     @media (prefers-reduced-motion: reduce) { #menuModal .panel { transition-duration: 1ms; } }
     #menuModal .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); }
     #menuModal .panel-body { padding: 1rem; height: calc(100% - 56px); overflow: auto; background: #f2f2f7; }
+    /* Respect iOS PWA notch for main header/body */
+    html.is-standalone #menuModal .panel-header { padding-top: calc(0.75rem + var(--safe-top)); }
+    html.is-standalone #menuModal .panel-body { height: calc(100% - 56px - var(--safe-top)); }
+    /* Subpanel header already has iOS padding; also adjust body height */
+    html.is-standalone #menuModal .subpanel .panel-body { height: calc(100% - 56px - var(--safe-top)); }
     #menuModal .modal-header { display:none; }
     #menuModal .modal-section { border: none; padding-bottom: 0; margin-bottom: 0.75rem; }
     #menuModal .menu-list button { display: block; width: 100%; text-align: left; padding: 0.5rem 0; background: none; border: none; font-size: 1rem; font-weight: 700; color: var(--text-color); }
@@ -284,6 +293,8 @@
       line-height: 1;
       touch-action: manipulation;
     }
+    /* Keep floating close aligned within safe areas */
+    html.is-standalone #menuCloseOverlay { margin-top: var(--safe-top); margin-left: var(--safe-left); }
     /* Prefer floating close on mobile */
     @media (max-width: 1023px) { #menuModal .modal-header .close-btn { display: none; } }
 
@@ -2790,12 +2801,19 @@
         updateAllIndicators();
         const closeOverlay = document.getElementById('menuCloseOverlay');
         if (closeOverlay) {
-          const rect = menuBtn.getBoundingClientRect();
-          closeOverlay.style.top = `${rect.top}px`;
-          closeOverlay.style.left = `${rect.left}px`;
-          closeOverlay.style.width = `${rect.width}px`;
-          closeOverlay.style.height = `${rect.height}px`;
+          const positionOverlay = () => {
+            const r = menuBtn.getBoundingClientRect();
+            closeOverlay.style.top = `calc(${r.top}px + var(--safe-top))`;
+            closeOverlay.style.left = `calc(${r.left}px + var(--safe-left))`;
+            closeOverlay.style.width = `${r.width}px`;
+            closeOverlay.style.height = `${r.height}px`;
+          };
+          positionOverlay();
           closeOverlay.style.display = 'block';
+          // Track to update on viewport changes
+          window.addEventListener('resize', positionOverlay);
+          window.addEventListener('scroll', positionOverlay, true);
+          closeOverlay._posHandler = positionOverlay;
         }
         openMenuPanel({ target: menuBtn });
         const mc = menuModal.querySelector('.modal-content'); if (mc) mc.focus(); 
@@ -2806,6 +2824,7 @@
       menuModal.classList.remove('visible'); 
       menuBtn.setAttribute('aria-expanded','false'); 
       menuCloseOverlay.style.display = 'none';
+      if (menuCloseOverlay._posHandler) { window.removeEventListener('resize', menuCloseOverlay._posHandler); window.removeEventListener('scroll', menuCloseOverlay._posHandler, true); menuCloseOverlay._posHandler = null; }
       const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
       bodyScrollLock(false);
     });
@@ -3045,7 +3064,7 @@
       if (e.key === 'Escape') { 
         allModals.forEach(modal => modal.classList.remove('visible'));
         document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
-        const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'none';
+        const mco = document.getElementById('menuCloseOverlay'); if (mco) { mco.style.display = 'none'; if (mco._posHandler) { window.removeEventListener('resize', mco._posHandler); window.removeEventListener('scroll', mco._posHandler, true); mco._posHandler = null; } }
         const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
         bodyScrollLock(false);
       }
@@ -3064,7 +3083,7 @@
             modal.classList.remove('visible'); 
             if (modal.id === 'menuModal') { 
               document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
-              const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'none';
+              const mco = document.getElementById('menuCloseOverlay'); if (mco) { mco.style.display = 'none'; if (mco._posHandler) { window.removeEventListener('resize', mco._posHandler); window.removeEventListener('scroll', mco._posHandler, true); mco._posHandler = null; } }
               // Ensure panel is reset and scrolling unlocked
               const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
               bodyScrollLock(false);
@@ -3076,7 +3095,7 @@
           modal.classList.remove('visible'); 
           if (modal.id === 'menuModal') { 
             document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
-            const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'none';
+            const mco = document.getElementById('menuCloseOverlay'); if (mco) { mco.style.display = 'none'; if (mco._posHandler) { window.removeEventListener('resize', mco._posHandler); window.removeEventListener('scroll', mco._posHandler, true); mco._posHandler = null; } }
             const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
             bodyScrollLock(false);
           }

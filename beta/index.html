@@ -50,6 +50,7 @@
       font-family: var(--font-family);
       background-color: var(--light-gray);
       color: var(--text-color);
+      -webkit-text-size-adjust: 100%;
     }
 
     .container {
@@ -83,6 +84,7 @@
     .header-actions { display: flex; align-items: center; gap: 1rem; flex-shrink: 0; }
     .icon-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-color); transition: transform 0.2s; }
     .icon-btn:hover { transform: scale(1.1); }
+    button, .btn, .icon-btn { touch-action: manipulation; }
     .language-flags { display: flex; gap: 0.5rem; }
     .language-flag { font-size: 1.5rem; cursor: pointer; opacity: 0.5; transition: all 0.2s ease; background: none; border: none; padding: 0; line-height: 1; }
     .language-flag.active { opacity: 1; transform: scale(1.15); }
@@ -169,9 +171,9 @@
     .mode-quick-item.disabled { opacity: 0.45; pointer-events: none; }
     .mode-quick-check { margin-left: auto; opacity: 0.7; }
     /* Voice quick menu: strictly compact with dividers */
-    .voice-quick-menu .mode-quick-item { padding: 6px 8px; line-height: 1.1; font-size: 0.95rem; border-radius: 6px; }
-    .voice-quick-menu .group-header { font-weight: 800; font-size: 0.8rem; letter-spacing: .02em; color: #8e8e93; padding: 4px 2px; margin: 4px 2px; text-transform: uppercase; }
-    .voice-quick-menu .divider { height: 1px; background: var(--border-color); margin: 6px 0; opacity: .8; }
+    .voice-quick-menu .mode-quick-item, .mode-quick-menu.compact .mode-quick-item { padding: 6px 8px; line-height: 1.1; font-size: 0.95rem; border-radius: 6px; }
+    .voice-quick-menu .group-header, .mode-quick-menu.compact .group-header { font-weight: 800; font-size: 0.8rem; letter-spacing: .02em; color: #8e8e93; padding: 4px 2px; margin: 4px 2px; text-transform: uppercase; }
+    .voice-quick-menu .divider, .mode-quick-menu.compact .divider { height: 1px; background: var(--border-color); margin: 6px 0; opacity: .8; }
     /* Mini confirm near status items */
     .mini-confirm { position: fixed; z-index: 1900; background: #fff; color: var(--text-color); border: 1px solid var(--border-color); box-shadow: 0 8px 24px rgba(0,0,0,0.12); border-radius: 12px; padding: 8px 10px; display: flex; align-items: center; gap: 10px; max-width: 80vw; }
     .mini-confirm .mini-actions { margin-left: auto; display: flex; gap: 8px; }
@@ -2109,7 +2111,7 @@
         // Close any other quick menus
         document.querySelectorAll('.mode-quick-menu').forEach(el => el.remove());
         menuEl = document.createElement('div');
-        menuEl.className = 'mode-quick-menu';
+        menuEl.className = 'mode-quick-menu compact';
         menuEl.setAttribute('role','listbox');
 
         const sel = document.getElementById('studyModeSelect');
@@ -2337,7 +2339,7 @@
         if (menuEl) menuEl.remove();
         document.querySelectorAll('.mode-quick-menu').forEach(el => el.remove());
         menuEl = document.createElement('div');
-        menuEl.className = 'mode-quick-menu';
+        menuEl.className = 'mode-quick-menu compact';
         menuEl.setAttribute('role','listbox');
         const filenames = Object.keys(wordLists || {});
         if (filenames.length === 0) {
@@ -2361,17 +2363,21 @@
         addItem.textContent = 'Add Word List…';
         addItem.addEventListener('click', (e) => {
           e.preventDefault(); e.stopPropagation();
-          // Prefer global hidden input; fallback to menu input; else create temporary
-          let picker = null;
-          try { picker = (typeof fileInput !== 'undefined') ? fileInput : null; } catch (_) { picker = null; }
-          if (!picker) picker = document.getElementById('menuFileInput');
-          if (picker && typeof picker.click === 'function') { picker.click(); }
-          else {
-            const tmp = document.createElement('input'); tmp.type='file'; tmp.accept='.txt'; tmp.multiple=true;
-            tmp.style.position='fixed'; tmp.style.left='-9999px'; document.body.appendChild(tmp);
-            tmp.addEventListener('change', () => { const files = Array.from(tmp.files||[]).filter(f=>f.name.endsWith('.txt')); if (files.length>0) handleFileLoad(files); document.body.removeChild(tmp); });
-            tmp.click();
-          }
+          // Take user to Menu → Active Word Lists
+          try {
+            const f = () => { openSubpanel('filesPanel'); generateWordListsUI(); };
+            const menuModalEl = document.getElementById('menuModal');
+            if (menuModalEl && !menuModalEl.classList.contains('visible')) {
+              // Open main menu then navigate
+              settingsModal.classList.remove('visible');
+              menuModalEl.classList.add('visible');
+              const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','false');
+              f();
+              const mc = menuModalEl.querySelector('.modal-content'); if (mc) mc.focus();
+            } else {
+              f();
+            }
+          } catch (_) {}
           closeMenu();
         });
         menuEl.appendChild(addItem);
@@ -3234,7 +3240,7 @@
 
     // Google Cloud TTS API key handlers
     function setGoogleKey(k){ const v=(k||'').trim(); if(v && !isValidGoogleKey(v)) { return; } googleKey = v; try{ if(googleKey) localStorage.setItem('google_tts_api_key', googleKey); else localStorage.removeItem('google_tts_api_key'); }catch(_){}; const m=document.getElementById('googleKeyMasked'); if(m) m.textContent = googleKey? ('Key: '+maskKey(googleKey)) : 'No key set'; populateVoiceList(); updateIntegrationIndicators(); clearAudioCache(); }
-    try{ const saved=localStorage.getItem('google_tts_api_key'); if(saved){ googleKey=saved; const m=document.getElementById('googleKeyMasked'); if(m) m.textContent='Key: '+maskKey(googleKey);} }catch(_){}
+    try{ const saved=localStorage.getItem('google_tts_api_key'); if(saved){ googleKey=saved; const m=document.getElementById('googleKeyMasked'); if(m) m.textContent='Key: '+maskKey(googleKey); populateVoiceList(); updateIntegrationIndicators(); } }catch(_){}
     (function(){
       const inp = document.getElementById('googleKeyInput');
       if (inp) {
@@ -3258,6 +3264,18 @@
       }
     })();
     const studyModeSelect = document.getElementById('studyModeSelect');
+    // Prevent iOS double-tap zoom on interactive areas
+    (function preventIOSDoubleTapZoom(){
+      let lastTouchEnd = 0;
+      document.addEventListener('touchend', function(e){
+        const now = Date.now();
+        if (now - lastTouchEnd <= 350) {
+          // Avoid zooming on double-tap
+          e.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, { passive: false });
+    })();
     if (studyModeSelect) studyModeSelect.addEventListener('change', () => {
       updateStudyModeIndicator();
       const isArticles = (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef');

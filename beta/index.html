@@ -2386,9 +2386,11 @@
               settingsModal.classList.remove('visible');
               menuModalEl.classList.add('visible');
               const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','false');
+              const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'block';
               f();
               const mc = menuModalEl.querySelector('.modal-content'); if (mc) mc.focus();
             } else {
+              const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'block';
               f();
             }
           } catch (_) {}
@@ -2765,6 +2767,10 @@
       document.getElementById('menuBtn')?.setAttribute('aria-expanded','true');
       if (isSafari) primeVoices();
       populateVoiceList();
+      // Ensure floating close (X) is visible and start at main menu
+      { const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'block'; }
+      { const mp = document.getElementById('menuPanel'); if (mp) { mp.setAttribute('aria-hidden','false'); mp.classList.remove('sub-open'); } }
+      document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
       const mc = menuModal.querySelector('.modal-content'); if (mc) mc.focus();
     });
     // Language flags
@@ -2787,6 +2793,7 @@
         bodyScrollLock(true);
         openMenuPanel();
         openSubpanel('helpPanel');
+        const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'block';
         const mc = menuModalEl.querySelector('.modal-content'); if (mc) mc.focus();
       }
     });
@@ -2802,10 +2809,10 @@
         // Sync grouped UI controls on open
         const st = document.getElementById('shuffleToggle'); if (st) st.checked = shuffleEnabled;
         updateAllIndicators();
-        const closeOverlay = document.getElementById('menuCloseOverlay');
-        if (closeOverlay) {
-          closeOverlay.style.display = 'block';
-        }
+        // Force main menu (hide any lingering subpanels)
+        document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
+        const mp = document.getElementById('menuPanel'); if (mp) mp.classList.remove('sub-open');
+        const closeOverlay = document.getElementById('menuCloseOverlay'); if (closeOverlay) closeOverlay.style.display = 'block';
         openMenuPanel({ target: menuBtn });
         const mc = menuModal.querySelector('.modal-content'); if (mc) mc.focus(); 
       }
@@ -2816,7 +2823,9 @@
       menuBtn.setAttribute('aria-expanded','false'); 
       menuCloseOverlay.style.display = 'none';
       if (menuCloseOverlay._posHandler) { window.removeEventListener('resize', menuCloseOverlay._posHandler); window.removeEventListener('scroll', menuCloseOverlay._posHandler, true); menuCloseOverlay._posHandler = null; }
-      const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
+      // Reset to main panel for next open
+      document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
+      const mp = document.getElementById('menuPanel'); if (mp) { mp.classList.remove('sub-open'); mp.setAttribute('aria-hidden','true'); }
       bodyScrollLock(false);
     });
     const menuLangEn = document.getElementById('menuLangEn');
@@ -3056,7 +3065,9 @@
         allModals.forEach(modal => modal.classList.remove('visible'));
         document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
         const mco = document.getElementById('menuCloseOverlay'); if (mco) { mco.style.display = 'none'; if (mco._posHandler) { window.removeEventListener('resize', mco._posHandler); window.removeEventListener('scroll', mco._posHandler, true); mco._posHandler = null; } }
-        const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
+        // Reset to main panel so next open starts from main menu
+        document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
+        const mp = document.getElementById('menuPanel'); if (mp) { mp.classList.remove('sub-open'); mp.setAttribute('aria-hidden','true'); }
         bodyScrollLock(false);
       }
       if (e.target.tagName.toLowerCase() === 'input' || document.querySelector('.modal.visible')) return;
@@ -3076,7 +3087,8 @@
               document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
               const mco = document.getElementById('menuCloseOverlay'); if (mco) { mco.style.display = 'none'; if (mco._posHandler) { window.removeEventListener('resize', mco._posHandler); window.removeEventListener('scroll', mco._posHandler, true); mco._posHandler = null; } }
               // Ensure panel is reset and scrolling unlocked
-              const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
+              document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
+              const mp = document.getElementById('menuPanel'); if (mp) { mp.classList.remove('sub-open'); mp.setAttribute('aria-hidden','true'); }
               bodyScrollLock(false);
             }
           }
@@ -3087,7 +3099,8 @@
           if (modal.id === 'menuModal') { 
             document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
             const mco = document.getElementById('menuCloseOverlay'); if (mco) { mco.style.display = 'none'; if (mco._posHandler) { window.removeEventListener('resize', mco._posHandler); window.removeEventListener('scroll', mco._posHandler, true); mco._posHandler = null; } }
-            const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
+            document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
+            const mp = document.getElementById('menuPanel'); if (mp) { mp.classList.remove('sub-open'); mp.setAttribute('aria-hidden','true'); }
             bodyScrollLock(false);
           }
         });

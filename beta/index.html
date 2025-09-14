@@ -309,7 +309,7 @@
     .settings-card { background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 0 rgba(0,0,0,0.04); }
     .settings-item { position: relative; display: flex; align-items: center; gap: 12px; padding: 9px 16px; border-bottom: 1px solid #ececec; font-size: 1rem; }
     .settings-item:last-child { border-bottom: none; }
-    .settings-label { flex: 1; color: #000; }
+    .settings-label { flex: 1; color: #000; min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
     .settings-value { color: #8e8e93; margin-left: auto; }
     .settings-chevron { color: #c7c7cc; margin-left: 8px; font-weight: 700; font-size: 1.35rem; }
     .settings-danger { color: #ff3b30; font-weight: 700; }
@@ -343,7 +343,7 @@
     /* Hide subpanel center title (keep breadcrumbs in body) */
     #menuModal .subpanel .panel-header h2 { display: none; }
     /* Subtle text and footer notes */
-    .subtle { color: #8e8e93; font-size: 0.9em; }
+    .subtle { color: #8e8e93; font-size: 0.9em; flex: 0 0 auto; white-space: nowrap; }
     .settings-note { color: #8e8e93; font-size: 0.85rem; padding: 0.75rem 0; }
     .btn-destructive { background: none; border: 0; color: #ff3b30; font-weight: 700; padding: 12px 8px; text-align: center; width: 100%; }
     /* Action sheet */

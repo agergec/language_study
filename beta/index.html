@@ -286,15 +286,18 @@
       position: fixed;
       z-index: 1500; /* above drawer */
       display: none;
+      top: calc(10px + var(--safe-top));
+      right: calc(10px + var(--safe-right));
+      width: 44px; height: 44px;
       background: transparent;
       border: none;
       font-size: 1.75rem;
       color: var(--text-color);
-      line-height: 1;
+      line-height: 44px;
+      text-align: center;
+      border-radius: 8px;
       touch-action: manipulation;
     }
-    /* Keep floating close aligned within safe areas */
-    html.is-standalone #menuCloseOverlay { margin-top: var(--safe-top); margin-left: var(--safe-left); }
     /* Prefer floating close on mobile */
     @media (max-width: 1023px) { #menuModal .modal-header .close-btn { display: none; } }
 
@@ -2801,19 +2804,7 @@
         updateAllIndicators();
         const closeOverlay = document.getElementById('menuCloseOverlay');
         if (closeOverlay) {
-          const positionOverlay = () => {
-            const r = menuBtn.getBoundingClientRect();
-            closeOverlay.style.top = `calc(${r.top}px + var(--safe-top))`;
-            closeOverlay.style.left = `calc(${r.left}px + var(--safe-left))`;
-            closeOverlay.style.width = `${r.width}px`;
-            closeOverlay.style.height = `${r.height}px`;
-          };
-          positionOverlay();
           closeOverlay.style.display = 'block';
-          // Track to update on viewport changes
-          window.addEventListener('resize', positionOverlay);
-          window.addEventListener('scroll', positionOverlay, true);
-          closeOverlay._posHandler = positionOverlay;
         }
         openMenuPanel({ target: menuBtn });
         const mc = menuModal.querySelector('.modal-content'); if (mc) mc.focus(); 

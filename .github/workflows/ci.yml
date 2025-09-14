@@ -5,6 +5,7 @@ on:
     branches: [ main ]
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   link-check:
@@ -16,9 +17,12 @@ jobs:
       - name: Check links
         uses: lycheeverse/lychee-action@v2
         with:
-          # Check HTML files and README; tolerate common external 403/429 responses
+          # Accept 2xx by default, plus 403/429 for sites that rate-limit/bounce CI
+          # Exclude data: URIs to avoid unsupported scheme noise
           args: >-
-            --verbose --no-progress --accept 403,429
+            --verbose --no-progress
+            --accept 200..=299,403,429
+            --exclude "data:*"
             --timeout 20 --max-concurrency 5
             './**/*.html' './README.md'
         env:

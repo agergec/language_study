@@ -40,8 +40,6 @@
       --font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       --border-radius: 12px;
       --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      /* Safe area defaults */
-      --safe-top: 0px; --safe-right: 0px; --safe-bottom: 0px; --safe-left: 0px;
     }
 
     /* --- Base Layout (Viewport App) --- */
@@ -52,7 +50,6 @@
       font-family: var(--font-family);
       background-color: var(--light-gray);
       color: var(--text-color);
-      -webkit-text-size-adjust: 100%;
     }
 
     .container {
@@ -86,7 +83,6 @@
     .header-actions { display: flex; align-items: center; gap: 1rem; flex-shrink: 0; }
     .icon-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-color); transition: transform 0.2s; }
     .icon-btn:hover { transform: scale(1.1); }
-    button, .btn, .icon-btn { touch-action: manipulation; }
     .language-flags { display: flex; gap: 0.5rem; }
     .language-flag { font-size: 1.5rem; cursor: pointer; opacity: 0.5; transition: all 0.2s ease; background: none; border: none; padding: 0; line-height: 1; }
     .language-flag.active { opacity: 1; transform: scale(1.15); }
@@ -172,10 +168,6 @@
     .mode-quick-item:hover { background: var(--light-gray); }
     .mode-quick-item.disabled { opacity: 0.45; pointer-events: none; }
     .mode-quick-check { margin-left: auto; opacity: 0.7; }
-    /* Voice quick menu: strictly compact with dividers */
-    .voice-quick-menu .mode-quick-item, .mode-quick-menu.compact .mode-quick-item { padding: 6px 8px; line-height: 1.1; font-size: 0.95rem; border-radius: 6px; }
-    .voice-quick-menu .group-header, .mode-quick-menu.compact .group-header { font-weight: 800; font-size: 0.8rem; letter-spacing: .02em; color: #8e8e93; padding: 4px 2px; margin: 4px 2px; text-transform: uppercase; }
-    .voice-quick-menu .divider, .mode-quick-menu.compact .divider { height: 1px; background: var(--border-color); margin: 6px 0; opacity: .8; }
     /* Mini confirm near status items */
     .mini-confirm { position: fixed; z-index: 1900; background: #fff; color: var(--text-color); border: 1px solid var(--border-color); box-shadow: 0 8px 24px rgba(0,0,0,0.12); border-radius: 12px; padding: 8px 10px; display: flex; align-items: center; gap: 10px; max-width: 80vw; }
     .mini-confirm .mini-actions { margin-left: auto; display: flex; gap: 8px; }
@@ -237,8 +229,6 @@
     }
     /* Standalone (PWA) safe-area padding */
     html.is-standalone .container { padding-top: calc(0.75rem + env(safe-area-inset-top)); padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
-    /* Standalone safe-area CSS variables */
-    html.is-standalone { --safe-top: env(safe-area-inset-top); --safe-right: env(safe-area-inset-right); --safe-bottom: env(safe-area-inset-bottom); --safe-left: env(safe-area-inset-left); }
     /* App version tags */
     .app-version-corner { display: none; }
 
@@ -260,11 +250,6 @@
     @media (prefers-reduced-motion: reduce) { #menuModal .panel { transition-duration: 1ms; } }
     #menuModal .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); }
     #menuModal .panel-body { padding: 1rem; height: calc(100% - 56px); overflow: auto; background: #f2f2f7; }
-    /* Respect iOS PWA notch for main header/body */
-    html.is-standalone #menuModal .panel-header { padding-top: calc(0.75rem + var(--safe-top)); }
-    html.is-standalone #menuModal .panel-body { height: calc(100% - 56px - var(--safe-top)); }
-    /* Subpanel header already has iOS padding; also adjust body height */
-    html.is-standalone #menuModal .subpanel .panel-body { height: calc(100% - 56px - var(--safe-top)); }
     #menuModal .modal-header { display:none; }
     #menuModal .modal-section { border: none; padding-bottom: 0; margin-bottom: 0.75rem; }
     #menuModal .menu-list button { display: block; width: 100%; text-align: left; padding: 0.5rem 0; background: none; border: none; font-size: 1rem; font-weight: 700; color: var(--text-color); }
@@ -286,16 +271,11 @@
       position: fixed;
       z-index: 1500; /* above drawer */
       display: none;
-      top: calc(10px + var(--safe-top));
-      right: calc(10px + var(--safe-right));
-      width: 44px; height: 44px;
       background: transparent;
       border: none;
       font-size: 1.75rem;
       color: var(--text-color);
-      line-height: 44px;
-      text-align: center;
-      border-radius: 8px;
+      line-height: 1;
       touch-action: manipulation;
     }
     /* Prefer floating close on mobile */
@@ -309,7 +289,7 @@
     .settings-card { background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 0 rgba(0,0,0,0.04); }
     .settings-item { position: relative; display: flex; align-items: center; gap: 12px; padding: 9px 16px; border-bottom: 1px solid #ececec; font-size: 1rem; }
     .settings-item:last-child { border-bottom: none; }
-    .settings-label { flex: 1; color: #000; min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+    .settings-label { flex: 1; color: #000; }
     .settings-value { color: #8e8e93; margin-left: auto; }
     .settings-chevron { color: #c7c7cc; margin-left: 8px; font-weight: 700; font-size: 1.35rem; }
     .settings-danger { color: #ff3b30; font-weight: 700; }
@@ -343,7 +323,7 @@
     /* Hide subpanel center title (keep breadcrumbs in body) */
     #menuModal .subpanel .panel-header h2 { display: none; }
     /* Subtle text and footer notes */
-    .subtle { color: #8e8e93; font-size: 0.9em; flex: 0 0 auto; white-space: nowrap; }
+    .subtle { color: #8e8e93; font-size: 0.9em; }
     .settings-note { color: #8e8e93; font-size: 0.85rem; padding: 0.75rem 0; }
     .btn-destructive { background: none; border: 0; color: #ff3b30; font-weight: 700; padding: 12px 8px; text-align: center; width: 100%; }
     /* Action sheet */
@@ -460,166 +440,47 @@
         <h2 data-i18n="settings_title">Settings</h2>
         <button class="icon-btn close-btn" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">&times;</button>
       </div>
-      <div class="panel-body" style="padding: 1rem; background:#f2f2f7;">
-        <div class="settings-section">
-          <div class="settings-section-title">QUICK ACCESS</div>
-          <div class="settings-card">
-            <div class="settings-item" id="goLanguage" role="button" tabindex="0">
-              <div class="settings-label">Language</div>
-              <div class="settings-chevron">›</div>
-            </div>
-            <div class="settings-item" id="goStudyMode" role="button" tabindex="0">
-              <div class="settings-label">Study Mode</div>
-              <div class="settings-value" id="settingsModalModeValue"></div>
-              <div class="settings-chevron">›</div>
-            </div>
-            <div class="settings-item" id="goVoice" role="button" tabindex="0">
-              <div class="settings-label">Voice</div>
-              <div class="settings-value" id="settingsModalVoiceValue"></div>
-              <div class="settings-chevron">›</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <div class="settings-section-title">INTEGRATIONS</div>
-          <div class="settings-card">
-            <div class="settings-item" id="goEleven" role="button" tabindex="0">
-              <div class="settings-label">ElevenLabs</div>
-              <div class="settings-value" id="settingsModalEleven"></div>
-              <div class="settings-chevron">›</div>
-            </div>
-            <div class="settings-item" id="goOpenAI" role="button" tabindex="0">
-              <div class="settings-label">OpenAI</div>
-              <div class="settings-value" id="settingsModalOpenAI"></div>
-              <div class="settings-chevron">›</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <div class="settings-section-title">DATA & SYSTEM</div>
-          <div class="settings-card">
-            <div class="settings-item" id="goFiles" role="button" tabindex="0">
-              <div class="settings-label">Active Word Lists</div>
-              <div class="settings-value" id="settingsActiveListsCountMirror">0</div>
-              <div class="settings-chevron">›</div>
-            </div>
-            <div class="settings-item" style="justify-content:center;">
-              <button class="btn btn-secondary" id="resetAppBtn" type="button">Reset App (Reload)</button>
-            </div>
-          </div>
-        </div>
+      <div class="modal-section">
+        <p style="margin:0; color:#666;">Controls have moved to the Menu (☰).</p>
+      </div>
+      <div class="modal-section">
+        <label style="display:block; font-weight:600; margin-bottom:0.5rem;">System</label>
+        <button class="btn btn-secondary" id="resetAppBtn" type="button">Reset App (Reload)</button>
+      </div>
+      <div id="wordListsSection" class="modal-section" style="display: none;">
+        <label data-i18n="label_active_word_lists">Active Word Lists</label>
+        <div id="wordListsOptions" class="word-lists-options"></div>
       </div>
     </div>
   </div>
 
   <div id="helpModal" class="modal">
     <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
-      <div class="modal-header"><h2 data-i18n="help_title">Help</h2><button class="icon-btn close-btn" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">&times;</button></div>
-      <div class="panel-body" style="padding: 1rem; background:#f2f2f7;">
-
-        <div class="settings-section">
-          <div class="settings-section-title">GETTING STARTED</div>
-          <div class="settings-card">
-            <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
-              <div><b>Load words</b>: Add one or more <code>.txt</code> files. Each line is a word or phrase.</div>
-              <div>Ways to add files: Welcome screen → “Add Word List…”, Menu → Data & System → Files → “Add Word List…”, or drag & drop anywhere.</div>
-              <div>After loading: the app builds your word pool and enables study controls.</div>
-            </div>
-          </div>
+        <div class="modal-header"><h2 data-i18n="help_title">Help</h2><button class="icon-btn close-btn" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">&times;</button></div>
+        <div class="modal-section">
+            <h4 data-i18n="help_getting_started">🚀 Getting Started</h4>
+            <p data-i18n="help_getting_started_body">Load a word list by dragging one or more <code>.txt</code> files onto the page, or by clicking the welcome screen to browse your files.</p>
         </div>
-
-        <div class="settings-section">
-          <div class="settings-section-title">STUDY MODES</div>
-          <div class="settings-card">
-            <div class="settings-item"><div class="settings-label"><b>Listen & Read</b></div><div class="settings-value">Shows text and speaks once.</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Read then Say</b></div><div class="settings-value">You read first. On Next, the app speaks once.</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Listen then Repeat</b></div><div class="settings-value">App speaks, you repeat. On Next, reveals and speaks again.</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Articles — le/la</b></div><div class="settings-value">Shows base (e.g., “… table”). Pick the correct definite article.</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Articles — un/une</b></div><div class="settings-value">Shows base (e.g., “… ami”). Pick the correct indefinite article.</div></div>
-            <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
-              <div><b>Switch mode</b>: Menu → General → Study Mode or tap the mode text in the footer.</div>
-              <div><b>Availability</b>: Article modes become selectable when matching words exist.</div>
-            </div>
-          </div>
+        <div class="modal-section">
+            <h4 data-i18n="help_main_controls">🎮 Main Controls</h4>
+            <ul>
+                <li data-i18n="help_main_controls_next"><b>Next (Space):</b> Proceeds to the next word.</li>
+                <li data-i18n="help_main_controls_repeat"><b>Repeat (R):</b> Repeats the audio for the current word.</li>
+                <li data-i18n="help_main_controls_show"><b>Show (S):</b> Instantly reveals the text of the current word.</li>
+            </ul>
         </div>
-
-        <div class="settings-section">
-          <div class="settings-section-title">CONTROLS & SHORTCUTS</div>
-          <div class="settings-card">
-            <div class="settings-item"><div class="settings-label"><b>Next</b></div><div class="settings-value">Space</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Repeat</b></div><div class="settings-value">R</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Show</b></div><div class="settings-value">S</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Menu</b></div><div class="settings-value">Alt+M</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Close</b></div><div class="settings-value">Esc (closes any open modal)</div></div>
-            <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
-              <div><b>Answers panel</b>: On desktop, toggle with the chevron on the left panel.</div>
-              <div><b>Progress</b>: The top bar shows progress by current mode.</div>
-            </div>
-          </div>
+        <div class="modal-section">
+            <h4 data-i18n="help_privative_title">🧩 Privative Prefix Quiz</h4>
+            <p data-i18n="help_privative_body">When your list has words that begin with <b>un</b> or <b>une</b>, enable the Privative Prefix mode in Settings. You will see the base word like “<b>…</b> ami”. Choose the correct prefix with the buttons. If you skip, the answer is recorded as “<b>…</b> ami” in Answers.</p>
         </div>
-
-        <div class="settings-section">
-          <div class="settings-section-title">VOICES & AUDIO</div>
-          <div class="settings-card">
-            <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
-              <div><b>Voice selection</b>: Menu → Voice Configuration → Voice. Tap “Test Voice” to preview.</div>
-              <div><b>System voice</b>: Uses your browser/OS voices for French (fr‑FR).</div>
-              <div><b>OpenAI / ElevenLabs</b>: Add an API key in Integrations to enable extra voices.</div>
-              <div><b>Quick change</b>: Tap the voice text in the footer to pick a voice inline.</div>
-              <div><b>Repeat speed‑up</b>: The app caches the most recent TTS clip temporarily to replay instantly on “Repeat”. Cache clears on mode/voice/list/shuffle changes and on app start.</div>
-            </div>
-          </div>
+        <div class="modal-section">
+            <h4 data-i18n="help_settings">⚙️ Settings</h4>
+            <p data-i18n="help_settings_body">Click the gear icon to manage settings. You can choose from different study modes, select voices, and enable/disable your loaded word lists for the current session. Use “Test Voice” to preview the current voice.</p>
         </div>
-
-        <div class="settings-section">
-          <div class="settings-section-title">FILES & PERSISTENCE</div>
-          <div class="settings-card">
-            <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
-              <div><b>Manage files</b>: Menu → Data & System → Files. See counts, enable/disable, delete (×), and add.</div>
-              <div><b>Enable/disable</b>: Toggles take effect immediately and rebuild the session.</div>
-              <div><b>Delete</b>: Use the × button to remove a file (also removed from local storage).</div>
-              <div><b>Persistence</b>: On first load per session, you can opt to save lists to IndexedDB. If accepted, lists restore automatically on next visit.</div>
-              <div><b>Reset app</b>: Settings → Reset clears local/session storage, IndexedDB word lists, and cached files.</div>
-            </div>
-          </div>
+        <div class="modal-section">
+            <h4 data-i18n="help_panels">↔️ Panels</h4>
+            <p data-i18n="help_panels_body">On desktop, you can click the <b>‹</b> icon on the "Answers" panel to collapse and expand it.</p>
         </div>
-
-        <div class="settings-section">
-          <div class="settings-section-title">STATUS BAR QUICK ACTIONS</div>
-          <div class="settings-card">
-            <div class="settings-item"><div class="settings-label"><b>Mode</b></div><div class="settings-value">Tap the text to switch modes inline.</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Voice</b></div><div class="settings-value">Tap the text to pick a voice inline.</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Files</b></div><div class="settings-value">Tap the icon to see file list and add a new list.</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Shuffle</b></div><div class="settings-value">Tap to toggle. A compact confirmation appears near the icon.</div></div>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <div class="settings-section-title">INTEGRATIONS</div>
-          <div class="settings-card">
-            <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
-              <div><b>OpenAI</b>: Add a <code>.key</code> file in Menu → Integrations → OpenAI. Remove with the trash icon.</div>
-              <div><b>ElevenLabs</b>: Add a <code>.key</code> file in Menu → Integrations → ElevenLabs. Remove with the trash icon.</div>
-              <div><b>Notes</b>: Keys are stored locally on your device. Network is required for these voices; if unavailable, the app falls back to the system voice.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <div class="settings-section-title">TIPS & TROUBLESHOOTING</div>
-          <div class="settings-card">
-            <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
-              <div>• If audio does not play, try interacting (tap/click) once to satisfy autoplay policies.</div>
-              <div>• If voices are missing, open the Menu and revisit Voice to refresh the list.</div>
-              <div>• If article modes are disabled, ensure your lists include words starting with the required prefixes (le/la or un/une).</div>
-              <div>• On desktop, collapse/expand the Answers panel with the chevron. Use the History button to see all revealed items.</div>
-            </div>
-          </div>
-        </div>
-
-      </div>
     </div>
   </div>
 
@@ -708,31 +569,26 @@
                   <div class="settings-value" id="openaiStatus"></div>
                   <div class="settings-chevron">›</div>
                 </div>
-                <div class="settings-item" id="rowGoogle" role="button" tabindex="0">
-                  <div class="settings-label">Google Cloud TTS</div>
-                  <div class="settings-value" id="googleStatus"></div>
-                  <div class="settings-chevron">›</div>
-                </div>
               </div>
             </div>
 
             <div class="settings-section">
-              <div class="settings-section-title">DATA & SYSTEM</div>
-              <div class="settings-card">
-                <div class="settings-item" id="rowFiles" role="button" tabindex="0">
-                  <div class="settings-label">Active Word Lists</div>
-                  <div class="settings-value" id="settingsActiveListsCount">0</div>
-                  <div class="settings-chevron">›</div>
-                </div>
-                <div class="settings-item">
-                  <button id="menuResetAppBtn" class="settings-danger" style="background:none;border:0;font:inherit;padding:0;margin:0;">Reset App (Reload)</button>
-                </div>
-                <div class="settings-item" id="menuHelpBtn" role="button" tabindex="0">
-                  <div class="settings-label">Help & Guide</div>
-                  <div class="settings-chevron">›</div>
-                </div>
+            <div class="settings-section-title">DATA & SYSTEM</div>
+            <div class="settings-card">
+              <div class="settings-item" id="rowFiles" role="button" tabindex="0">
+                <div class="settings-label">Active Word Lists</div>
+                <div class="settings-value" id="settingsActiveListsCount">0</div>
+                <div class="settings-chevron">›</div>
+              </div>
+              <div class="settings-item">
+                <button id="menuResetAppBtn" class="settings-danger" style="background:none;border:0;font:inherit;padding:0;margin:0;">Reset App (Reload)</button>
+              </div>
+              <div class="settings-item" id="menuHelpBtn" role="button" tabindex="0">
+                <div class="settings-label">Help & Guide</div>
+                <div class="settings-chevron">›</div>
               </div>
             </div>
+          </div>
 
             <div class="settings-footer">
               <div id="menuVersion" class="version-inline" style="display:inline-block; padding:0; margin:0;"></div>
@@ -829,38 +685,6 @@
               </div>
             </section>
 
-            <!-- Subpanel: Google Cloud TTS -->
-            <section id="googlePanel" class="panel subpanel" aria-hidden="true" aria-labelledby="googlePanelTitle">
-              <div class="panel-header">
-                <button class="panel-back" data-back="googlePanel">‹ Back</button>
-                <h2 id="googlePanelTitle" style="margin:0">Google Cloud TTS</h2>
-                <div style="width:44px"></div>
-              </div>
-              <div class="panel-body">
-                <div class="settings-section-title">Integrations → Google Cloud TTS</div>
-                <div class="settings-card">
-                  <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:8px;">
-                    <div class="label-row" style="display:flex; align-items:center; justify-content:space-between;">
-                      <div class="settings-label" style="font-weight:700;">API Key</div>
-                    </div>
-                    <input id="googleKeyInput" type="password" placeholder="AIza..." style="flex:1; min-width:220px; padding:.5rem;"/>
-                    <div class="key-mask-wrap">
-                      <div id="googleKeyMasked" class="settings-note">No key set</div>
-                      <button id="googleDeleteBtn" class="trash-btn" type="button" title="Remove key" aria-label="Remove Google key">🗑️</button>
-                    </div>
-                  </div>
-                </div>
-                <div class="settings-card" style="margin-top:12px;">
-                  <div class="settings-item" style="justify-content:center; gap: 12px;">
-                    <button class="panel-link" id="googleLoadFileBtn" type="button">Choose Key File…</button>
-                    <input type="file" id="googleKeyFile" accept=".key" style="display:none;"/>
-                  </div>
-                </div>
-
-                <div class="settings-note">Adds Google voices “fr‑FR‑Neural2‑F/G” using header‑based API key (no query string). Note: client‑side keys are visible to users.</div>
-              </div>
-            </section>
-
             <!-- Subpanel: Files -->
             <section id="filesPanel" class="panel subpanel" aria-hidden="true" aria-labelledby="filesPanelTitle">
               <div class="panel-header">
@@ -883,10 +707,10 @@
                     <input type="file" id="menuFileInput" accept=".txt" multiple style="display:none;" />
                   </div>
                 </div>
-              <div class="settings-note">Tip: You can also drag & drop files anywhere on the page.</div>
+                <div class="settings-note">Tip: You can also drag & drop files anywhere on the page.</div>
               </div>
             </section>
-            
+
             <!-- Subpanel: Help & Guide -->
             <section id="helpPanel" class="panel subpanel" aria-hidden="true" aria-labelledby="helpPanelTitle">
               <div class="panel-header">
@@ -1186,7 +1010,7 @@
     let shuffleEnabled = false;
     let originalWordOrder = [];
     let isSessionComplete = false;
-    const APP_VERSION = 'v1.8.0';
+    const APP_VERSION = 'v1.6.3';
     // Articles quiz state
     let prefixWords = [];
     let prefixWordsIndef = [];
@@ -1203,7 +1027,6 @@
     const OPENAI_TTS_MODEL = 'gpt-4o-mini-tts';
     let openaiAudio = null;
     let elevenKey = null; // ElevenLabs API key (local)
-    let googleKey = null; // Google Cloud TTS API key (local)
 
     // --- ENV / BROWSER DETECTION ---
     const UA = navigator.userAgent || '';
@@ -1339,13 +1162,6 @@
       const allFrench = availableVoices.filter(v => (v.lang || '').toLowerCase().startsWith('fr'));
       const qualityKeywords = ['siri', 'enhanced', 'premium', 'neural', 'hq', 'audrey', 'amelie', 'amélie', 'thomas'];
 
-      // Helper: normalize a name for dedup (remove case/diacritics)
-      const norm = (s) => (s || '')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // strip combining marks
-        .toLowerCase()
-        .trim();
-
       let toShow = [];
       if (isSafari) {
         // Apple platforms: show only specific system voices (Audrey, Amélie, Thomas)
@@ -1353,50 +1169,38 @@
           const n = (v.name || '').toLowerCase();
           return n.includes('thomas') || n.includes('audrey') || n.includes('amelie') || n.includes('amélie');
         };
-        toShow = allFrench.filter(isAllowedApple);
+        toShow = allFrench.filter(isAllowedApple).sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
       } else if (isFirefox) {
         // Firefox: prefer high-quality filtered list; fallback to all FR
         const high = allFrench.filter(v => qualityKeywords.some(k => (v.name || '').toLowerCase().includes(k)));
-        toShow = (high.length ? high : allFrench);
+        toShow = (high.length ? high : allFrench).sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
       } else if (isChromium) {
         // Chromium: only show clearly high-quality voices to avoid poor defaults
         const high = allFrench.filter(v => qualityKeywords.some(k => (v.name || '').toLowerCase().includes(k)));
-        toShow = high;
+        toShow = high.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
         if (toShow.length === 0 && currentVoice && currentVoice !== 'system') {
           const saved = allFrench.find(v => v.name === currentVoice);
           if (saved) toShow = [saved];
         }
       } else {
-        toShow = allFrench;
+        toShow = allFrench.sort((a, b) => scoreFrenchVoice(b) - scoreFrenchVoice(a));
       }
 
-      // Deduplicate by normalized name; keep highest scoring variant
-      const byName = new Map();
-      toShow.forEach(v => {
-        const key = norm(v.name);
-        const prev = byName.get(key);
-        if (!prev || scoreFrenchVoice(v) > scoreFrenchVoice(prev)) byName.set(key, v);
-      });
-      // Sort alphabetically (display) per resource requirement
-      Array.from(byName.values())
-        .sort((a,b) => (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' }))
-        .forEach(voice => {
+      toShow.forEach(voice => {
         const opt = document.createElement("option");
         opt.value = voice.name;
         opt.textContent = `${voice.name} (${voice.lang})`;
         vs.appendChild(opt);
       });
 
-      // Append Google Cloud TTS voices when API key is set
-      if (googleKey) {
-        const groupG = document.createElement('optgroup');
-        groupG.label = 'Google Cloud TTS (fr-FR)';
-        const gOptions = [
-          { value: 'google:fr-FR-Neural2-F', text: 'Neural2 - Female (Google)' },
-          { value: 'google:fr-FR-Neural2-G', text: 'Neural2 - Male (Google)' }
-        ].sort((a,b) => a.text.localeCompare(b.text, 'fr', { sensitivity: 'base' }));
-        gOptions.forEach(o => { const opt = document.createElement('option'); opt.value = o.value; opt.textContent = o.text; groupG.appendChild(opt); });
-        vs.appendChild(groupG);
+      // Append OpenAI voices when API key is set
+      if (openaiKey) {
+        const group = document.createElement('optgroup');
+        group.label = 'OpenAI TTS';
+        const echo = document.createElement('option'); echo.value = 'openai:echo'; echo.textContent = 'Echo (OpenAI)';
+        const nova = document.createElement('option'); nova.value = 'openai:nova'; nova.textContent = 'Nova (OpenAI)';
+        group.appendChild(echo); group.appendChild(nova);
+        vs.appendChild(group);
       }
 
       // Add ElevenLabs voices (fr-FR, non-streaming) when key is present
@@ -1404,27 +1208,13 @@
         if (window._ELEVEN && window._ELEVEN.key) {
           const group2 = document.createElement('optgroup');
           group2.label = 'ElevenLabs (fr-FR)';
-          // Public sample voices
-          const eOptions = [
-            { value: 'eleven:EXAVITQu4vr4xnSDxMaL', text: 'Bella — female (ElevenLabs)' },
-            { value: 'eleven:TxGEqnHWrfWFTfGW9XjX', text: 'Josh — male (ElevenLabs)' }
-          ].sort((a,b) => a.text.localeCompare(b.text, 'fr', { sensitivity: 'base' }));
-          eOptions.forEach(o => { const opt = document.createElement('option'); opt.value = o.value; opt.textContent = o.text; group2.appendChild(opt); });
+          // One male and one female public sample voices
+          const male = document.createElement('option'); male.value = 'eleven:TxGEqnHWrfWFTfGW9XjX'; male.textContent = 'Josh — male (ElevenLabs)';
+          const female = document.createElement('option'); female.value = 'eleven:EXAVITQu4vr4xnSDxMaL'; female.textContent = 'Bella — female (ElevenLabs)';
+          group2.appendChild(male); group2.appendChild(female);
           vs.appendChild(group2);
         }
       } catch (_) {}
-
-      // Append OpenAI voices when API key is set (after Google/ElevenLabs)
-      if (openaiKey) {
-        const group = document.createElement('optgroup');
-        group.label = 'OpenAI TTS';
-        const oa = [
-          { value: 'openai:echo', text: 'Echo (OpenAI)' },
-          { value: 'openai:nova', text: 'Nova (OpenAI)' }
-        ].sort((a,b) => a.text.localeCompare(b.text, 'fr', { sensitivity: 'base' }));
-        oa.forEach(o => { const opt = document.createElement('option'); opt.value = o.value; opt.textContent = o.text; group.appendChild(opt); });
-        vs.appendChild(group);
-      }
 
       // Preserve current selection if possible
       let existingIndex = Array.from(vs.options).findIndex(o => o.value === currentVoice);
@@ -1679,10 +1469,6 @@
         const voice = (currentVoice.split(':')[1] || 'echo');
         return speakWithOpenAITTS(w, voice);
       }
-      if (googleKey && typeof currentVoice === 'string' && currentVoice.startsWith('google:')) {
-        const voiceName = currentVoice.split(':')[1] || 'fr-FR-Neural2-F';
-        return speakWithGoogleTTS(w, voiceName);
-      }
       const u = new SpeechSynthesisUtterance(w);
       let selectedVoice = null;
       if (currentVoice && currentVoice !== 'system') {
@@ -1744,47 +1530,6 @@
         return new Promise(resolve => { openaiAudio.onended = resolve; });
       } catch (e) {
         showToast('OpenAI TTS error (possibly CORS). Falling back.');
-        const u = new SpeechSynthesisUtterance(text); synth.speak(u); return new Promise(r=>u.onend=r);
-      }
-    }
-
-    async function speakWithGoogleTTS(text, voiceName) {
-      try {
-        // Play from short-term cache if available
-        const cached = getAudioCache('google', voiceName, text);
-        if (cached) {
-          const a = new Audio(cached);
-          await a.play();
-          return new Promise(resolve => { a.onended = resolve; });
-        }
-        const resp = await fetch('https://texttospeech.googleapis.com/v1/text:synthesize', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': googleKey
-          },
-          body: JSON.stringify({
-            input: { text },
-            voice: { languageCode: 'fr-FR', name: voiceName },
-            audioConfig: { audioEncoding: 'MP3', speakingRate: 0.9 }
-          })
-        });
-        if (!resp.ok) throw new Error('Google TTS request failed');
-        const data = await resp.json();
-        const b64 = data && data.audioContent;
-        if (!b64) throw new Error('No audioContent');
-        const byteChars = atob(b64);
-        const byteNums = new Array(byteChars.length);
-        for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
-        const byteArray = new Uint8Array(byteNums);
-        const blob = new Blob([byteArray], { type: 'audio/mpeg' });
-        blobToDataURL(blob).then((dataUrl)=>{ if (dataUrl) setAudioCache('google', voiceName, text, dataUrl, blob.type); });
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        await audio.play();
-        return new Promise(resolve => { audio.onended = resolve; });
-      } catch (e) {
-        showToast('Google TTS error (maybe CORS). Falling back.');
         const u = new SpeechSynthesisUtterance(text); synth.speak(u); return new Promise(r=>u.onend=r);
       }
     }
@@ -2002,7 +1747,7 @@
       if (!currentWord) return; 
       const isArticles = (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef');
       const text = (isArticles && currentBaseWord) ? currentBaseWord : currentWord;
-      // Use cached audio for OpenAI/Eleven/Google replays if available
+      // Use cached audio for OpenAI/Eleven replays if available
       if (typeof currentVoice === 'string') {
         if (currentVoice.startsWith('openai:')) {
           const v = currentVoice.split(':')[1] || 'echo';
@@ -2011,10 +1756,6 @@
         } else if (currentVoice.startsWith('eleven:')) {
           const v = currentVoice.split(':')[1] || '';
           if (v) { const cached = getAudioCache('eleven', v, text); if (cached) { const a = new Audio(cached); await a.play(); return; } }
-        } else if (currentVoice.startsWith('google:')) {
-          const v = currentVoice.split(':')[1] || 'fr-FR-Neural2-F';
-          const cached = getAudioCache('google', v, text);
-          if (cached) { const a = new Audio(cached); await a.play(); return; }
         }
       }
       await speakWord(text);
@@ -2057,12 +1798,10 @@
         const selectedOption = vs.selectedOptions[0];
         const bottomVoice = document.getElementById('bottomVoice');
         const settingsVoiceValue = document.getElementById('settingsVoiceValue');
-        const settingsModalVoiceValue = document.getElementById('settingsModalVoiceValue');
         if (!selectedOption) { 
           document.getElementById('activeVoiceDisplay').textContent = i18n[curLang].no_voices; 
           if (bottomVoice) bottomVoice.textContent = i18n[curLang].no_voices; 
           if (settingsVoiceValue) settingsVoiceValue.textContent = '—';
-          if (settingsModalVoiceValue) settingsModalVoiceValue.textContent = '—';
           return; 
         }
         // If "system" is selected, try to show the resolved best French voice name
@@ -2072,14 +1811,12 @@
             document.getElementById('activeVoiceDisplay').textContent = `🗣️ ${resolved.name} (${resolved.lang})`;
             if (bottomVoice) bottomVoice.textContent = `${resolved.name} (${resolved.lang})`;
             if (settingsVoiceValue) settingsVoiceValue.textContent = `${resolved.name}`;
-            if (settingsModalVoiceValue) settingsModalVoiceValue.textContent = `${resolved.name}`;
             return;
           }
         }
         document.getElementById('activeVoiceDisplay').textContent = `🗣️ ${selectedOption.text}`;
         if (bottomVoice) bottomVoice.textContent = selectedOption.text;
         if (settingsVoiceValue) settingsVoiceValue.textContent = selectedOption.text;
-        if (settingsModalVoiceValue) settingsModalVoiceValue.textContent = selectedOption.text;
     }
 
     function getSelectedStudyMode() {
@@ -2096,7 +1833,6 @@
       document.getElementById('activeStudyModeDisplay').textContent = `${i18n[curLang].indicator_mode_prefix} ${text}`;
       const bottomMode = document.getElementById('bottomMode'); if (bottomMode) bottomMode.textContent = text;
       const settingsModeValue = document.getElementById('settingsModeValue'); if (settingsModeValue) settingsModeValue.textContent = text || settingsModeValue.textContent;
-      const settingsModalModeValue = document.getElementById('settingsModalModeValue'); if (settingsModalModeValue) settingsModalModeValue.textContent = text || settingsModalModeValue.textContent;
     }
 
     function updateShuffleIndicator() {
@@ -2125,7 +1861,7 @@
         // Close any other quick menus
         document.querySelectorAll('.mode-quick-menu').forEach(el => el.remove());
         menuEl = document.createElement('div');
-        menuEl.className = 'mode-quick-menu compact';
+        menuEl.className = 'mode-quick-menu';
         menuEl.setAttribute('role','listbox');
 
         const sel = document.getElementById('studyModeSelect');
@@ -2229,28 +1965,18 @@
         try { populateVoiceList(); } catch (_) {}
         const vs = document.getElementById('voiceSelect');
         menuEl = document.createElement('div');
-        menuEl.className = 'mode-quick-menu voice-quick-menu';
+        menuEl.className = 'mode-quick-menu';
         menuEl.setAttribute('role','listbox');
         const cur = vs && vs.value ? vs.value : 'system';
-
-        const appendDivider = () => {
-          const div = document.createElement('div');
-          div.className = 'divider';
-          menuEl.appendChild(div);
-        };
-        const appendHeader = (label) => {
-          const h = document.createElement('div');
-          h.className = 'group-header';
-          h.textContent = label;
-          menuEl.appendChild(h);
-        };
-        const appendItem = (opt) => {
+        const opts = vs ? Array.from(vs.options) : [];
+        opts.forEach(o => {
+          if (!o.value) return; // skip placeholders
           const item = document.createElement('div');
-          item.className = 'mode-quick-item' + (opt.disabled ? ' disabled' : '');
+          item.className = 'mode-quick-item' + (o.disabled ? ' disabled' : '');
           item.setAttribute('role','option');
-          item.dataset.value = opt.value;
-          item.textContent = opt.text;
-          if (opt.value === cur) {
+          item.dataset.value = o.value;
+          item.textContent = o.text;
+          if (o.value === cur) {
             const check = document.createElement('span');
             check.className = 'mode-quick-check';
             check.textContent = '✓';
@@ -2258,37 +1984,15 @@
           }
           item.addEventListener('click', (e) => {
             e.preventDefault(); e.stopPropagation();
-            if (opt.disabled) return;
+            if (o.disabled) return;
             if (vs) {
-              vs.value = opt.value;
+              vs.value = o.value;
               vs.dispatchEvent(new Event('change', { bubbles: true }));
             }
             closeMenu();
           });
           menuEl.appendChild(item);
-        };
-
-        if (vs) {
-          let isFirstGroup = true;
-          // System: all OPTIONs before the first OPTGROUP
-          const children = Array.from(vs.children || []);
-          const firstGroupIndex = children.findIndex(c => c.tagName === 'OPTGROUP');
-          const systemOptions = (firstGroupIndex === -1 ? children : children.slice(0, firstGroupIndex))
-            .filter(c => c.tagName === 'OPTION');
-          if (systemOptions.length) {
-            appendHeader('System Voices');
-            systemOptions.forEach(o => appendItem(o));
-            isFirstGroup = false;
-          }
-          // Then each OPTGROUP with a divider between sources
-          children.filter(c => c.tagName === 'OPTGROUP').forEach((grp) => {
-            if (!isFirstGroup) appendDivider();
-            appendHeader(grp.label || 'Voices');
-            const opts = Array.from(grp.children || []);
-            opts.forEach(o => appendItem(o));
-            isFirstGroup = false;
-          });
-        }
+        });
         document.body.appendChild(menuEl);
       }
 
@@ -2353,7 +2057,7 @@
         if (menuEl) menuEl.remove();
         document.querySelectorAll('.mode-quick-menu').forEach(el => el.remove());
         menuEl = document.createElement('div');
-        menuEl.className = 'mode-quick-menu compact';
+        menuEl.className = 'mode-quick-menu';
         menuEl.setAttribute('role','listbox');
         const filenames = Object.keys(wordLists || {});
         if (filenames.length === 0) {
@@ -2377,23 +2081,17 @@
         addItem.textContent = 'Add Word List…';
         addItem.addEventListener('click', (e) => {
           e.preventDefault(); e.stopPropagation();
-          // Take user to Menu → Active Word Lists
-          try {
-            const f = () => { openSubpanel('filesPanel'); generateWordListsUI(); };
-            const menuModalEl = document.getElementById('menuModal');
-            if (menuModalEl && !menuModalEl.classList.contains('visible')) {
-              // Open main menu then navigate
-              settingsModal.classList.remove('visible');
-              menuModalEl.classList.add('visible');
-              const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','false');
-              const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'block';
-              f();
-              const mc = menuModalEl.querySelector('.modal-content'); if (mc) mc.focus();
-            } else {
-              const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'block';
-              f();
-            }
-          } catch (_) {}
+          // Prefer global hidden input; fallback to menu input; else create temporary
+          let picker = null;
+          try { picker = (typeof fileInput !== 'undefined') ? fileInput : null; } catch (_) { picker = null; }
+          if (!picker) picker = document.getElementById('menuFileInput');
+          if (picker && typeof picker.click === 'function') { picker.click(); }
+          else {
+            const tmp = document.createElement('input'); tmp.type='file'; tmp.accept='.txt'; tmp.multiple=true;
+            tmp.style.position='fixed'; tmp.style.left='-9999px'; document.body.appendChild(tmp);
+            tmp.addEventListener('change', () => { const files = Array.from(tmp.files||[]).filter(f=>f.name.endsWith('.txt')); if (files.length>0) handleFileLoad(files); document.body.removeChild(tmp); });
+            tmp.click();
+          }
           closeMenu();
         });
         menuEl.appendChild(addItem);
@@ -2767,10 +2465,6 @@
       document.getElementById('menuBtn')?.setAttribute('aria-expanded','true');
       if (isSafari) primeVoices();
       populateVoiceList();
-      // Ensure floating close (X) is visible and start at main menu
-      { const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'block'; }
-      { const mp = document.getElementById('menuPanel'); if (mp) { mp.setAttribute('aria-hidden','false'); mp.classList.remove('sub-open'); } }
-      document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
       const mc = menuModal.querySelector('.modal-content'); if (mc) mc.focus();
     });
     // Language flags
@@ -2793,7 +2487,6 @@
         bodyScrollLock(true);
         openMenuPanel();
         openSubpanel('helpPanel');
-        const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'block';
         const mc = menuModalEl.querySelector('.modal-content'); if (mc) mc.focus();
       }
     });
@@ -2809,10 +2502,15 @@
         // Sync grouped UI controls on open
         const st = document.getElementById('shuffleToggle'); if (st) st.checked = shuffleEnabled;
         updateAllIndicators();
-        // Force main menu (hide any lingering subpanels)
-        document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
-        const mp = document.getElementById('menuPanel'); if (mp) mp.classList.remove('sub-open');
-        const closeOverlay = document.getElementById('menuCloseOverlay'); if (closeOverlay) closeOverlay.style.display = 'block';
+        const closeOverlay = document.getElementById('menuCloseOverlay');
+        if (closeOverlay) {
+          const rect = menuBtn.getBoundingClientRect();
+          closeOverlay.style.top = `${rect.top}px`;
+          closeOverlay.style.left = `${rect.left}px`;
+          closeOverlay.style.width = `${rect.width}px`;
+          closeOverlay.style.height = `${rect.height}px`;
+          closeOverlay.style.display = 'block';
+        }
         openMenuPanel({ target: menuBtn });
         const mc = menuModal.querySelector('.modal-content'); if (mc) mc.focus(); 
       }
@@ -2822,10 +2520,7 @@
       menuModal.classList.remove('visible'); 
       menuBtn.setAttribute('aria-expanded','false'); 
       menuCloseOverlay.style.display = 'none';
-      if (menuCloseOverlay._posHandler) { window.removeEventListener('resize', menuCloseOverlay._posHandler); window.removeEventListener('scroll', menuCloseOverlay._posHandler, true); menuCloseOverlay._posHandler = null; }
-      // Reset to main panel for next open
-      document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
-      const mp = document.getElementById('menuPanel'); if (mp) { mp.classList.remove('sub-open'); mp.setAttribute('aria-hidden','true'); }
+      const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
       bodyScrollLock(false);
     });
     const menuLangEn = document.getElementById('menuLangEn');
@@ -2838,7 +2533,6 @@
     const rowLanguage = document.getElementById('rowLanguage'); if(rowLanguage){ const fn=()=>{ openSubpanel('langPanel'); updateLangChecks(); }; rowLanguage.addEventListener('click', fn); rowLanguage.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
     const rowEleven = document.getElementById('rowEleven'); if(rowEleven){ const fn=()=>openSubpanel('elevenPanel'); rowEleven.addEventListener('click', fn); rowEleven.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
     const rowOpenAI = document.getElementById('rowOpenAI'); if(rowOpenAI){ const fn=()=>openSubpanel('openaiPanel'); rowOpenAI.addEventListener('click', fn); rowOpenAI.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
-    const rowGoogle = document.getElementById('rowGoogle'); if(rowGoogle){ const fn=()=>openSubpanel('googlePanel'); rowGoogle.addEventListener('click', fn); rowGoogle.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
     const rowFiles = document.getElementById('rowFiles'); if(rowFiles){ const fn=()=>{ openSubpanel('filesPanel'); generateWordListsUI(); }; rowFiles.addEventListener('click', fn); rowFiles.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); fn(); } }); }
     // Back buttons
     document.querySelectorAll('.panel-back').forEach(btn=>{ btn.addEventListener('click',()=>{ const id=btn.getAttribute('data-back'); if(id) closeSubpanel(id); }); });
@@ -2857,56 +2551,6 @@
       menuHelpBtn.addEventListener('click', openHelpPanel);
       menuHelpBtn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openHelpPanel(); } });
     }
-
-    // Settings modal quick access → open Menu/subpanels
-    (function(){
-      function openMenuAnd(fn){
-        settingsModal.classList.remove('visible');
-        menuModal.classList.add('visible');
-        if (toastNotification) toastNotification.classList.remove('visible');
-        document.getElementById('menuBtn')?.setAttribute('aria-expanded','true');
-        bodyScrollLock(true);
-        openMenuPanel();
-        if (typeof fn === 'function') fn();
-        const mc = menuModal.querySelector('.modal-content'); if (mc) mc.focus();
-      }
-      const goLanguage = document.getElementById('goLanguage');
-      if (goLanguage) {
-        const act = ()=>openMenuAnd(()=>openSubpanel('langPanel'));
-        goLanguage.addEventListener('click', act);
-        goLanguage.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); act(); }});
-      }
-      const goStudyMode = document.getElementById('goStudyMode');
-      if (goStudyMode) {
-        const act = ()=>openMenuAnd(null); // Main menu shows Study Mode row
-        goStudyMode.addEventListener('click', act);
-        goStudyMode.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); act(); }});
-      }
-      const goVoice = document.getElementById('goVoice');
-      if (goVoice) {
-        const act = ()=>openMenuAnd(null); // Main menu shows Voice row
-        goVoice.addEventListener('click', act);
-        goVoice.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); act(); }});
-      }
-      const goEleven = document.getElementById('goEleven');
-      if (goEleven) {
-        const act = ()=>openMenuAnd(()=>openSubpanel('elevenPanel'));
-        goEleven.addEventListener('click', act);
-        goEleven.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); act(); }});
-      }
-      const goOpenAI = document.getElementById('goOpenAI');
-      if (goOpenAI) {
-        const act = ()=>openMenuAnd(()=>openSubpanel('openaiPanel'));
-        goOpenAI.addEventListener('click', act);
-        goOpenAI.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); act(); }});
-      }
-      const goFiles = document.getElementById('goFiles');
-      if (goFiles) {
-        const act = ()=>openMenuAnd(()=>{ openSubpanel('filesPanel'); generateWordListsUI(); });
-        goFiles.addEventListener('click', act);
-        goFiles.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); act(); }});
-      }
-    })();
     const menuSettingsBtn = document.getElementById('menuSettingsBtn');
     if (menuSettingsBtn) menuSettingsBtn.addEventListener('click', () => { menuModal.classList.remove('visible'); settingsModal.classList.add('visible'); if (isSafari) primeVoices(); populateVoiceList(); const mc = settingsModal.querySelector('.modal-content'); if (mc) mc.focus(); });
     // Left-rail expanding panel behavior
@@ -3064,10 +2708,8 @@
       if (e.key === 'Escape') { 
         allModals.forEach(modal => modal.classList.remove('visible'));
         document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
-        const mco = document.getElementById('menuCloseOverlay'); if (mco) { mco.style.display = 'none'; if (mco._posHandler) { window.removeEventListener('resize', mco._posHandler); window.removeEventListener('scroll', mco._posHandler, true); mco._posHandler = null; } }
-        // Reset to main panel so next open starts from main menu
-        document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
-        const mp = document.getElementById('menuPanel'); if (mp) { mp.classList.remove('sub-open'); mp.setAttribute('aria-hidden','true'); }
+        const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'none';
+        const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
         bodyScrollLock(false);
       }
       if (e.target.tagName.toLowerCase() === 'input' || document.querySelector('.modal.visible')) return;
@@ -3085,10 +2727,9 @@
             modal.classList.remove('visible'); 
             if (modal.id === 'menuModal') { 
               document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
-              const mco = document.getElementById('menuCloseOverlay'); if (mco) { mco.style.display = 'none'; if (mco._posHandler) { window.removeEventListener('resize', mco._posHandler); window.removeEventListener('scroll', mco._posHandler, true); mco._posHandler = null; } }
+              const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'none';
               // Ensure panel is reset and scrolling unlocked
-              document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
-              const mp = document.getElementById('menuPanel'); if (mp) { mp.classList.remove('sub-open'); mp.setAttribute('aria-hidden','true'); }
+              const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
               bodyScrollLock(false);
             }
           }
@@ -3098,9 +2739,8 @@
           modal.classList.remove('visible'); 
           if (modal.id === 'menuModal') { 
             document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
-            const mco = document.getElementById('menuCloseOverlay'); if (mco) { mco.style.display = 'none'; if (mco._posHandler) { window.removeEventListener('resize', mco._posHandler); window.removeEventListener('scroll', mco._posHandler, true); mco._posHandler = null; } }
-            document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
-            const mp = document.getElementById('menuPanel'); if (mp) { mp.classList.remove('sub-open'); mp.setAttribute('aria-hidden','true'); }
+            const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'none';
+            const mp = document.getElementById('menuPanel'); if (mp) mp.setAttribute('aria-hidden','true');
             bodyScrollLock(false);
           }
         });
@@ -3152,7 +2792,6 @@
     // ElevenLabs API key handlers
     function isValidElevenKey(k) { return typeof k === 'string' && /^sk_[A-Za-z0-9]{8,}/.test(k); }
     function isValidOpenAIKey(k) { return typeof k === 'string' && /^sk-proj-[A-Za-z0-9_-]{8,}/.test(k); }
-    function isValidGoogleKey(k) { return typeof k === 'string' && /^AIza[0-9A-Za-z_\-]{8,}/.test(k); }
     function setElevenKey(k) {
       const v = (k || '').trim();
       if (v && !isValidElevenKey(v)) { return; }
@@ -3177,10 +2816,8 @@
     function updateIntegrationIndicators(){
       const elevenOk = typeof elevenKey === 'string' && elevenKey.startsWith('sk_');
       const openaiOk = typeof openaiKey === 'string' && openaiKey.startsWith('sk-proj-');
-      const googleOk = typeof googleKey === 'string' && googleKey.startsWith('AIza');
       const es = document.getElementById('elevenStatus'); if (es) es.textContent = elevenOk ? 'Configured' : '';
       const os = document.getElementById('openaiStatus'); if (os) os.textContent = openaiOk ? 'Configured' : '';
-      const gs = document.getElementById('googleStatus'); if (gs) gs.textContent = googleOk ? 'Configured' : '';
       // Disable/enable fields and file pickers based on state
       const eInput = document.getElementById('elevenKeyInput');
       const eLoad = document.getElementById('elevenLoadFileBtn');
@@ -3198,14 +2835,6 @@
         oInput.placeholder = openaiOk ? 'OpenAI key is loaded. Remove the previous key to load a new one.' : 'Paste a valid API Key';
       }
       if (oLoad) oLoad.classList.toggle('link-disabled', !!openaiOk);
-      const gInput = document.getElementById('googleKeyInput');
-      const gLoad = document.getElementById('googleLoadFileBtn');
-      if (gInput) {
-        gInput.disabled = !!googleOk;
-        gInput.value = '';
-        gInput.placeholder = googleOk ? 'Google key is loaded. Remove it to change.' : 'Paste a valid API Key';
-      }
-      if (gLoad) gLoad.classList.toggle('link-disabled', !!googleOk);
     }
     // Auto-save Eleven key on input (non-empty only)
     (function(){
@@ -3260,45 +2889,7 @@
         });
       }
     })();
-
-    // Google Cloud TTS API key handlers
-    function setGoogleKey(k){ const v=(k||'').trim(); if(v && !isValidGoogleKey(v)) { return; } googleKey = v; try{ if(googleKey) localStorage.setItem('google_tts_api_key', googleKey); else localStorage.removeItem('google_tts_api_key'); }catch(_){}; const m=document.getElementById('googleKeyMasked'); if(m) m.textContent = googleKey? ('Key: '+maskKey(googleKey)) : 'No key set'; populateVoiceList(); updateIntegrationIndicators(); clearAudioCache(); }
-    try{ const saved=localStorage.getItem('google_tts_api_key'); if(saved){ googleKey=saved; const m=document.getElementById('googleKeyMasked'); if(m) m.textContent='Key: '+maskKey(googleKey); populateVoiceList(); updateIntegrationIndicators(); } }catch(_){}
-    (function(){
-      const inp = document.getElementById('googleKeyInput');
-      if (inp) {
-        const saveIfValue = (hard=false) => { const v = (inp.value||'').trim(); if (!v) return; if (isValidGoogleKey(v)) { setGoogleKey(v); } };
-        inp.addEventListener('input', () => saveIfValue(false));
-        inp.addEventListener('change', () => saveIfValue(true));
-        inp.addEventListener('paste', () => setTimeout(()=>saveIfValue(true), 0));
-      }
-      const delBtn = document.getElementById('googleDeleteBtn');
-      if (delBtn) delBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); setGoogleKey(''); updateIntegrationIndicators(); });
-      const loadBtn = document.getElementById('googleLoadFileBtn'); const keyFile = document.getElementById('googleKeyFile');
-      if (loadBtn && keyFile) {
-        loadBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); keyFile.click(); });
-        keyFile.addEventListener('change', () => {
-          const f = keyFile.files && keyFile.files[0]; if (!f) return; if (!/\.key$/i.test(f.name)) { keyFile.value=''; return; } const r = new FileReader();
-          r.onload = () => { const v=String(r.result||'').trim(); if (!v) { keyFile.value=''; return; }
-            if (isValidGoogleKey(v)) { setGoogleKey(v); }
-            keyFile.value=''; updateIntegrationIndicators(); };
-          r.readAsText(f);
-        });
-      }
-    })();
     const studyModeSelect = document.getElementById('studyModeSelect');
-    // Prevent iOS double-tap zoom on interactive areas
-    (function preventIOSDoubleTapZoom(){
-      let lastTouchEnd = 0;
-      document.addEventListener('touchend', function(e){
-        const now = Date.now();
-        if (now - lastTouchEnd <= 350) {
-          // Avoid zooming on double-tap
-          e.preventDefault();
-        }
-        lastTouchEnd = now;
-      }, { passive: false });
-    })();
     if (studyModeSelect) studyModeSelect.addEventListener('change', () => {
       updateStudyModeIndicator();
       const isArticles = (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef');
@@ -3415,7 +3006,7 @@
           const apple = document.getElementById('appleIcon'); if (apple) apple.setAttribute('href', icon180);
           // Build manifest with PNG icons
           const manifestJson = {
-            name: 'French Study', short_name: 'French Study', start_url: './?source=pwa', display: 'standalone',
+            name: 'French Study', short_name: 'Frency Study', start_url: './?source=pwa', display: 'standalone',
             background_color: '#F7F7F7', theme_color: '#4A90E2',
             icons: [ { src: icon192, sizes: '192x192', type: 'image/png' }, { src: icon512, sizes: '512x512', type: 'image/png' } ]
           };

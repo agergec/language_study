@@ -1680,11 +1680,8 @@
           else { unBtnLbl.textContent = i18n[curLang].btn_prefix_un; uneBtnLbl.textContent = i18n[curLang].btn_prefix_une; }
         }
       })();
-      // Shuffle questions for articles mode according to shuffleEnabled
-      if ((getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef') && prefixWords.length > 0) {
-        if (shuffleEnabled) shuffleArray(prefixWords);
-        else if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
-      }
+      // Note: Shuffling for article modes is handled when entering the mode
+      // and by the shuffle toggle handlers to avoid double randomization here.
     }
 
     // --- Persistent Storage (IndexedDB) for Word Lists ---
@@ -2606,12 +2603,23 @@
       function applyShuffle(enabled) {
         shuffleEnabled = enabled;
         if (st) st.checked = shuffleEnabled;
+        const isArticles = (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef');
         if (shuffleEnabled) {
-          shuffleArray(words);
-          if (prefixWords.length > 0) shuffleArray(prefixWords);
+          if (isArticles) {
+            // Ensure active pool and its original snapshot are set
+            prefixWords = (getSelectedStudyMode() === 'articlesIndef') ? prefixWordsIndef : prefixWordsDef;
+            window.prefixOriginalOrder = (getSelectedStudyMode() === 'articlesIndef') ? window.prefixOriginalOrderIndef : window.prefixOriginalOrderDef;
+            if (prefixWords.length > 0) shuffleArray(prefixWords);
+          } else {
+            shuffleArray(words);
+          }
         } else {
-          words = [...originalWordOrder];
-          if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
+          if (isArticles) {
+            window.prefixOriginalOrder = (getSelectedStudyMode() === 'articlesIndef') ? window.prefixOriginalOrderIndef : window.prefixOriginalOrderDef;
+            if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
+          } else {
+            words = [...originalWordOrder];
+          }
         }
         updateShuffleIndicator();
         initializeStudy();
@@ -2724,9 +2732,9 @@
           if (!container || !section) return;
           if (filenames.length === 0) { section.style.display = 'none'; return; }
           if (style === 'ios') {
-            // Always show file list with counts; include toggles only when multiple files
+            // Always show file list with counts; include toggles even when single file
             section.style.display = 'block';
-            const showToggles = filenames.length > 1;
+            const showToggles = true;
             filenames.forEach(name => {
               const row = document.createElement('div');
               row.className = 'settings-item';
@@ -2764,8 +2772,8 @@
               container.appendChild(row);
             });
           } else {
-            // Legacy settings: show toggles only when multiple files are present
-            if (filenames.length > 1) {
+            // Legacy settings: show toggles even when a single file is present
+            if (filenames.length >= 1) {
               section.style.display = 'block';
               filenames.forEach(name => {
                 const item = document.createElement('div');
@@ -3103,11 +3111,24 @@
     const wordListContent = document.getElementById("wordListContent");
     document.getElementById('viewListBtn').addEventListener('click', () => {
         wordListContent.innerHTML = "";
-        words.forEach((word, index) => {
+        // Choose source list based on study mode
+        let list = words;
+        let highlightIndex = currentIndex - 1;
+        const modeNow = getSelectedStudyMode();
+        if (modeNow === 'articlesIndef' || modeNow === 'articlesDef') {
+            // Use the active (possibly shuffled) article pool
+            if (!Array.isArray(prefixWords) || prefixWords.length === 0) {
+              prefixWords = (modeNow === 'articlesIndef') ? prefixWordsIndef : prefixWordsDef;
+            }
+            list = prefixWords.map(p => p.full);
+            // Highlight the current item (prefixIndex always points to next slot)
+            highlightIndex = Math.max(0, prefixIndex - 1);
+        }
+        list.forEach((word, index) => {
             const wordItem = document.createElement("div");
             wordItem.className = "history-item";
             wordItem.textContent = `${index + 1}. ${word}`;
-            if (index === currentIndex - 1) wordItem.style.fontWeight = "bold";
+            if (index === highlightIndex) wordItem.style.fontWeight = "bold";
             wordListContent.appendChild(wordItem);
         });
         wordListModal.classList.add('visible');
@@ -3120,12 +3141,22 @@
         confirmationCallback = () => {
             shuffleEnabled = !shuffleEnabled; 
             document.getElementById('shuffleToggle').checked = shuffleEnabled;
+            const isArticles = (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef');
             if (shuffleEnabled) {
-              shuffleArray(words);
-              if (prefixWords.length > 0) shuffleArray(prefixWords);
+              if (isArticles) {
+                prefixWords = (getSelectedStudyMode() === 'articlesIndef') ? prefixWordsIndef : prefixWordsDef;
+                window.prefixOriginalOrder = (getSelectedStudyMode() === 'articlesIndef') ? window.prefixOriginalOrderIndef : window.prefixOriginalOrderDef;
+                if (prefixWords.length > 0) shuffleArray(prefixWords);
+              } else {
+                shuffleArray(words);
+              }
             } else {
-              words = [...originalWordOrder];
-              if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
+              if (isArticles) {
+                window.prefixOriginalOrder = (getSelectedStudyMode() === 'articlesIndef') ? window.prefixOriginalOrderIndef : window.prefixOriginalOrderDef;
+                if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
+              } else {
+                words = [...originalWordOrder];
+              }
             }
             updateShuffleIndicator();
             initializeStudy();
@@ -3447,6 +3478,25 @@
       updateStudyModeIndicator();
       const isArticles = (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef');
       document.getElementById('privativeControls').style.display = isArticles ? 'flex' : 'none';
+      // When leaving articles mode, restore normal word order if it was shuffled for articles
+      if (!isArticles) {
+        // Restore full words order from originalWordOrder
+        if (Array.isArray(originalWordOrder) && originalWordOrder.length) {
+          words = [...originalWordOrder];
+        }
+        // Reset article pool and index highlight
+        prefixIndex = 0;
+      } else {
+        // Entering articles mode: ensure prefix pool reflects current shuffle setting
+        prefixWords = (getSelectedStudyMode() === 'articlesIndef') ? prefixWordsIndef : prefixWordsDef;
+        window.prefixOriginalOrder = (getSelectedStudyMode() === 'articlesIndef') ? window.prefixOriginalOrderIndef : window.prefixOriginalOrderDef;
+        if (shuffleEnabled) {
+          shuffleArray(prefixWords);
+        } else if (window.prefixOriginalOrder) {
+          prefixWords = [...window.prefixOriginalOrder];
+        }
+        prefixIndex = 0;
+      }
       // Update prefix buttons for selected articles mode
       const unBtnLbl = document.getElementById('prefixUnBtn');
       const uneBtnLbl = document.getElementById('prefixUneBtn');

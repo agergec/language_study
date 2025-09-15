@@ -12,7 +12,7 @@
   <link rel="manifest" id="manifestLink">
   <!-- iOS home-screen icon (set at runtime to PNG) -->
   <link rel="apple-touch-icon" sizes="180x180" id="appleIcon">
-  <title data-i18n="page_title">🇫🇷 French Listening Study</title>
+  <title data-i18n="page_title">French Listening Study</title>
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇫🇷</text></svg>">
 
@@ -438,18 +438,18 @@
         <p style="margin: 1rem 0;" data-i18n="welcome_instructions">To begin, please load one or more `.txt` files containing your words.</p>
         <div id="welcomeActions" class="welcome-actions">
           <div class="settings-section">
-            <div class="settings-section-title">Files</div>
+            <div class="settings-section-title" data-i18n="files_title">Files</div>
             <div class="settings-card">
               <div class="settings-item" style="justify-content:center;">
-                <button id="welcomeAddBtn" class="panel-link">Add Word List…</button>
+                <button id="welcomeAddBtn" class="panel-link" data-i18n="files_add_list">Add Word List…</button>
               </div>
             </div>
             <div class="settings-card" style="margin-top:12px;">
               <div class="settings-item" style="justify-content:center;">
-                <a id="chatgptLinkWelcome" class="panel-link" href="#">Open in ChatGPT</a>
+                <a id="chatgptLinkWelcome" class="panel-link" href="#" data-i18n="files_open_in_chatgpt">Open in ChatGPT</a>
               </div>
             </div>
-            <div class="settings-note">Tip: You can also drag & drop files anywhere on the page.</div>
+            <div class="settings-note" data-i18n="files_drag_drop_tip">Tip: You can also drag & drop files anywhere on the page.</div>
           </div>
           <div id="iosFilePickerRow" style="display:none; margin-top: 0.75rem;">
             <input type="file" id="iosFileInput" accept=".txt" multiple />
@@ -467,19 +467,19 @@
       </div>
       <div class="panel-body" style="padding: 1rem; background:#f2f2f7;">
         <div class="settings-section">
-          <div class="settings-section-title">QUICK ACCESS</div>
+          <div class="settings-section-title" data-i18n="quick_access_title">QUICK ACCESS</div>
           <div class="settings-card">
             <div class="settings-item" id="goLanguage" role="button" tabindex="0">
-              <div class="settings-label">Language</div>
+              <div class="settings-label" data-i18n="quick_language_label">Language</div>
               <div class="settings-chevron">›</div>
             </div>
             <div class="settings-item" id="goStudyMode" role="button" tabindex="0">
-              <div class="settings-label">Study Mode</div>
+              <div class="settings-label" data-i18n="quick_mode_label">Study Mode</div>
               <div class="settings-value" id="settingsModalModeValue"></div>
               <div class="settings-chevron">›</div>
             </div>
             <div class="settings-item" id="goVoice" role="button" tabindex="0">
-              <div class="settings-label">Voice</div>
+              <div class="settings-label" data-i18n="quick_voice_label">Voice</div>
               <div class="settings-value" id="settingsModalVoiceValue"></div>
               <div class="settings-chevron">›</div>
             </div>
@@ -487,15 +487,15 @@
         </div>
 
         <div class="settings-section">
-          <div class="settings-section-title">INTEGRATIONS</div>
+          <div class="settings-section-title" data-i18n="integrations_title">INTEGRATIONS</div>
           <div class="settings-card">
             <div class="settings-item" id="goEleven" role="button" tabindex="0">
-              <div class="settings-label">ElevenLabs</div>
+              <div class="settings-label" data-i18n="integrations_elevenlabs_label">ElevenLabs</div>
               <div class="settings-value" id="settingsModalEleven"></div>
               <div class="settings-chevron">›</div>
             </div>
             <div class="settings-item" id="goOpenAI" role="button" tabindex="0">
-              <div class="settings-label">OpenAI</div>
+              <div class="settings-label" data-i18n="integrations_openai_label">OpenAI</div>
               <div class="settings-value" id="settingsModalOpenAI"></div>
               <div class="settings-chevron">›</div>
             </div>
@@ -503,15 +503,15 @@
         </div>
 
         <div class="settings-section">
-          <div class="settings-section-title">DATA & SYSTEM</div>
+          <div class="settings-section-title" data-i18n="data_system_title">DATA & SYSTEM</div>
           <div class="settings-card">
             <div class="settings-item" id="goFiles" role="button" tabindex="0">
-              <div class="settings-label">Active Word Lists</div>
+              <div class="settings-label" data-i18n="data_active_lists_label">Active Word Lists</div>
               <div class="settings-value" id="settingsActiveListsCountMirror">0</div>
               <div class="settings-chevron">›</div>
             </div>
             <div class="settings-item" style="justify-content:center;">
-              <button class="btn btn-secondary" id="resetAppBtn" type="button">Reset App (Reload)</button>
+              <button class="btn btn-secondary" id="resetAppBtn" type="button" data-i18n="data_reset_btn">Reset App (Reload)</button>
             </div>
           </div>
         </div>
@@ -525,39 +525,39 @@
       <div class="panel-body" style="padding: 1rem; background:#f2f2f7;">
 
         <div class="settings-section">
-          <div class="settings-section-title">GETTING STARTED</div>
+          <div class="settings-section-title" data-i18n="help_getting_started_title">GETTING STARTED</div>
           <div class="settings-card">
             <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
-              <div><b>Load words</b>: Add one or more <code>.txt</code> files. Each line is a word or phrase.</div>
-              <div>Ways to add files: Welcome screen → “Add Word List…”, Menu → Data & System → Files → “Add Word List…”, or drag & drop anywhere.</div>
-              <div>After loading: the app builds your word pool and enables study controls.</div>
+              <div data-i18n="help_load_words"><b>Load words</b>: Add one or more <code>.txt</code> files. Each line is a word or phrase.</div>
+              <div data-i18n="help_add_files_ways">Ways to add files: Welcome screen → “Add Word List…”, Menu → Data & System → Files → “Add Word List…”, or drag & drop anywhere.</div>
+              <div data-i18n="help_after_loading">After loading: the app builds your word pool and enables study controls.</div>
             </div>
           </div>
         </div>
 
         <div class="settings-section">
-          <div class="settings-section-title">STUDY MODES</div>
+          <div class="settings-section-title" data-i18n="help_modes_title">STUDY MODES</div>
           <div class="settings-card">
-            <div class="settings-item"><div class="settings-label"><b>Listen & Read</b></div><div class="settings-value">Shows text and speaks once.</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Read then Say</b></div><div class="settings-value">You read first. On Next, the app speaks once.</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Listen then Repeat</b></div><div class="settings-value">App speaks, you repeat. On Next, reveals and speaks again.</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Articles — le/la</b></div><div class="settings-value">Shows base (e.g., “… table”). Pick the correct definite article.</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Articles — un/une</b></div><div class="settings-value">Shows base (e.g., “… ami”). Pick the correct indefinite article.</div></div>
+            <div class="settings-item"><div class="settings-label" data-i18n="help_mode_listen_read_label"><b>Listen & Read</b></div><div class="settings-value" data-i18n="help_mode_listen_read_desc">Shows text and speaks once.</div></div>
+            <div class="settings-item"><div class="settings-label" data-i18n="help_mode_read_then_say_label"><b>Read then Say</b></div><div class="settings-value" data-i18n="help_mode_read_then_say_desc">You read first. On Next, the app speaks once.</div></div>
+            <div class="settings-item"><div class="settings-label" data-i18n="help_mode_listen_then_repeat_label"><b>Listen then Repeat</b></div><div class="settings-value" data-i18n="help_mode_listen_then_repeat_desc">App speaks, you repeat. On Next, reveals and speaks again.</div></div>
+            <div class="settings-item"><div class="settings-label" data-i18n="help_mode_articles_def_label"><b>Articles — le/la</b></div><div class="settings-value" data-i18n="help_mode_articles_def_desc">Shows base (e.g., “… table”). Pick the correct definite article.</div></div>
+            <div class="settings-item"><div class="settings-label" data-i18n="help_mode_articles_indef_label"><b>Articles — un/une</b></div><div class="settings-value" data-i18n="help_mode_articles_indef_desc">Shows base (e.g., “… ami”). Pick the correct indefinite article.</div></div>
             <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
-              <div><b>Switch mode</b>: Menu → General → Study Mode or tap the mode text in the footer.</div>
-              <div><b>Availability</b>: Article modes become selectable when matching words exist.</div>
+              <div data-i18n="help_switch_mode"><b>Switch mode</b>: Menu → General → Study Mode or tap the mode text in the footer.</div>
+              <div data-i18n="help_availability"><b>Availability</b>: Article modes become selectable when matching words exist.</div>
             </div>
           </div>
         </div>
 
         <div class="settings-section">
-          <div class="settings-section-title">CONTROLS & SHORTCUTS</div>
+          <div class="settings-section-title" data-i18n="help_controls_title">CONTROLS & SHORTCUTS</div>
           <div class="settings-card">
-            <div class="settings-item"><div class="settings-label"><b>Next</b></div><div class="settings-value">Space</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Repeat</b></div><div class="settings-value">R</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Show</b></div><div class="settings-value">S</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Menu</b></div><div class="settings-value">Alt+M</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Close</b></div><div class="settings-value">Esc (closes any open modal)</div></div>
+            <div class="settings-item"><div class="settings-label" data-i18n="help_control_next_label"><b>Next</b></div><div class="settings-value" data-i18n="help_control_next_value">Space</div></div>
+            <div class="settings-item"><div class="settings-label" data-i18n="help_control_repeat_label"><b>Repeat</b></div><div class="settings-value" data-i18n="help_control_repeat_value">R</div></div>
+            <div class="settings-item"><div class="settings-label" data-i18n="help_control_show_label"><b>Show</b></div><div class="settings-value" data-i18n="help_control_show_value">S</div></div>
+            <div class="settings-item"><div class="settings-label" data-i18n="help_control_menu_label"><b>Menu</b></div><div class="settings-value" data-i18n="help_control_menu_value">Alt+M</div></div>
+            <div class="settings-item"><div class="settings-label" data-i18n="help_control_close_label"><b>Close</b></div><div class="settings-value" data-i18n="help_control_close_value">Esc (closes any open modal)</div></div>
             <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
               <div><b>Answers panel</b>: On desktop, toggle with the chevron on the left panel.</div>
               <div><b>Progress</b>: The top bar shows progress by current mode.</div>
@@ -566,33 +566,33 @@
         </div>
 
         <div class="settings-section">
-          <div class="settings-section-title">VOICES & AUDIO</div>
+          <div class="settings-section-title" data-i18n="help_voice_title">VOICES & AUDIO</div>
           <div class="settings-card">
             <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
-              <div><b>Voice selection</b>: Menu → Voice Configuration → Voice. Tap “Test Voice” to preview.</div>
-              <div><b>System voice</b>: Uses your browser/OS voices for French (fr‑FR).</div>
-              <div><b>OpenAI / ElevenLabs</b>: Add an API key in Integrations to enable extra voices.</div>
-              <div><b>Quick change</b>: Tap the voice text in the footer to pick a voice inline.</div>
-              <div><b>Repeat speed‑up</b>: The app caches the most recent TTS clip temporarily to replay instantly on “Repeat”. Cache clears on mode/voice/list/shuffle changes and on app start.</div>
+              <div data-i18n="help_voice_selection"><b>Voice selection</b>: Menu → Voice Configuration → Voice. Tap “Test Voice” to preview.</div>
+              <div data-i18n="help_voice_system"><b>System voice</b>: Uses your browser/OS voices for French (fr‑FR).</div>
+              <div data-i18n="help_voice_cloud"><b>OpenAI / ElevenLabs</b>: Add an API key in Integrations to enable extra voices.</div>
+              <div data-i18n="help_voice_quick_change"><b>Quick change</b>: Tap the voice text in the footer to pick a voice inline.</div>
+              <div data-i18n="help_voice_repeat_cache"><b>Repeat speed‑up</b>: The app caches the most recent TTS clip temporarily to replay instantly on “Repeat”. Cache clears on mode/voice/list/shuffle changes and on app start.</div>
             </div>
           </div>
         </div>
 
         <div class="settings-section">
-          <div class="settings-section-title">FILES & PERSISTENCE</div>
+          <div class="settings-section-title" data-i18n="help_files_persist_title">FILES & PERSISTENCE</div>
           <div class="settings-card">
             <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
-              <div><b>Manage files</b>: Menu → Data & System → Files. See counts, enable/disable, delete (×), and add.</div>
-              <div><b>Enable/disable</b>: Toggles take effect immediately and rebuild the session.</div>
-              <div><b>Delete</b>: Use the × button to remove a file (also removed from local storage).</div>
-              <div><b>Persistence</b>: On first load per session, you can opt to save lists to IndexedDB. If accepted, lists restore automatically on next visit.</div>
-              <div><b>Reset app</b>: Settings → Reset clears local/session storage, IndexedDB word lists, and cached files.</div>
+              <div data-i18n="help_manage_files"><b>Manage files</b>: Menu → Data & System → Files. See counts, enable/disable, delete (×), and add.</div>
+              <div data-i18n="help_enable_disable"><b>Enable/disable</b>: Toggles take effect immediately and rebuild the session.</div>
+              <div data-i18n="help_delete_file"><b>Delete</b>: Use the × button to remove a file (also removed from local storage).</div>
+              <div data-i18n="help_persistence"><b>Persistence</b>: On first load per session, you can opt to save lists to IndexedDB. If accepted, lists restore automatically on next visit.</div>
+              <div data-i18n="help_reset_app"><b>Reset app</b>: Settings → Reset clears local/session storage, IndexedDB word lists, and cached files.</div>
             </div>
           </div>
         </div>
 
         <div class="settings-section">
-          <div class="settings-section-title">STATUS BAR QUICK ACTIONS</div>
+          <div class="settings-section-title" data-i18n="help_status_bar_title">STATUS BAR QUICK ACTIONS</div>
           <div class="settings-card">
             <div class="settings-item"><div class="settings-label"><b>Mode</b></div><div class="settings-value">Tap the text to switch modes inline.</div></div>
             <div class="settings-item"><div class="settings-label"><b>Voice</b></div><div class="settings-value">Tap the text to pick a voice inline.</div></div>
@@ -953,6 +953,7 @@
                       <div><b>Voice selection</b>: Menu → Voice Configuration → Voice. Tap “Test Voice” to preview.</div>
                       <div><b>System voice</b>: Uses your browser/OS voices for French (fr‑FR).</div>
                       <div><b>OpenAI / ElevenLabs</b>: Add an API key in Integrations to enable extra voices.</div>
+                      <div data-i18n="voice_note_new_google"><b>New Google voices</b>: If your browser exposes the latest Google voices, they appear under System voices automatically. Choose any labelled “Google” for clearer, more natural pronunciation.</div>
                       <div><b>Quick change</b>: Tap the voice text in the footer to pick a voice inline.</div>
                       <div><b>Repeat speed‑up</b>: The app caches the most recent TTS clip temporarily to replay instantly on “Repeat”. Cache clears on mode/voice/list/shuffle changes and on app start.</div>
                     </div>
@@ -975,10 +976,10 @@
                 <div class="settings-section">
                   <div class="settings-section-title">STATUS BAR QUICK ACTIONS</div>
                   <div class="settings-card">
-                    <div class="settings-item"><div class="settings-label"><b>Mode</b></div><div class="settings-value">Tap the text to switch modes inline.</div></div>
-                    <div class="settings-item"><div class="settings-label"><b>Voice</b></div><div class="settings-value">Tap the text to pick a voice inline.</div></div>
-                    <div class="settings-item"><div class="settings-label"><b>Files</b></div><div class="settings-value">Tap the icon to see file list and add a new list.</div></div>
-                    <div class="settings-item"><div class="settings-label"><b>Shuffle</b></div><div class="settings-value">Tap to toggle. A compact confirmation appears near the icon.</div></div>
+                    <div class="settings-item"><div class="settings-label" data-i18n="help_status_mode_label"><b>Mode</b></div><div class="settings-value" data-i18n="help_status_mode_value">Tap the text to switch modes inline.</div></div>
+                    <div class="settings-item"><div class="settings-label" data-i18n="help_status_voice_label"><b>Voice</b></div><div class="settings-value" data-i18n="help_status_voice_value">Tap the text to pick a voice inline.</div></div>
+                    <div class="settings-item"><div class="settings-label" data-i18n="help_status_files_label"><b>Files</b></div><div class="settings-value" data-i18n="help_status_files_value">Tap the icon to see file list and add a new list.</div></div>
+                    <div class="settings-item"><div class="settings-label" data-i18n="help_status_shuffle_label"><b>Shuffle</b></div><div class="settings-value" data-i18n="help_status_shuffle_value">Tap to toggle. A compact confirmation appears near the icon.</div></div>
                   </div>
                 </div>
 
@@ -988,7 +989,23 @@
                     <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
                       <div><b>OpenAI</b>: Add a <code>.key</code> file in Menu → Integrations → OpenAI. Remove with the trash icon.</div>
                       <div><b>ElevenLabs</b>: Add a <code>.key</code> file in Menu → Integrations → ElevenLabs. Remove with the trash icon.</div>
-                      <div><b>Notes</b>: Keys are stored locally on your device. Network is required for these voices; if unavailable, the app falls back to the system voice.</div>
+                      <div data-i18n="integrations_google_tts"><b>Google Cloud TTS</b>: Add a <code>.key</code> file in Menu → Integrations → Google Cloud. The key should be a JSON service account or API key with Text‑to‑Speech access. Once added, Google voices appear in the Voice picker.</div>
+                      <div data-i18n="integrations_chatgpt_tip"><b>ChatGPT integration</b>: Use the “Open in ChatGPT” link in Files to reach a specialized GPT. It can generate plain <code>.txt</code> lists that are immediately compatible with this app (one word or phrase per line). Download the file and add it via “Add Word List…”.</div>
+                      <div><b>Notes</b>: Keys are stored locally on your device. Network is required for cloud voices (OpenAI, ElevenLabs, Google Cloud); if unavailable, the app falls back to the system voice.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="settings-section">
+                  <div class="settings-section-title" data-i18n="best_title">HOW TO USE THIS APP BEST</div>
+                  <div class="settings-card">
+                    <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
+                      <div data-i18n="best_start_focused"><b>Start focused</b>: Load a small themed list (20–50 items) to build momentum.</div>
+                      <div data-i18n="best_pick_mode"><b>Pick a mode per goal</b>: Use “Listen then Repeat” for pronunciation, “Read then Say” for recall, and article modes for gender practice.</div>
+                      <div data-i18n="best_cycle_voices"><b>Cycle voices</b>: Try different system or cloud voices weekly to improve listening range.</div>
+                      <div data-i18n="best_short_sessions"><b>Short sessions</b>: Aim for 10–15 minute sessions, multiple times a day.</div>
+                      <div data-i18n="best_track_mistakes"><b>Track mistakes</b>: Skipped or wrong answers appear in History—review them at the end.</div>
+                      <div data-i18n="best_refresh_lists"><b>Refresh lists</b>: Grow your lists with ChatGPT‑generated <code>.txt</code> files tailored to your level.</div>
                     </div>
                   </div>
                 </div>
@@ -1028,7 +1045,7 @@
     'use strict';
     const i18n = {
       en: {
-        page_title: "🇫🇷 French Listening Study",
+        page_title: "French Listening Study",
         header_title: "🇫🇷 French Study",
         title_help: "Help",
         title_settings: "Settings",
@@ -1083,6 +1100,16 @@
         confirm_title: "Reset Study Progress",
         confirm_yes_continue: "Yes, Continue",
         confirm_cancel: "Cancel",
+        voice_note_new_google: "<b>New Google voices</b>: If your browser exposes the latest Google voices, they appear under System voices automatically. Choose any labelled “Google” for clearer, more natural pronunciation.",
+        integrations_google_tts: "<b>Google Cloud TTS</b>: Add a <code>.key</code> file in Menu → Integrations → Google Cloud. The key should be a JSON service account or API key with Text‑to‑Speech access. Once added, Google voices appear in the Voice picker.",
+        integrations_chatgpt_tip: "<b>ChatGPT integration</b>: Use the “Open in ChatGPT” link in Files to reach a specialized GPT. It can generate plain <code>.txt</code> lists that are immediately compatible with this app (one word or phrase per line). Download the file and add it via “Add Word List…”.",
+        best_title: "HOW TO USE THIS APP BEST",
+        best_start_focused: "<b>Start focused</b>: Load a small themed list (20–50 items) to build momentum.",
+        best_pick_mode: "<b>Pick a mode per goal</b>: Use “Listen then Repeat” for pronunciation, “Read then Say” for recall, and article modes for gender practice.",
+        best_cycle_voices: "<b>Cycle voices</b>: Try different system or cloud voices weekly to improve listening range.",
+        best_short_sessions: "<b>Short sessions</b>: Aim for 10–15 minute sessions, multiple times a day.",
+        best_track_mistakes: "<b>Track mistakes</b>: Skipped or wrong answers appear in History—review them at the end.",
+        best_refresh_lists: "<b>Refresh lists</b>: Grow your lists with ChatGPT‑generated <code>.txt</code> files tailored to your level.",
         no_voices: "🗣️ No Voices Available",
         indicator_mode_prefix: "📖 Mode:",
         indicator_shuffle_on: "🔀 Shuffle: On",
@@ -1102,10 +1129,78 @@
         toast_multi_file: "✅ {wordCount} words from {fileCount} files loaded – ready to study!",
         confirm_shuffle: "Changing shuffle mode will reset your progress. Are you sure?",
         confirm_word_list: "Changing active word lists will reset your progress. Are you sure?",
-        confirm_reset: "This will clear local & session storage, API keys, cached files, and reload the app. Continue?"
+        confirm_reset: "This will clear local & session storage, API keys, cached files, and reload the app. Continue?",
+        files_title: "Files",
+        files_add_list: "Add Word List…",
+        files_open_in_chatgpt: "Open in ChatGPT",
+        files_drag_drop_tip: "Tip: You can also drag & drop files anywhere on the page.",
+        quick_access_title: "QUICK ACCESS",
+        quick_language_label: "Language",
+        quick_mode_label: "Study Mode",
+        quick_voice_label: "Voice",
+        integrations_title: "INTEGRATIONS",
+        integrations_elevenlabs_label: "ElevenLabs",
+        integrations_openai_label: "OpenAI",
+        data_system_title: "DATA & SYSTEM",
+        data_active_lists_label: "Active Word Lists",
+        data_reset_btn: "Reset App (Reload)",
+        help_getting_started_title: "GETTING STARTED",
+        help_load_words: "<b>Load words</b>: Add one or more <code>.txt</code> files. Each line is a word or phrase.",
+        help_add_files_ways: "Ways to add files: Welcome screen → “Add Word List…”, Menu → Data & System → Files → “Add Word List…”, or drag & drop anywhere.",
+        help_after_loading: "After loading: the app builds your word pool and enables study controls.",
+        help_modes_title: "STUDY MODES",
+        help_mode_listen_read_label: "<b>Listen & Read</b>",
+        help_mode_listen_read_desc: "Shows text and speaks once.",
+        help_mode_read_then_say_label: "<b>Read then Say</b>",
+        help_mode_read_then_say_desc: "You read first. On Next, the app speaks once.",
+        help_mode_listen_then_repeat_label: "<b>Listen then Repeat</b>",
+        help_mode_listen_then_repeat_desc: "App speaks, you repeat. On Next, reveals and speaks again.",
+        help_mode_articles_def_label: "<b>Articles — le/la</b>",
+        help_mode_articles_def_desc: "Shows base (e.g., “… table”). Pick the correct definite article.",
+        help_mode_articles_indef_label: "<b>Articles — un/une</b>",
+        help_mode_articles_indef_desc: "Shows base (e.g., “… ami”). Pick the correct indefinite article.",
+        help_switch_mode: "<b>Switch mode</b>: Menu → General → Study Mode or tap the mode text in the footer.",
+        help_availability: "<b>Availability</b>: Article modes become selectable when matching words exist.",
+        help_controls_title: "CONTROLS & SHORTCUTS",
+        help_control_next_label: "<b>Next</b>",
+        help_control_next_value: "Space",
+        help_control_repeat_label: "<b>Repeat</b>",
+        help_control_repeat_value: "R",
+        help_control_show_label: "<b>Show</b>",
+        help_control_show_value: "S",
+        help_control_menu_label: "<b>Menu</b>",
+        help_control_menu_value: "Alt+M",
+        help_control_close_label: "<b>Close</b>",
+        help_control_close_value: "Esc (closes any open modal)",
+        help_voice_title: "VOICES & AUDIO",
+        help_voice_selection: "<b>Voice selection</b>: Menu → Voice Configuration → Voice. Tap “Test Voice” to preview.",
+        help_voice_system: "<b>System voice</b>: Uses your browser/OS voices for French (fr‑FR).",
+        help_voice_cloud: "<b>OpenAI / ElevenLabs</b>: Add an API key in Integrations to enable extra voices.",
+        help_voice_quick_change: "<b>Quick change</b>: Tap the voice text in the footer to pick a voice inline.",
+        help_voice_repeat_cache: "<b>Repeat speed‑up</b>: The app caches the most recent TTS clip temporarily to replay instantly on “Repeat”. Cache clears on mode/voice/list/shuffle changes and on app start.",
+        help_files_persist_title: "FILES & PERSISTENCE",
+        help_manage_files: "<b>Manage files</b>: Menu → Data & System → Files. See counts, enable/disable, delete (×), and add.",
+        help_enable_disable: "<b>Enable/disable</b>: Toggles take effect immediately and rebuild the session.",
+        help_delete_file: "<b>Delete</b>: Use the × button to remove a file (also removed from local storage).",
+        help_persistence: "<b>Persistence</b>: On first load per session, you can opt to save lists to IndexedDB. If accepted, lists restore automatically on next visit.",
+        help_reset_app: "<b>Reset app</b>: Settings → Reset clears local/session storage, IndexedDB word lists, and cached files.",
+        help_status_bar_title: "ACTIONS RAPIDES DE LA BARRE D’ÉTAT",
+        help_status_mode_label: "<b>Mode</b>",
+        help_status_mode_value: "Tap the text to switch modes inline.",
+        help_status_voice_label: "<b>Voice</b>",
+        help_status_voice_value: "Tap the text to pick a voice inline.",
+        help_status_files_label: "<b>Files</b>",
+        help_status_files_value: "Tap the icon to see file list and add a new list.",
+        help_status_shuffle_label: "<b>Shuffle</b>",
+        help_status_shuffle_value: "Tap to toggle. A compact confirmation appears near the icon.",
+        help_tips_title: "TIPS & TROUBLESHOOTING",
+        help_tip_autoplay: "• If audio does not play, try interacting (tap/click) once to satisfy autoplay policies.",
+        help_tip_refresh_voices: "• If voices are missing, open the Menu and revisit Voice to refresh the list.",
+        help_tip_articles_availability: "• If article modes are disabled, ensure your lists include words starting with the required prefixes (le/la or un/une).",
+        help_tip_history_panel: "• On desktop, collapse/expand the Answers panel with the chevron. Use the History button to see all revealed items."
       },
       fr: {
-        page_title: "🇫🇷 Étude d'écoute en français",
+        page_title: "Étude d'écoute en français",
         header_title: "🇫🇷 Étude de français",
         title_help: "Aide",
         title_settings: "Paramètres",
@@ -1121,6 +1216,20 @@
         welcome_or: "ou",
         welcome_browse: "Parcourir les fichiers",
         settings_title: "Paramètres",
+        files_title: "Fichiers",
+        files_add_list: "Ajouter une liste…",
+        files_open_in_chatgpt: "Ouvrir dans ChatGPT",
+        files_drag_drop_tip: "Astuce : vous pouvez aussi glisser‑déposer des fichiers n’importe où sur la page.",
+        quick_access_title: "ACCÈS RAPIDE",
+        quick_language_label: "Langue",
+        quick_mode_label: "Mode d'étude",
+        quick_voice_label: "Voix",
+        integrations_title: "INTÉGRATIONS",
+        integrations_elevenlabs_label: "ElevenLabs",
+        integrations_openai_label: "OpenAI",
+        data_system_title: "DONNÉES & SYSTÈME",
+        data_active_lists_label: "Listes de mots actives",
+        data_reset_btn: "Réinitialiser l’application (recharger)",
         label_active_word_lists: "Listes de mots actives",
         btn_next: "Suivant (Espace)", btn_repeat: "Répéter (R)", btn_show: "Afficher (S)", btn_toggleVoice: "Voix (V)",
         status_ready: "Prêt à commencer une nouvelle session", history_title: "Réponses",
@@ -1160,6 +1269,16 @@
         confirm_title: "Réinitialiser la progression d'étude",
         confirm_yes_continue: "Oui, continuer",
         confirm_cancel: "Annuler",
+        voice_note_new_google: "<b>Nouvelles voix Google</b> : Si votre navigateur expose les dernières voix Google, elles apparaissent automatiquement sous Voix système. Choisissez celles indiquées “Google” pour une prononciation plus claire et naturelle.",
+        integrations_google_tts: "<b>Google Cloud TTS</b> : Ajoutez un fichier <code>.key</code> dans Menu → Intégrations → Google Cloud. La clé doit être un compte de service JSON ou une clé API avec l’accès Text‑to‑Speech. Une fois ajoutées, les voix Google apparaissent dans le sélecteur de voix.",
+        integrations_chatgpt_tip: "<b>Intégration ChatGPT</b> : Utilisez le lien “Ouvrir dans ChatGPT” dans Fichiers pour accéder à un GPT spécialisé. Il peut générer des listes <code>.txt</code> simples, immédiatement compatibles avec l’application (un mot ou une expression par ligne). Téléchargez puis ajoutez le fichier via “Ajouter une liste…”.",
+        best_title: "OPTIMISER L’UTILISATION DE L’APPLICATION",
+        best_start_focused: "<b>Commencez ciblé</b> : Chargez une petite liste thématique (20–50 éléments) pour gagner en élan.",
+        best_pick_mode: "<b>Choisissez le mode selon l’objectif</b> : “Écouter puis répéter” pour la prononciation, “Lire puis dire” pour le rappel, et les modes d’articles pour le genre.",
+        best_cycle_voices: "<b>Alternez les voix</b> : Essayez chaque semaine différentes voix système ou cloud pour élargir votre écoute.",
+        best_short_sessions: "<b>Sessions courtes</b> : Visez 10–15 minutes, plusieurs fois par jour.",
+        best_track_mistakes: "<b>Suivez vos erreurs</b> : Les réponses sautées ou erronées figurent dans Historique — révisez‑les à la fin.",
+        best_refresh_lists: "<b>Renouvelez les listes</b> : Enrichissez‑les avec des fichiers <code>.txt</code> générés par ChatGPT, adaptés à votre niveau.",
         no_voices: "🗣️ Aucune voix disponible",
         indicator_mode_prefix: "📖 Mode :",
         indicator_shuffle_on: "🔀 Mélange : Activé",
@@ -1196,7 +1315,7 @@
     let shuffleEnabled = false;
     let originalWordOrder = [];
     let isSessionComplete = false;
-    const APP_VERSION = 'v1.8.3';
+    const APP_VERSION = 'v1.8.3-beta';
     // Articles quiz state
     let prefixWords = [];
     let prefixWordsIndef = [];
@@ -1561,11 +1680,8 @@
           else { unBtnLbl.textContent = i18n[curLang].btn_prefix_un; uneBtnLbl.textContent = i18n[curLang].btn_prefix_une; }
         }
       })();
-      // Shuffle questions for articles mode according to shuffleEnabled
-      if ((getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef') && prefixWords.length > 0) {
-        if (shuffleEnabled) shuffleArray(prefixWords);
-        else if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
-      }
+      // Note: Shuffling for article modes is handled when entering the mode
+      // and by the shuffle toggle handlers to avoid double randomization here.
     }
 
     // --- Persistent Storage (IndexedDB) for Word Lists ---
@@ -2487,12 +2603,23 @@
       function applyShuffle(enabled) {
         shuffleEnabled = enabled;
         if (st) st.checked = shuffleEnabled;
+        const isArticles = (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef');
         if (shuffleEnabled) {
-          shuffleArray(words);
-          if (prefixWords.length > 0) shuffleArray(prefixWords);
+          if (isArticles) {
+            // Ensure active pool and its original snapshot are set
+            prefixWords = (getSelectedStudyMode() === 'articlesIndef') ? prefixWordsIndef : prefixWordsDef;
+            window.prefixOriginalOrder = (getSelectedStudyMode() === 'articlesIndef') ? window.prefixOriginalOrderIndef : window.prefixOriginalOrderDef;
+            if (prefixWords.length > 0) shuffleArray(prefixWords);
+          } else {
+            shuffleArray(words);
+          }
         } else {
-          words = [...originalWordOrder];
-          if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
+          if (isArticles) {
+            window.prefixOriginalOrder = (getSelectedStudyMode() === 'articlesIndef') ? window.prefixOriginalOrderIndef : window.prefixOriginalOrderDef;
+            if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
+          } else {
+            words = [...originalWordOrder];
+          }
         }
         updateShuffleIndicator();
         initializeStudy();
@@ -2605,9 +2732,9 @@
           if (!container || !section) return;
           if (filenames.length === 0) { section.style.display = 'none'; return; }
           if (style === 'ios') {
-            // Always show file list with counts; include toggles only when multiple files
+            // Always show file list with counts; include toggles even when single file
             section.style.display = 'block';
-            const showToggles = filenames.length > 1;
+            const showToggles = true;
             filenames.forEach(name => {
               const row = document.createElement('div');
               row.className = 'settings-item';
@@ -2645,8 +2772,8 @@
               container.appendChild(row);
             });
           } else {
-            // Legacy settings: show toggles only when multiple files are present
-            if (filenames.length > 1) {
+            // Legacy settings: show toggles even when a single file is present
+            if (filenames.length >= 1) {
               section.style.display = 'block';
               filenames.forEach(name => {
                 const item = document.createElement('div');
@@ -2984,11 +3111,24 @@
     const wordListContent = document.getElementById("wordListContent");
     document.getElementById('viewListBtn').addEventListener('click', () => {
         wordListContent.innerHTML = "";
-        words.forEach((word, index) => {
+        // Choose source list based on study mode
+        let list = words;
+        let highlightIndex = currentIndex - 1;
+        const modeNow = getSelectedStudyMode();
+        if (modeNow === 'articlesIndef' || modeNow === 'articlesDef') {
+            // Use the active (possibly shuffled) article pool
+            if (!Array.isArray(prefixWords) || prefixWords.length === 0) {
+              prefixWords = (modeNow === 'articlesIndef') ? prefixWordsIndef : prefixWordsDef;
+            }
+            list = prefixWords.map(p => p.full);
+            // Highlight the current item (prefixIndex always points to next slot)
+            highlightIndex = Math.max(0, prefixIndex - 1);
+        }
+        list.forEach((word, index) => {
             const wordItem = document.createElement("div");
             wordItem.className = "history-item";
             wordItem.textContent = `${index + 1}. ${word}`;
-            if (index === currentIndex - 1) wordItem.style.fontWeight = "bold";
+            if (index === highlightIndex) wordItem.style.fontWeight = "bold";
             wordListContent.appendChild(wordItem);
         });
         wordListModal.classList.add('visible');
@@ -3001,12 +3141,22 @@
         confirmationCallback = () => {
             shuffleEnabled = !shuffleEnabled; 
             document.getElementById('shuffleToggle').checked = shuffleEnabled;
+            const isArticles = (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef');
             if (shuffleEnabled) {
-              shuffleArray(words);
-              if (prefixWords.length > 0) shuffleArray(prefixWords);
+              if (isArticles) {
+                prefixWords = (getSelectedStudyMode() === 'articlesIndef') ? prefixWordsIndef : prefixWordsDef;
+                window.prefixOriginalOrder = (getSelectedStudyMode() === 'articlesIndef') ? window.prefixOriginalOrderIndef : window.prefixOriginalOrderDef;
+                if (prefixWords.length > 0) shuffleArray(prefixWords);
+              } else {
+                shuffleArray(words);
+              }
             } else {
-              words = [...originalWordOrder];
-              if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
+              if (isArticles) {
+                window.prefixOriginalOrder = (getSelectedStudyMode() === 'articlesIndef') ? window.prefixOriginalOrderIndef : window.prefixOriginalOrderDef;
+                if (window.prefixOriginalOrder) prefixWords = [...window.prefixOriginalOrder];
+              } else {
+                words = [...originalWordOrder];
+              }
             }
             updateShuffleIndicator();
             initializeStudy();
@@ -3328,6 +3478,25 @@
       updateStudyModeIndicator();
       const isArticles = (getSelectedStudyMode() === 'articlesIndef' || getSelectedStudyMode() === 'articlesDef');
       document.getElementById('privativeControls').style.display = isArticles ? 'flex' : 'none';
+      // When leaving articles mode, restore normal word order if it was shuffled for articles
+      if (!isArticles) {
+        // Restore full words order from originalWordOrder
+        if (Array.isArray(originalWordOrder) && originalWordOrder.length) {
+          words = [...originalWordOrder];
+        }
+        // Reset article pool and index highlight
+        prefixIndex = 0;
+      } else {
+        // Entering articles mode: ensure prefix pool reflects current shuffle setting
+        prefixWords = (getSelectedStudyMode() === 'articlesIndef') ? prefixWordsIndef : prefixWordsDef;
+        window.prefixOriginalOrder = (getSelectedStudyMode() === 'articlesIndef') ? window.prefixOriginalOrderIndef : window.prefixOriginalOrderDef;
+        if (shuffleEnabled) {
+          shuffleArray(prefixWords);
+        } else if (window.prefixOriginalOrder) {
+          prefixWords = [...window.prefixOriginalOrder];
+        }
+        prefixIndex = 0;
+      }
       // Update prefix buttons for selected articles mode
       const unBtnLbl = document.getElementById('prefixUnBtn');
       const uneBtnLbl = document.getElementById('prefixUneBtn');

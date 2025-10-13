@@ -6,7 +6,7 @@ Diğer alıştırmalar zaman içinde ortaya çıkmıştır.
 
 # Nasıl başlayalım?
 
-Hemen şunu deneyin. <a href="https://raw.githubusercontent.com/agergec/language_study/refs/heads/beta/beta/a1_test.txt" download>Bu<a/> dosyayı indirip açıp olan sayfaya sürükleyin.
+Hemen şunu deneyin. <a href="https://raw.githubusercontent.com/agergec/language_study/refs/heads/beta/beta/a1_test.txt">Bu<a/> dosyayı indirip açıp olan sayfaya sürükleyin.
 
 Uygulamayı ilk açtığınızda, sizden {{kelime listesi}} yüklemenizi isteyen bir pencere ile karşılaşacaksınız.
 <img width="1007" height="754" alt="image" src="https://github.com/user-attachments/assets/13d44d6d-1604-4254-a078-742027c1b885" />

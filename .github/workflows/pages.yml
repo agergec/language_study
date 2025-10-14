@@ -28,8 +28,11 @@ jobs:
         run: |
           mkdir -p dist
           cp index.html dist/
-          if [ -d beta ]; then cp -R beta dist/beta; fi
-          for d in assets static public; do
+          if [ -d beta ]; then
+            mkdir -p dist/beta
+            cp -R beta/. dist/beta
+          fi
+          for d in assets static public content; do
             if [ -d "$d" ]; then cp -R "$d" "dist/$d"; fi
           done
 
@@ -48,4 +51,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-

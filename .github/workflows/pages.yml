@@ -32,6 +32,7 @@ jobs:
             mkdir -p dist/beta
             cp -R beta/. dist/beta
           fi
+          if [ -f sw.js ]; then cp sw.js dist/; fi
           for d in assets static public content; do
             if [ -d "$d" ]; then cp -R "$d" "dist/$d"; fi
           done

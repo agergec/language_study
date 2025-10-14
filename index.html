@@ -336,6 +336,8 @@
     .panel-actions { display:flex; align-items:center; gap: 8px; min-width: 44px; justify-content: flex-end; }
     .panel-link { background: none; border: 0; color: var(--primary-color); font-weight: 700; padding: 6px 8px; font-size: 0.98rem; }
     .panel-link.link-disabled { opacity: .45; pointer-events: none; }
+    .url-input-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; justify-content: center; width: 100%; }
+    .url-input-row input[type="url"] { flex: 1 1 220px; min-width: 200px; padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); font-size: 0.95rem; font-family: var(--font-family); }
     .settings-check { color: var(--primary-color); font-weight: 800; margin-left: auto; }
     html.is-ios #menuModal .subpanel .panel-header { padding-top: calc(0.75rem + env(safe-area-inset-top)); }
     /* Hide main header when a subpanel is open to avoid overlap */
@@ -442,6 +444,20 @@
             <div class="settings-card">
               <div class="settings-item" style="justify-content:center;">
                 <button id="welcomeAddBtn" class="panel-link" data-i18n="files_add_list">Add Word List…</button>
+              </div>
+            </div>
+            <div class="settings-card" style="margin-top:12px;">
+              <div class="settings-item" style="flex-direction:column; gap:10px; align-items:stretch;">
+                <div style="display:flex; justify-content:center;">
+                  <button id="welcomeSampleBtn" class="panel-link" type="button" data-i18n="files_load_sample">Load Sample Word List</button>
+                </div>
+                <div class="settings-note" style="padding:0; text-align:center;" data-i18n="welcome_sample_note">Loads the starter A1 French words file.</div>
+                <div class="settings-label" style="text-align:center; font-weight:700;" data-i18n="url_add_label">Add from URL</div>
+                <div class="url-input-row">
+                  <input id="welcomeUrlInput" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="https://example.com/words.txt" data-i18n-placeholder="url_add_placeholder">
+                  <button id="welcomeUrlLoadBtn" class="panel-link" type="button" data-i18n="url_add_action">Load URL</button>
+                </div>
+                <div class="settings-note" style="padding:0; text-align:center;" data-i18n="url_add_tip">Supports HTTPS text files; duplicates replace existing lists with the same name.</div>
               </div>
             </div>
             <div class="settings-card" style="margin-top:12px;">
@@ -884,8 +900,22 @@
                 </div>
                 <div class="settings-card" style="margin-top:12px;">
                   <div class="settings-item" style="justify-content:center;">
-                    <button id="btnAddWordList" class="panel-link" type="button">Add Word List…</button>
+                    <button id="btnAddWordList" class="panel-link" type="button" data-i18n="files_add_list">Add Word List…</button>
                     <input type="file" id="menuFileInput" accept=".txt" multiple style="display:none;" />
+                  </div>
+                </div>
+                <div class="settings-card" style="margin-top:12px;">
+                  <div class="settings-item" style="flex-direction:column; gap:10px; align-items:stretch;">
+                    <div style="display:flex; justify-content:center;">
+                      <button id="filesSampleBtn" class="panel-link" type="button" data-i18n="files_load_sample">Load Sample Word List</button>
+                    </div>
+                    <div class="settings-note" style="padding:0; text-align:center;" data-i18n="welcome_sample_note">Loads the starter A1 French words file.</div>
+                    <div class="settings-label" style="text-align:center; font-weight:700;" data-i18n="url_add_label">Add from URL</div>
+                    <div class="url-input-row">
+                      <input id="filesUrlInput" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="https://example.com/words.txt" data-i18n-placeholder="url_add_placeholder">
+                      <button id="filesUrlLoadBtn" class="panel-link" type="button" data-i18n="url_add_action">Load URL</button>
+                    </div>
+                    <div class="settings-note" style="padding:0; text-align:center;" data-i18n="url_add_tip">Supports HTTPS text files; duplicates replace existing lists with the same name.</div>
                   </div>
                 </div>
                 <div class="settings-card" style="margin-top:12px;">
@@ -910,7 +940,7 @@
                   <div class="settings-card">
                     <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
                       <div><b>Load words</b>: Add one or more <code>.txt</code> files. Each line is a word or phrase.</div>
-                      <div>Ways to add files: Welcome screen → “Add Word List…”, Menu → Data & System → Files → “Add Word List…”, or drag & drop anywhere.</div>
+                      <div>Ways to add files: Welcome screen or Files panel → “Add Word List…”, “Load Sample Word List”, “Load from URL”, or drag & drop anywhere.</div>
                       <div>After loading: the app builds your word pool and enables study controls.</div>
                     </div>
                   </div>
@@ -1132,8 +1162,17 @@
         confirm_reset: "This will clear local & session storage, API keys, cached files, and reload the app. Continue?",
         files_title: "Files",
         files_add_list: "Add Word List…",
+        files_load_sample: "Load Sample Word List",
         files_open_in_chatgpt: "Open in ChatGPT",
         files_drag_drop_tip: "Tip: You can also drag & drop files anywhere on the page.",
+        welcome_sample_note: "Loads the starter A1 French words file.",
+        url_add_label: "Add from URL",
+        url_add_action: "Load URL",
+        url_add_placeholder: "https://example.com/words.txt",
+        url_add_tip: "Supports HTTPS text files; duplicates replace existing lists with the same name.",
+        toast_url_invalid: "Enter a valid URL (https://…) to load words.",
+        toast_url_failed: "Couldn't load that URL. Check the address or CORS settings.",
+        toast_empty_list: "The file loaded but did not contain any words.",
         quick_access_title: "QUICK ACCESS",
         quick_language_label: "Language",
         quick_mode_label: "Study Mode",
@@ -1146,7 +1185,7 @@
         data_reset_btn: "Reset App (Reload)",
         help_getting_started_title: "GETTING STARTED",
         help_load_words: "<b>Load words</b>: Add one or more <code>.txt</code> files. Each line is a word or phrase.",
-        help_add_files_ways: "Ways to add files: Welcome screen → “Add Word List…”, Menu → Data & System → Files → “Add Word List…”, or drag & drop anywhere.",
+        help_add_files_ways: "Ways to add files: Welcome screen or Files panel → “Add Word List…”, “Load Sample Word List”, “Load from URL”, or drag & drop anywhere.",
         help_after_loading: "After loading: the app builds your word pool and enables study controls.",
         help_modes_title: "STUDY MODES",
         help_mode_listen_read_label: "<b>Listen & Read</b>",
@@ -1218,8 +1257,21 @@
         settings_title: "Paramètres",
         files_title: "Fichiers",
         files_add_list: "Ajouter une liste…",
+        files_load_sample: "Charger la liste d'essai",
         files_open_in_chatgpt: "Ouvrir dans ChatGPT",
         files_drag_drop_tip: "Astuce : vous pouvez aussi glisser‑déposer des fichiers n’importe où sur la page.",
+        help_getting_started_title: "BIEN DÉMARRER",
+        help_load_words: "<b>Charger des mots</b> : Ajoutez un ou plusieurs fichiers <code>.txt</code>. Chaque ligne contient un mot ou une expression.",
+        help_add_files_ways: "Moyens d’ajouter des fichiers : écran d’accueil ou panneau Fichiers → « Ajouter une liste… », « Charger la liste d’essai », « Charger via une URL », ou glissez-déposez n’importe où.",
+        help_after_loading: "Après chargement : l’application prépare votre banque de mots et active les contrôles d’étude.",
+        welcome_sample_note: "Charge la liste d’exemple A1 en français.",
+        url_add_label: "Ajouter via une URL",
+        url_add_action: "Charger l’URL",
+        url_add_placeholder: "https://exemple.com/mots.txt",
+        url_add_tip: "Prend en charge les fichiers texte HTTPS ; remplace les listes portant le même nom.",
+        toast_url_invalid: "Saisissez une URL valide (https://…) pour charger des mots.",
+        toast_url_failed: "Impossible de charger cette URL. Vérifiez l’adresse ou les paramètres CORS.",
+        toast_empty_list: "Le fichier a été chargé mais ne contient aucun mot.",
         quick_access_title: "ACCÈS RAPIDE",
         quick_language_label: "Langue",
         quick_mode_label: "Mode d'étude",
@@ -1315,7 +1367,9 @@
     let shuffleEnabled = false;
     let originalWordOrder = [];
     let isSessionComplete = false;
-    const APP_VERSION = 'v1.8.3';
+    const APP_VERSION = 'v1.9.0';
+    const APP_IS_BETA = APP_VERSION.includes('beta');
+    const SAMPLE_FILE_NAME = 'a1_test_words.txt';
     // Articles quiz state
     let prefixWords = [];
     let prefixWordsIndef = [];
@@ -1412,6 +1466,12 @@
         const key = el.getAttribute('data-i18n-aria-label');
         if (i18n[lang] && i18n[lang][key]) {
           el.setAttribute('aria-label', i18n[lang][key]);
+        }
+      });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (i18n[lang] && i18n[lang][key]) {
+          el.setAttribute('placeholder', i18n[lang][key]);
         }
       });
       if (words.length > 0) {
@@ -1597,6 +1657,66 @@
       renderVoiceDebug();
     }
 
+    function parseWordListContent(text) {
+      if (typeof text !== 'string') return [];
+      return text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+    }
+
+    function deriveListNameFromUrl(urlString) {
+      try {
+        const u = new URL(urlString, location.href);
+        const parts = u.pathname.split('/').filter(Boolean);
+        const candidate = parts.pop();
+        if (candidate) return decodeURIComponent(candidate);
+        if (u.hostname) return u.hostname;
+      } catch (_) {
+        const cleaned = (urlString || '').split('?')[0];
+        const segments = cleaned.split('/').filter(Boolean);
+        if (segments.length) return decodeURIComponent(segments.pop());
+      }
+      return 'remote-list.txt';
+    }
+
+    function storeWordList(name, words) {
+      if (!Array.isArray(words) || words.length === 0) return { count: 0, filename: null };
+      const fallback = `Word List ${Object.keys(wordLists).length + 1}`;
+      const normalized = (name && name.trim()) ? name.trim() : fallback;
+      wordLists[normalized] = { words, enabled: true };
+      return { count: words.length, filename: normalized };
+    }
+
+    function finalizeWordListImport(totalWords, opts = {}) {
+      if (totalWords <= 0) return false;
+      generateWordListsUI();
+      rebuildActiveWordsList();
+      if (!opts.keepWelcomeOpen && welcomeModal) welcomeModal.classList.remove('visible');
+
+      const fileCount = Object.keys(wordLists).length;
+      let toastMessage;
+      if (fileCount === 1) {
+        toastMessage = i18n[curLang].toast_single_file.replace('{count}', totalWords);
+      } else {
+        toastMessage = i18n[curLang].toast_multi_file.replace('{wordCount}', totalWords).replace('{fileCount}', fileCount);
+      }
+
+      const filesPanel = document.getElementById('filesPanel');
+      const menuModalEl = document.getElementById('menuModal');
+      const inFilesPanel = !!(menuModalEl && menuModalEl.classList.contains('visible') && filesPanel && filesPanel.getAttribute('aria-hidden') === 'false');
+      if (!opts.suppressToast && !inFilesPanel) {
+        showToast(toastMessage);
+      }
+      clearAudioCache();
+      maybePromptPersist();
+      return true;
+    }
+
+    function getSampleWordListUrl() {
+      const isLocal = ['localhost', '127.0.0.1', '::1'].includes(location.hostname) || location.protocol === 'file:';
+      if (isLocal) return `content/${SAMPLE_FILE_NAME}`;
+      const base = APP_IS_BETA ? 'https://agergec.github.io/language_study_beta' : 'https://agergec.github.io/language_study';
+      return `${base}/content/${SAMPLE_FILE_NAME}`;
+    }
+
     async function handleFileLoad(files, opts = {}) {
         let totalWords = 0;
 
@@ -1610,40 +1730,113 @@
         for (const file of files) {
             try {
                 const content = await readFile(file);
-                const fileWords = content.split("\n").filter(w => w.trim());
+                const fileWords = parseWordListContent(content);
                 if (fileWords.length > 0) {
-                  wordLists[file.name] = { words: fileWords, enabled: true };
-                  totalWords += fileWords.length;
+                  const { count } = storeWordList(file.name, fileWords);
+                  totalWords += count;
+                } else {
+                  showToast(i18n[curLang].toast_empty_list);
                 }
             } catch (err) {
+                console.error('File load failed', err);
                 showToast(`Error: Could not load ${file.name}.`);
             }
         }
 
         if (totalWords > 0) {
-            generateWordListsUI();
-            rebuildActiveWordsList();
-            welcomeModal.classList.remove('visible');
-
-            let toastMessage;
-            const fileCount = Object.keys(wordLists).length;
-
-            if (fileCount === 1) {
-                toastMessage = i18n[curLang].toast_single_file.replace('{count}', totalWords);
-            } else {
-                toastMessage = i18n[curLang].toast_multi_file.replace('{wordCount}', totalWords).replace('{fileCount}', fileCount);
-            }
-            // Suppress success toast within Files panel of the menu
-            const filesPanel = document.getElementById('filesPanel');
-            const menuModalEl = document.getElementById('menuModal');
-            const inFilesPanel = !!(menuModalEl && menuModalEl.classList.contains('visible') && filesPanel && filesPanel.getAttribute('aria-hidden') === 'false');
-            if (!opts.suppressToast && !inFilesPanel) {
-              showToast(toastMessage);
-            }
-            clearAudioCache();
-            // Ask to persist to IndexedDB (one-time per session unless accepted)
-            maybePromptPersist();
+            finalizeWordListImport(totalWords, opts);
+            return true;
         }
+        return false;
+    }
+
+    async function loadWordListFromUrl(rawUrl, opts = {}) {
+      const trimmed = (rawUrl || '').trim();
+      if (!trimmed) {
+        showToast(i18n[curLang].toast_url_invalid);
+        return false;
+      }
+      let parsed;
+      try {
+        parsed = new URL(trimmed, location.href);
+      } catch (err) {
+        showToast(i18n[curLang].toast_url_invalid);
+        return false;
+      }
+      const allowedProtocols = ['http:', 'https:'];
+      const sameProtocolAllowed = parsed.protocol === location.protocol && parsed.protocol === 'file:';
+      if (!allowedProtocols.includes(parsed.protocol) && !sameProtocolAllowed) {
+        showToast(i18n[curLang].toast_url_invalid);
+        return false;
+      }
+      try {
+        const response = await fetch(parsed.toString(), { cache: 'no-cache' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const text = await response.text();
+        const words = parseWordListContent(text);
+        if (words.length === 0) {
+          showToast(i18n[curLang].toast_empty_list);
+          return false;
+        }
+        const preferredName = opts.preferName || deriveListNameFromUrl(parsed.toString());
+        const { count } = storeWordList(preferredName, words);
+        finalizeWordListImport(count, opts);
+        return true;
+      } catch (err) {
+        console.error('URL load failed', err);
+        showToast(i18n[curLang].toast_url_failed);
+        return false;
+      }
+    }
+
+    function loadSampleWordList(opts = {}) {
+      return loadWordListFromUrl(getSampleWordListUrl(), { ...opts, preferName: SAMPLE_FILE_NAME });
+    }
+
+    function setupSampleLoader(buttonId, opts = {}) {
+      const btn = document.getElementById(buttonId);
+      if (!btn) return;
+      btn.addEventListener('click', async () => {
+        if (btn.dataset.loading === '1') return;
+        btn.dataset.loading = '1';
+        btn.classList.add('link-disabled');
+        try {
+          await loadSampleWordList(opts);
+        } finally {
+          delete btn.dataset.loading;
+          btn.classList.remove('link-disabled');
+        }
+      });
+    }
+
+    function setupUrlLoader(inputId, buttonId, opts = {}) {
+      const input = document.getElementById(inputId);
+      const btn = document.getElementById(buttonId);
+      if (!input || !btn) return;
+      const trigger = async () => {
+        if (btn.dataset.loading === '1') return;
+        const value = (input.value || '').trim();
+        if (!value) {
+          showToast(i18n[curLang].toast_url_invalid);
+          return;
+        }
+        btn.dataset.loading = '1';
+        btn.classList.add('link-disabled');
+        try {
+          const success = await loadWordListFromUrl(value, opts);
+          if (success) input.value = '';
+        } finally {
+          delete btn.dataset.loading;
+          btn.classList.remove('link-disabled');
+        }
+      };
+      btn.addEventListener('click', trigger);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          trigger();
+        }
+      });
     }
     
     function shuffleArray(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } }
@@ -3205,6 +3398,10 @@
         });
       }
     }
+    setupSampleLoader('welcomeSampleBtn');
+    setupSampleLoader('filesSampleBtn', { suppressToast: true });
+    setupUrlLoader('welcomeUrlInput', 'welcomeUrlLoadBtn');
+    setupUrlLoader('filesUrlInput', 'filesUrlLoadBtn', { suppressToast: true });
     function isFileDrag(e) {
       try {
         if (!e.dataTransfer) return false;

@@ -18,6 +18,7 @@ jobs:
           mkdir -p dist
           # Use beta variant as the root index for the beta site
           cp beta/index.html dist/index.html
+          if [ -f sw.js ]; then cp sw.js dist/; fi
           # Optionally include shared asset dirs if present
           for d in assets static public; do
             if [ -d "$d" ]; then cp -R "$d" "dist/$d"; fi

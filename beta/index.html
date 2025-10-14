@@ -3781,12 +3781,13 @@
           const isLocal = ['localhost','127.0.0.1'].includes(location.hostname);
           const isSecure = location.protocol === 'https:' || isLocal;
           if ('serviceWorker' in navigator && isSecure) {
-            const SW_CODE = `const CACHE='study-app-v1';const CORE=['./','./index.html'];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()))});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.map(k=>k===CACHE?null:caches.delete(k)))).then(()=>self.clients.claim()))});self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET'||!r.url.startsWith(self.location.origin))return;e.respondWith(caches.match(r).then(c=>c||fetch(r).then(resp=>{const cp=resp.clone();caches.open(CACHE).then(cc=>cc.put(r,cp));return resp}).catch(()=>c)))})`;
-            const swBlob = new Blob([SW_CODE], { type: 'application/javascript' });
-            const swUrl = URL.createObjectURL(swBlob);
-            navigator.serviceWorker.register(swUrl);
+            navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(err => {
+              console.warn('Service worker registration failed', err);
+            });
           }
-        } catch (_) {}
+        } catch (err) {
+          console.warn('Service worker registration threw', err);
+        }
 
         // Inject manifest from inline JSON (with data-URI icons)
         try {

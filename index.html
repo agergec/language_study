@@ -1375,7 +1375,7 @@
     let shuffleEnabled = false;
     let originalWordOrder = [];
     let isSessionComplete = false;
-    const APP_VERSION = 'v1.9.1';
+    const APP_VERSION = 'v1.9.2';
     const APP_IS_BETA = APP_VERSION.includes('beta');
     const URL_LOADING_ENABLED = false; // Flip to true once cross-origin loading is production-ready.
     const SAMPLE_FILE_NAME = 'a1_test_words.txt';
@@ -1396,6 +1396,7 @@
     let openaiAudio = null;
     let elevenKey = null; // ElevenLabs API key (local)
     let googleKey = null; // Google Cloud TTS API key (local)
+    let voicePreferenceExplicit = false;
 
     // --- ENV / BROWSER DETECTION ---
     const UA = navigator.userAgent || '';
@@ -1660,14 +1661,25 @@
         currentVoice = 'system';
       };
       let existingIndex = Array.from(vs.options).findIndex(o => o.value === currentVoice);
-      if (existingIndex >= 0) {
-        vs.selectedIndex = existingIndex;
-      } else if (isIOS || isMac || isSafari) {
-        if (!selectVoiceByTerms(['thomas'])) {
-          if (!(isSafari && selectVoiceByTerms(['audrey','amelie','amélie']))) {
-            setSystemDefault();
-          }
+      const currentValue = existingIndex >= 0 ? vs.options[existingIndex].value : null;
+      const shouldRespectExisting = existingIndex >= 0 && (voicePreferenceExplicit || currentValue !== 'system');
+      const autoSelectPreferredVoice = () => {
+        const gotThomas = selectVoiceByTerms(['thomas']);
+        const gotAlt = !gotThomas && isSafari ? selectVoiceByTerms(['audrey','amelie','amélie']) : false;
+        const success = gotThomas || gotAlt;
+        if (success && !voicePreferenceExplicit) {
+          try { localStorage.setItem('selectedVoice', currentVoice); } catch (_) {}
         }
+        return success;
+      };
+      if (shouldRespectExisting) {
+        vs.selectedIndex = existingIndex;
+      } else if ((isIOS || isMac || isSafari) && (!voicePreferenceExplicit || !currentVoice || currentVoice === 'system')) {
+        if (!autoSelectPreferredVoice()) {
+          setSystemDefault();
+        }
+      } else if (existingIndex >= 0) {
+        vs.selectedIndex = existingIndex;
       } else {
         setSystemDefault();
       }
@@ -3538,7 +3550,11 @@
     
     document.getElementById('voiceSelect').addEventListener('change', e => { 
       currentVoice = e.target.value; 
-      try { localStorage.setItem('selectedVoice', currentVoice); } catch (_) {}
+      voicePreferenceExplicit = true;
+      try { 
+        localStorage.setItem('selectedVoice', currentVoice); 
+        localStorage.setItem('voicePreferenceExplicit', '1');
+      } catch (_) {}
       updateVoiceIndicator(); 
       renderVoiceDebug();
       clearAudioCache();
@@ -3734,6 +3750,9 @@
     // --- INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', () => {
         // Restore preferences
+        try {
+          voicePreferenceExplicit = localStorage.getItem('voicePreferenceExplicit') === '1';
+        } catch (_) {}
         try {
           const savedVoice = localStorage.getItem('selectedVoice');
           if (savedVoice) currentVoice = savedVoice;

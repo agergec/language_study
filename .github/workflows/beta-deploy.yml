@@ -22,6 +22,11 @@ jobs:
           for d in assets static public; do
             if [ -d "$d" ]; then cp -R "$d" "dist/$d"; fi
           done
+          # Ensure beta-specific content is available at /content/ on the beta site
+          if [ -d beta/content ]; then
+            mkdir -p dist/content
+            cp -R beta/content/. dist/content
+          fi
 
       - name: Publish to external repository (gh-pages)
         uses: peaceiris/actions-gh-pages@v3

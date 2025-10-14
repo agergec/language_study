@@ -458,6 +458,7 @@
                   <button id="welcomeUrlLoadBtn" class="panel-link" type="button" data-i18n="url_add_action">Load URL</button>
                 </div>
                 <div class="settings-note" style="padding:0; text-align:center;" data-i18n="url_add_tip">Supports HTTPS text files; duplicates replace existing lists with the same name.</div>
+                <div class="settings-note" style="padding:0; text-align:center;" data-i18n="url_add_disabled">URL loading is under development.</div>
               </div>
             </div>
             <div class="settings-card" style="margin-top:12px;">
@@ -916,6 +917,7 @@
                       <button id="filesUrlLoadBtn" class="panel-link" type="button" data-i18n="url_add_action">Load URL</button>
                     </div>
                     <div class="settings-note" style="padding:0; text-align:center;" data-i18n="url_add_tip">Supports HTTPS text files; duplicates replace existing lists with the same name.</div>
+                    <div class="settings-note" style="padding:0; text-align:center;" data-i18n="url_add_disabled">URL loading is under development.</div>
                   </div>
                 </div>
                 <div class="settings-card" style="margin-top:12px;">
@@ -1170,6 +1172,7 @@
         url_add_action: "Load URL",
         url_add_placeholder: "https://example.com/words.txt",
         url_add_tip: "Supports HTTPS text files; duplicates replace existing lists with the same name.",
+        url_add_disabled: "URL loading is under development.",
         toast_url_invalid: "Enter a valid URL (https://…) to load words.",
         toast_url_failed: "Couldn't load that URL. Check the address or CORS settings.",
         toast_empty_list: "The file loaded but did not contain any words.",
@@ -1269,6 +1272,7 @@
         url_add_action: "Charger l’URL",
         url_add_placeholder: "https://exemple.com/mots.txt",
         url_add_tip: "Prend en charge les fichiers texte HTTPS ; remplace les listes portant le même nom.",
+        url_add_disabled: "Le chargement par URL est en cours de développement.",
         toast_url_invalid: "Saisissez une URL valide (https://…) pour charger des mots.",
         toast_url_failed: "Impossible de charger cette URL. Vérifiez l’adresse ou les paramètres CORS.",
         toast_empty_list: "Le fichier a été chargé mais ne contient aucun mot.",
@@ -1369,6 +1373,7 @@
     let isSessionComplete = false;
     const APP_VERSION = 'v1.9.0';
     const APP_IS_BETA = APP_VERSION.includes('beta');
+    const URL_LOADING_ENABLED = false;
     const SAMPLE_FILE_NAME = 'a1_test_words.txt';
     // Articles quiz state
     let prefixWords = [];
@@ -1813,6 +1818,12 @@
       const input = document.getElementById(inputId);
       const btn = document.getElementById(buttonId);
       if (!input || !btn) return;
+      if (!URL_LOADING_ENABLED) {
+        btn.classList.add('link-disabled');
+        btn.setAttribute('disabled', 'disabled');
+        input.setAttribute('disabled', 'disabled');
+        return;
+      }
       const trigger = async () => {
         if (btn.dataset.loading === '1') return;
         const value = (input.value || '').trim();

@@ -198,6 +198,127 @@
     .mode-options, .word-lists-options { display: flex; flex-direction: column; gap: 0.75rem; }
     .mode-option { display: flex; align-items: center; gap: 0.5rem; }
     .close-btn { font-size: 1.5rem; }
+
+    /* Full-sheet modals (Help & Tutorial) */
+    .sheet-modal {
+      --sheet-padding: clamp(1rem, 3vh, 2.5rem);
+      align-items: center;
+      justify-content: center;
+      padding: var(--sheet-padding);
+    }
+    html.is-standalone .sheet-modal {
+      padding-top: calc(var(--sheet-padding) + env(safe-area-inset-top));
+      padding-bottom: calc(var(--sheet-padding) + env(safe-area-inset-bottom));
+    }
+    .sheet-modal .modal-content {
+      width: min(960px, 100%);
+      max-width: calc(100% - 2rem);
+      max-height: none;
+      height: auto;
+      padding: 0;
+      background: transparent;
+      box-shadow: none;
+      border-radius: 0;
+      display: flex;
+      justify-content: center;
+    }
+    .sheet-panel {
+      width: 100%;
+      max-height: calc(100svh - (2 * var(--sheet-padding)));
+      background: var(--background-color);
+      border-radius: 22px;
+      box-shadow: 0 22px 48px rgba(0,0,0,0.16);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .sheet-header h2 {
+      flex: 1;
+      margin: 0;
+      text-align: center;
+      font-size: 1.35rem;
+      font-weight: 800;
+    }
+    .sheet-back {
+      background: none;
+      border: 0;
+      font: inherit;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      cursor: pointer;
+      padding: 0.25rem 0.35rem;
+    }
+    .sheet-header .close-btn {
+      font-size: 1.75rem;
+      line-height: 1;
+      padding: 0 0.25rem;
+    }
+    .sheet-body {
+      flex: 1;
+      padding: 1.5rem;
+      background: #f2f2f7;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .sheet-body .settings-section {
+      margin-top: 1.5rem;
+    }
+    .sheet-body .settings-section:first-of-type {
+      margin-top: 0;
+    }
+    .tutorial-stack {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.65rem;
+    }
+    .tutorial-steps {
+      margin: 0.25rem 0 0;
+      padding-left: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+    .tutorial-steps li {
+      line-height: 1.45;
+    }
+    .tutorial-steps a {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 700;
+    }
+    .tutorial-steps a:hover { text-decoration: underline; }
+    @media (max-width: 768px) {
+      .sheet-modal {
+        padding: 0;
+      }
+      .sheet-modal .modal-content {
+        max-width: none;
+        height: 100%;
+      }
+      .sheet-panel {
+        border-radius: 0;
+        max-height: none;
+        height: 100%;
+        box-shadow: none;
+      }
+      .sheet-header {
+        padding: calc(0.85rem + env(safe-area-inset-top)) 1rem 0.85rem;
+      }
+      .sheet-body {
+        padding: 1rem;
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+      }
+    }
+
     #welcomeModal .modal-content { text-align: center; }
     #welcomeUploadArea { padding: 2rem; border: 3px dashed var(--primary-color); border-radius: var(--border-radius); cursor: pointer; background-color: var(--light-gray); }
     #welcomeUploadArea:hover { background-color: #eaf2fa; }
@@ -537,115 +658,204 @@
       </div>
     </div>
   </div>
-
-  <div id="helpModal" class="modal">
+  <div id="helpModal" class="modal sheet-modal">
     <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
-      <div class="modal-header"><h2 data-i18n="help_title">Help</h2><button class="icon-btn close-btn" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">&times;</button></div>
-      <div class="panel-body" style="padding: 1rem; background:#f2f2f7;">
+      <section class="sheet-panel" aria-labelledby="helpPanelTitleModal">
+        <div class="sheet-header">
+          <button id="helpBackBtn" class="sheet-back" type="button" data-i18n="sheet_back">‹ Back</button>
+          <h2 id="helpPanelTitleModal" data-i18n="help_title">Help</h2>
+          <button class="icon-btn close-btn" type="button" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">&times;</button>
+        </div>
+        <div class="sheet-body">
 
-        <div class="settings-section">
-          <div class="settings-section-title" data-i18n="help_getting_started_title">GETTING STARTED</div>
-          <div class="settings-card">
-            <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
-              <div data-i18n="help_load_words"><b>Load words</b>: Add one or more <code>.txt</code> files. Each line is a word or phrase.</div>
-              <div data-i18n="help_add_files_ways">Ways to add files: Welcome screen → “Add Word List…”, Menu → Data & System → Files → “Add Word List…”, or drag & drop anywhere.</div>
-              <div data-i18n="help_after_loading">After loading: the app builds your word pool and enables study controls.</div>
+          <div class="settings-section">
+            <div class="settings-section-title" data-i18n="help_getting_started_title">GETTING STARTED</div>
+            <div class="settings-card">
+              <div class="settings-item tutorial-stack">
+                <div data-i18n="help_load_words"><b>Load words</b>: Add one or more <code>.txt</code> files. Each line is a word or phrase.</div>
+                <div data-i18n="help_add_files_ways">Ways to add files: Welcome screen → “Add Word List…”, Menu → Data & System → Files → “Add Word List…”, or drag & drop anywhere.</div>
+                <div data-i18n="help_after_loading">After loading: the app builds your word pool and enables study controls.</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="settings-section">
-          <div class="settings-section-title" data-i18n="help_modes_title">STUDY MODES</div>
-          <div class="settings-card">
-            <div class="settings-item"><div class="settings-label" data-i18n="help_mode_listen_read_label"><b>Listen & Read</b></div><div class="settings-value" data-i18n="help_mode_listen_read_desc">Shows text and speaks once.</div></div>
-            <div class="settings-item"><div class="settings-label" data-i18n="help_mode_read_then_say_label"><b>Read then Say</b></div><div class="settings-value" data-i18n="help_mode_read_then_say_desc">You read first. On Next, the app speaks once.</div></div>
-            <div class="settings-item"><div class="settings-label" data-i18n="help_mode_listen_then_repeat_label"><b>Listen then Repeat</b></div><div class="settings-value" data-i18n="help_mode_listen_then_repeat_desc">App speaks, you repeat. On Next, reveals and speaks again.</div></div>
-            <div class="settings-item"><div class="settings-label" data-i18n="help_mode_articles_def_label"><b>Articles — le/la</b></div><div class="settings-value" data-i18n="help_mode_articles_def_desc">Shows base (e.g., “… table”). Pick the correct definite article.</div></div>
-            <div class="settings-item"><div class="settings-label" data-i18n="help_mode_articles_indef_label"><b>Articles — un/une</b></div><div class="settings-value" data-i18n="help_mode_articles_indef_desc">Shows base (e.g., “… ami”). Pick the correct indefinite article.</div></div>
-            <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
-              <div data-i18n="help_switch_mode"><b>Switch mode</b>: Menu → General → Study Mode or tap the mode text in the footer.</div>
-              <div data-i18n="help_availability"><b>Availability</b>: Article modes become selectable when matching words exist.</div>
+          <div class="settings-section">
+            <div class="settings-section-title" data-i18n="help_modes_title">STUDY MODES</div>
+            <div class="settings-card">
+              <div class="settings-item"><div class="settings-label" data-i18n="help_mode_listen_read_label"><b>Listen & Read</b></div><div class="settings-value" data-i18n="help_mode_listen_read_desc">Shows text and speaks once.</div></div>
+              <div class="settings-item"><div class="settings-label" data-i18n="help_mode_read_then_say_label"><b>Read then Say</b></div><div class="settings-value" data-i18n="help_mode_read_then_say_desc">You read first. On Next, the app speaks once.</div></div>
+              <div class="settings-item"><div class="settings-label" data-i18n="help_mode_listen_then_repeat_label"><b>Listen then Repeat</b></div><div class="settings-value" data-i18n="help_mode_listen_then_repeat_desc">App speaks, you repeat. On Next, reveals and speaks again.</div></div>
+              <div class="settings-item"><div class="settings-label" data-i18n="help_mode_articles_def_label"><b>Articles — le/la</b></div><div class="settings-value" data-i18n="help_mode_articles_def_desc">Shows base (e.g., “… table”). Pick the correct definite article.</div></div>
+              <div class="settings-item"><div class="settings-label" data-i18n="help_mode_articles_indef_label"><b>Articles — un/une</b></div><div class="settings-value" data-i18n="help_mode_articles_indef_desc">Shows base (e.g., “… ami”). Pick the correct indefinite article.</div></div>
+              <div class="settings-item tutorial-stack">
+                <div data-i18n="help_switch_mode"><b>Switch mode</b>: Menu → General → Study Mode or tap the mode text in the footer.</div>
+                <div data-i18n="help_availability"><b>Availability</b>: Article modes become selectable when matching words exist.</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="settings-section">
-          <div class="settings-section-title" data-i18n="help_controls_title">CONTROLS & SHORTCUTS</div>
-          <div class="settings-card">
-            <div class="settings-item"><div class="settings-label" data-i18n="help_control_next_label"><b>Next</b></div><div class="settings-value" data-i18n="help_control_next_value">Space</div></div>
-            <div class="settings-item"><div class="settings-label" data-i18n="help_control_repeat_label"><b>Repeat</b></div><div class="settings-value" data-i18n="help_control_repeat_value">R</div></div>
-            <div class="settings-item"><div class="settings-label" data-i18n="help_control_show_label"><b>Show</b></div><div class="settings-value" data-i18n="help_control_show_value">S</div></div>
-            <div class="settings-item"><div class="settings-label" data-i18n="help_control_menu_label"><b>Menu</b></div><div class="settings-value" data-i18n="help_control_menu_value">Alt+M</div></div>
-            <div class="settings-item"><div class="settings-label" data-i18n="help_control_close_label"><b>Close</b></div><div class="settings-value" data-i18n="help_control_close_value">Esc (closes any open modal)</div></div>
-            <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
-              <div><b>Answers panel</b>: On desktop, toggle with the chevron on the left panel.</div>
-              <div><b>Progress</b>: The top bar shows progress by current mode.</div>
+          <div class="settings-section">
+            <div class="settings-section-title" data-i18n="help_controls_title">CONTROLS & SHORTCUTS</div>
+            <div class="settings-card">
+              <div class="settings-item"><div class="settings-label" data-i18n="help_control_next_label"><b>Next</b></div><div class="settings-value" data-i18n="help_control_next_value">Space</div></div>
+              <div class="settings-item"><div class="settings-label" data-i18n="help_control_repeat_label"><b>Repeat</b></div><div class="settings-value" data-i18n="help_control_repeat_value">R</div></div>
+              <div class="settings-item"><div class="settings-label" data-i18n="help_control_show_label"><b>Show</b></div><div class="settings-value" data-i18n="help_control_show_value">S</div></div>
+              <div class="settings-item"><div class="settings-label" data-i18n="help_control_menu_label"><b>Menu</b></div><div class="settings-value" data-i18n="help_control_menu_value">Alt+M</div></div>
+              <div class="settings-item"><div class="settings-label" data-i18n="help_control_close_label"><b>Close</b></div><div class="settings-value" data-i18n="help_control_close_value">Esc (closes any open modal)</div></div>
+              <div class="settings-item tutorial-stack">
+                <div><b>Answers panel</b>: On desktop, toggle with the chevron on the left panel.</div>
+                <div><b>Progress</b>: The top bar shows progress by current mode.</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="settings-section">
-          <div class="settings-section-title" data-i18n="help_voice_title">VOICES & AUDIO</div>
-          <div class="settings-card">
-            <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
-              <div data-i18n="help_voice_selection"><b>Voice selection</b>: Menu → Voice Configuration → Voice. Tap “Test Voice” to preview.</div>
-              <div data-i18n="help_voice_system"><b>System voice</b>: Uses your browser/OS voices for French (fr‑FR).</div>
-              <div data-i18n="help_voice_cloud"><b>OpenAI / ElevenLabs</b>: Add an API key in Integrations to enable extra voices.</div>
-              <div data-i18n="help_voice_quick_change"><b>Quick change</b>: Tap the voice text in the footer to pick a voice inline.</div>
-              <div data-i18n="help_voice_repeat_cache"><b>Repeat speed‑up</b>: The app caches the most recent TTS clip temporarily to replay instantly on “Repeat”. Cache clears on mode/voice/list/shuffle changes and on app start.</div>
+          <div class="settings-section">
+            <div class="settings-section-title" data-i18n="help_voice_title">VOICES & AUDIO</div>
+            <div class="settings-card">
+              <div class="settings-item tutorial-stack">
+                <div data-i18n="help_voice_selection"><b>Voice selection</b>: Menu → Voice Configuration → Voice. Tap “Test Voice” to preview.</div>
+                <div data-i18n="help_voice_system"><b>System voice</b>: Uses your browser/OS voices for French (fr‑FR).</div>
+                <div data-i18n="help_voice_cloud"><b>OpenAI / ElevenLabs</b>: Add an API key in Integrations to enable extra voices.</div>
+                <div data-i18n="help_voice_quick_change"><b>Quick change</b>: Tap the voice text in the footer to pick a voice inline.</div>
+                <div data-i18n="help_voice_repeat_cache"><b>Repeat speed‑up</b>: The app caches the most recent TTS clip temporarily to replay instantly on “Repeat”. Cache clears on mode/voice/list/shuffle changes and on app start.</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="settings-section">
-          <div class="settings-section-title" data-i18n="help_files_persist_title">FILES & PERSISTENCE</div>
-          <div class="settings-card">
-            <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
-              <div data-i18n="help_manage_files"><b>Manage files</b>: Menu → Data & System → Files. See counts, enable/disable, delete (×), and add.</div>
-              <div data-i18n="help_enable_disable"><b>Enable/disable</b>: Toggles take effect immediately and rebuild the session.</div>
-              <div data-i18n="help_delete_file"><b>Delete</b>: Use the × button to remove a file (also removed from local storage).</div>
-              <div data-i18n="help_persistence"><b>Persistence</b>: On first load per session, you can opt to save lists to IndexedDB. If accepted, lists restore automatically on next visit.</div>
-              <div data-i18n="help_reset_app"><b>Reset app</b>: Settings → Reset clears local/session storage, IndexedDB word lists, and cached files.</div>
+          <div class="settings-section">
+            <div class="settings-section-title" data-i18n="help_files_persist_title">FILES & PERSISTENCE</div>
+            <div class="settings-card">
+              <div class="settings-item tutorial-stack">
+                <div data-i18n="help_manage_files"><b>Manage files</b>: Menu → Data & System → Files. See counts, enable/disable, delete (×), and add.</div>
+                <div data-i18n="help_enable_disable"><b>Enable/disable</b>: Toggles take effect immediately and rebuild the session.</div>
+                <div data-i18n="help_delete_file"><b>Delete</b>: Use the × button to remove a file (also removed from local storage).</div>
+                <div data-i18n="help_persistence"><b>Persistence</b>: On first load per session, you can opt to save lists to IndexedDB. If accepted, lists restore automatically on next visit.</div>
+                <div data-i18n="help_reset_app"><b>Reset app</b>: Settings → Reset clears local/session storage, IndexedDB word lists, and cached files.</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="settings-section">
-          <div class="settings-section-title" data-i18n="help_status_bar_title">STATUS BAR QUICK ACTIONS</div>
-          <div class="settings-card">
-            <div class="settings-item"><div class="settings-label"><b>Mode</b></div><div class="settings-value">Tap the text to switch modes inline.</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Voice</b></div><div class="settings-value">Tap the text to pick a voice inline.</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Files</b></div><div class="settings-value">Tap the icon to see file list and add a new list.</div></div>
-            <div class="settings-item"><div class="settings-label"><b>Shuffle</b></div><div class="settings-value">Tap to toggle. A compact confirmation appears near the icon.</div></div>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <div class="settings-section-title">INTEGRATIONS</div>
-          <div class="settings-card">
-            <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
-              <div><b>OpenAI</b>: Add a <code>.key</code> file in Menu → Integrations → OpenAI. Remove with the trash icon.</div>
-              <div><b>ElevenLabs</b>: Add a <code>.key</code> file in Menu → Integrations → ElevenLabs. Remove with the trash icon.</div>
-              <div><b>Notes</b>: Keys are stored locally on your device. Network is required for these voices; if unavailable, the app falls back to the system voice.</div>
+          <div class="settings-section">
+            <div class="settings-section-title" data-i18n="help_status_bar_title">STATUS BAR QUICK ACTIONS</div>
+            <div class="settings-card">
+              <div class="settings-item"><div class="settings-label"><b>Mode</b></div><div class="settings-value">Tap the text to switch modes inline.</div></div>
+              <div class="settings-item"><div class="settings-label"><b>Voice</b></div><div class="settings-value">Tap the text to pick a voice inline.</div></div>
+              <div class="settings-item"><div class="settings-label"><b>Files</b></div><div class="settings-value">Tap the icon to see file list and add a new list.</div></div>
+              <div class="settings-item"><div class="settings-label"><b>Shuffle</b></div><div class="settings-value">Tap to toggle. A compact confirmation appears near the icon.</div></div>
             </div>
           </div>
-        </div>
 
-        <div class="settings-section">
-          <div class="settings-section-title">TIPS & TROUBLESHOOTING</div>
-          <div class="settings-card">
-            <div class="settings-item" style="flex-direction:column; align-items:stretch; gap:6px;">
-              <div>• If audio does not play, try interacting (tap/click) once to satisfy autoplay policies.</div>
-              <div>• If voices are missing, open the Menu and revisit Voice to refresh the list.</div>
-              <div>• If article modes are disabled, ensure your lists include words starting with the required prefixes (le/la or un/une).</div>
-              <div>• On desktop, collapse/expand the Answers panel with the chevron. Use the History button to see all revealed items.</div>
+          <div class="settings-section">
+            <div class="settings-section-title">INTEGRATIONS</div>
+            <div class="settings-card">
+              <div class="settings-item tutorial-stack">
+                <div><b>OpenAI</b>: Add a <code>.key</code> file in Menu → Integrations → OpenAI. Remove with the trash icon.</div>
+                <div><b>ElevenLabs</b>: Add a <code>.key</code> file in Menu → Integrations → ElevenLabs. Remove with the trash icon.</div>
+                <div><b>Notes</b>: Keys are stored locally on your device. Network is required for these voices; if unavailable, the app falls back to the system voice.</div>
+              </div>
             </div>
           </div>
-        </div>
 
-      </div>
+          <div class="settings-section">
+            <div class="settings-section-title">TIPS & TROUBLESHOOTING</div>
+            <div class="settings-card">
+              <div class="settings-item tutorial-stack">
+                <div>• If audio does not play, try interacting (tap/click) once to satisfy autoplay policies.</div>
+                <div>• If voices are missing, open the Menu and revisit Voice to refresh the list.</div>
+                <div>• If article modes are disabled, ensure your lists include words starting with the required prefixes (le/la or un/une).</div>
+                <div>• On desktop, collapse/expand the Answers panel with the chevron. Use the History button to see all revealed items.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
     </div>
   </div>
+
+
+  <div id="tutorialModal" class="modal sheet-modal">
+    <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
+      <section class="sheet-panel tutorial-panel" aria-labelledby="tutorialPanelTitle">
+        <div class="sheet-header">
+          <button id="tutorialBackBtn" class="sheet-back" type="button" data-i18n="sheet_back">‹ Back</button>
+          <h2 id="tutorialPanelTitle" data-i18n="tutorial_title">Hızlı Başlangıç Rehberi</h2>
+          <button class="icon-btn close-btn" type="button" data-i18n-title="label_close" data-i18n-aria-label="label_close" aria-label="Close" title="Close">&times;</button>
+        </div>
+        <div class="sheet-body">
+
+          <div class="settings-section">
+            <div class="settings-section-title" data-i18n="tutorial_intro_title">GİRİŞ</div>
+            <div class="settings-card">
+              <div class="settings-item tutorial-stack">
+                <div data-i18n="tutorial_intro_1">Bu uygulama, Fransızca öğrenen herkesin dinleme ve yüksek sesle tekrar etme pratiğini rahatça yapabilmesi için hazırlandı.</div>
+                <div data-i18n="tutorial_intro_2">Quizlet ya da AlgoApp gibi birçok araç var; biz özellikle “Listen then Repeat” akışını sade ve odaklı bir deneyime dönüştürmeye odaklandık.</div>
+                <div data-i18n="tutorial_intro_3">Bu modda kelime önce seslendirilir, siz tekrar edersiniz; isterseniz yeniden dinler ya da not alırsınız. Metin yalnızca istediğinizde veya sonraki kelimeye geçtiğinizde görünür.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="settings-section-title" data-i18n="tutorial_quick_title">HIZLI BAŞLANGIÇ</div>
+            <div class="settings-card">
+              <div class="settings-item tutorial-stack">
+                <ol class="tutorial-steps">
+                  <li data-i18n="tutorial_quick_step1">Tarayıcınızda <a href="https://agergec.github.io/language_study/index.html" target="_blank" rel="noopener">agergec.github.io/language_study</a> adresini açın.</li>
+                  <li data-i18n="tutorial_quick_step2">Açılan pencerede örnek dosya bağlantısına tıklayın. İçerisinde 250 adet A1 düzeyinde, günlük hayatta az duyulan kelime ve kalıp bulunur.</li>
+                  <li data-i18n="tutorial_quick_step3">İlk seferde çıkacak “Dosyayı tarayıcınıza kaydetmek ister misiniz?” sorusuna “Yes, Continue” deyin. Ayarları sıfırlayana kadar bu soruyu tekrar görmezsiniz.</li>
+                  <li data-i18n="tutorial_quick_step4">Sol alt köşedeki yeşil onay işaretini gördüğünüzde ilk çalışmanıza hazırsınız.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="settings-section-title" data-i18n="tutorial_ready_title">ÇALIŞMAYA BAŞLARKEN</div>
+            <div class="settings-card">
+              <div class="settings-item tutorial-stack">
+                <div data-i18n="tutorial_ready_1">Kelimeyi dinlemek için boş alana dokunmanız yeterli; ses bittikten sonra kelimeyi yüksek sesle tekrar edin.</div>
+                <div data-i18n="tutorial_ready_2">Kelimeyi görmek isterseniz “Show” düğmesine basabilir, sonraki kelimeye “Next” ile geçebilirsiniz.</div>
+                <div data-i18n="tutorial_ready_3">Tekrar duymak için “Repeat” (klavyede R) tuşunu kullanın; uygulama son dinlediğiniz sesi hızlıca yeniden oynatır.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="settings-section-title" data-i18n="tutorial_files_title">DOSYALAR VE KARIŞTIRMA</div>
+            <div class="settings-card">
+              <div class="settings-item tutorial-stack">
+                <div data-i18n="tutorial_files_1">Yeni listeler eklemek için “Add Word List…” düğmesini kullanın ya da hazırladığınız <code>.txt</code> dosyasını sayfaya sürükleyip bırakın.</div>
+                <div data-i18n="tutorial_files_2">Listeler satır satır kelime veya kısa cümlelerden oluşur; Windows’ta Notepad, macOS’ta TextEdit ile kolayca hazırlayabilirsiniz.</div>
+                <div data-i18n="tutorial_files_3">Karıştırma ikonuna bastığınızda tüm listeler farklı bir sırayla tekrar edilir; ritmi değiştirmek istediğinizde idealdir.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="settings-section-title" data-i18n="tutorial_more_title">DİĞER ÖZELLİKLER</div>
+            <div class="settings-card">
+              <div class="settings-item tutorial-stack">
+                <div data-i18n="tutorial_more_1">Sağ üstteki menüden ayarlara ulaşıp çalışma modunu, sesleri ve etkin listeleri yönetebilirsiniz.</div>
+                <div data-i18n="tutorial_more_2">Aynı menüdeki “Help & Guide” bölümü daha teknik ayrıntılar içerir; takıldığınızda göz atın.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="settings-section-title" data-i18n="tutorial_voice_title">SESLER</div>
+            <div class="settings-card">
+              <div class="settings-item tutorial-stack">
+                <div data-i18n="tutorial_voice_1">Uygulama, kullandığınız cihazdaki (Windows, macOS, iOS veya Android) sistem seslerini seçer; tonlama cihazdan cihaza değişebilir.</div>
+                <div data-i18n="tutorial_voice_2">Daha gelişmiş seçenekler için OpenAI, ElevenLabs veya Google TTS anahtarlarınızı ekleyebilirsiniz; bu servisler ücretli üyelik ve temel teknik bilgi gerektirir.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </div>
+  </div>
+
 
   <div id="wordListModal" class="modal">
      <div class="modal-content" role="dialog" aria-modal="true" tabindex="-1">
@@ -751,8 +961,12 @@
                 <div class="settings-item">
                   <button id="menuResetAppBtn" class="settings-danger" style="background:none;border:0;font:inherit;padding:0;margin:0;">Reset App (Reload)</button>
                 </div>
+                <div class="settings-item" id="menuTutorialBtn" role="button" tabindex="0">
+                  <div class="settings-label" data-i18n="menu_tutorial_label">Tutorial</div>
+                  <div class="settings-chevron">›</div>
+                </div>
                 <div class="settings-item" id="menuHelpBtn" role="button" tabindex="0">
-                  <div class="settings-label">Help & Guide</div>
+                  <div class="settings-label" data-i18n="menu_help_label">Help & Guide</div>
                   <div class="settings-chevron">›</div>
                 </div>
               </div>
@@ -1243,7 +1457,34 @@
         help_tip_autoplay: "• If audio does not play, try interacting (tap/click) once to satisfy autoplay policies.",
         help_tip_refresh_voices: "• If voices are missing, open the Menu and revisit Voice to refresh the list.",
         help_tip_articles_availability: "• If article modes are disabled, ensure your lists include words starting with the required prefixes (le/la or un/une).",
-        help_tip_history_panel: "• On desktop, collapse/expand the Answers panel with the chevron. Use the History button to see all revealed items."
+        help_tip_history_panel: "• On desktop, collapse/expand the Answers panel with the chevron. Use the History button to see all revealed items.",
+        menu_help_label: "Help & Guide",
+        menu_tutorial_label: "Tutorial",
+        sheet_back: "‹ Back",
+        tutorial_title: "Hızlı Başlangıç Rehberi",
+        tutorial_intro_title: "GİRİŞ",
+        tutorial_intro_1: "Bu uygulama, Fransızca öğrenen herkesin dinleme ve yüksek sesle tekrar etme pratiğini rahatça yapabilmesi için hazırlandı.",
+        tutorial_intro_2: "Quizlet ya da AlgoApp gibi birçok araç var; biz özellikle “Listen then Repeat” akışını sade ve odaklı bir deneyime dönüştürmeye odaklandık.",
+        tutorial_intro_3: "Bu modda kelime önce seslendirilir, siz tekrar edersiniz; isterseniz yeniden dinler ya da not alırsınız. Metin yalnızca istediğinizde veya sonraki kelimeye geçtiğinizde görünür.",
+        tutorial_quick_title: "HIZLI BAŞLANGIÇ",
+        tutorial_quick_step1: "Tarayıcınızda <a href=\"https://agergec.github.io/language_study/index.html\" target=\"_blank\" rel=\"noopener\">agergec.github.io/language_study</a> adresini açın.",
+        tutorial_quick_step2: "Açılan pencerede örnek dosya bağlantısına tıklayın. İçerisinde 250 adet A1 düzeyinde, günlük hayatta az duyulan kelime ve kalıp bulunur.",
+        tutorial_quick_step3: "İlk seferde çıkacak “Dosyayı tarayıcınıza kaydetmek ister misiniz?” sorusuna “Yes, Continue” deyin. Ayarları sıfırlayana kadar bu soruyu tekrar görmezsiniz.",
+        tutorial_quick_step4: "Sol alt köşedeki yeşil onay işaretini gördüğünüzde ilk çalışmanıza hazırsınız.",
+        tutorial_ready_title: "ÇALIŞMAYA BAŞLARKEN",
+        tutorial_ready_1: "Kelimeyi dinlemek için boş alana dokunmanız yeterli; ses bittikten sonra kelimeyi yüksek sesle tekrar edin.",
+        tutorial_ready_2: "Kelimeyi görmek isterseniz “Show” düğmesine basabilir, sonraki kelimeye “Next” ile geçebilirsiniz.",
+        tutorial_ready_3: "Tekrar duymak için “Repeat” (klavyede R) tuşunu kullanın; uygulama son dinlediğiniz sesi hızlıca yeniden oynatır.",
+        tutorial_files_title: "DOSYALAR VE KARIŞTIRMA",
+        tutorial_files_1: "Yeni listeler eklemek için “Add Word List…” düğmesini kullanın ya da hazırladığınız <code>.txt</code> dosyasını sayfaya sürükleyip bırakın.",
+        tutorial_files_2: "Listeler satır satır kelime veya kısa cümlelerden oluşur; Windows’ta Notepad, macOS’ta TextEdit ile kolayca hazırlayabilirsiniz.",
+        tutorial_files_3: "Karıştırma ikonuna bastığınızda tüm listeler farklı bir sırayla tekrar edilir; ritmi değiştirmek istediğinizde idealdir.",
+        tutorial_more_title: "DİĞER ÖZELLİKLER",
+        tutorial_more_1: "Sağ üstteki menüden ayarlara ulaşıp çalışma modunu, sesleri ve etkin listeleri yönetebilirsiniz.",
+        tutorial_more_2: "Aynı menüdeki “Help & Guide” bölümü daha teknik ayrıntılar içerir; takıldığınızda göz atın.",
+        tutorial_voice_title: "SESLER",
+        tutorial_voice_1: "Uygulama, kullandığınız cihazdaki (Windows, macOS, iOS veya Android) sistem seslerini seçer; tonlama cihazdan cihaza değişebilir.",
+        tutorial_voice_2: "Daha gelişmiş seçenekler için OpenAI, ElevenLabs veya Google TTS anahtarlarınızı ekleyebilirsiniz; bu servisler ücretli üyelik ve temel teknik bilgi gerektirir."
       },
       fr: {
         page_title: "Étude d'écoute en français",
@@ -1339,6 +1580,33 @@
         best_short_sessions: "<b>Sessions courtes</b> : Visez 10–15 minutes, plusieurs fois par jour.",
         best_track_mistakes: "<b>Suivez vos erreurs</b> : Les réponses sautées ou erronées figurent dans Historique — révisez‑les à la fin.",
         best_refresh_lists: "<b>Renouvelez les listes</b> : Enrichissez‑les avec des fichiers <code>.txt</code> générés par ChatGPT, adaptés à votre niveau.",
+        menu_help_label: "Aide & Guide",
+        menu_tutorial_label: "Tutoriel",
+        sheet_back: "‹ Retour",
+        tutorial_title: "Guide de démarrage rapide",
+        tutorial_intro_title: "INTRODUCTION",
+        tutorial_intro_1: "Cette application facilite la pratique de l'écoute et de la répétition en français.",
+        tutorial_intro_2: "Il existe de nombreux outils comme Quizlet ou AlgoApp, mais ici nous privilégions le mode « Listen then Repeat » avec une interface simple.",
+        tutorial_intro_3: "Dans ce mode, le mot est d'abord prononcé ; vous le répétez, le réécoutez ou prenez des notes. Le texte apparaît seulement à votre demande.",
+        tutorial_quick_title: "DÉMARRAGE RAPIDE",
+        tutorial_quick_step1: "Ouvrez <a href=\"https://agergec.github.io/language_study/index.html\" target=\"_blank\" rel=\"noopener\">agergec.github.io/language_study</a> dans votre navigateur.",
+        tutorial_quick_step2: "Cliquez sur le lien du fichier exemple : il contient 250 mots et expressions de niveau A1, peu fréquents mais utiles.",
+        tutorial_quick_step3: "Lors du premier chargement, acceptez la question “Save this file for next time?” en choisissant “Yes, Continue”. Tant que vous ne réinitialisez pas l’application, le message ne revient pas.",
+        tutorial_quick_step4: "L’icône verte en bas à gauche confirme que vous pouvez lancer votre première session.",
+        tutorial_ready_title: "PENDANT LA SESSION",
+        tutorial_ready_1: "Touchez la zone principale pour écouter le mot ; répétez-le ensuite à voix haute.",
+        tutorial_ready_2: "Le bouton « Show » affiche le texte, « Next » passe au mot suivant.",
+        tutorial_ready_3: "Utilisez « Repeat » (ou la touche R) pour réécouter immédiatement le dernier son.",
+        tutorial_files_title: "LISTES ET MÉLANGE",
+        tutorial_files_1: "Ajoutez de nouvelles listes via « Add Word List… » ou en déposant un fichier <code>.txt</code> sur la page.",
+        tutorial_files_2: "Chaque ligne d’un fichier correspond à un mot ou une expression ; créez-les facilement avec Notepad (Windows) ou TextEdit (macOS).",
+        tutorial_files_3: "L’icône de mélange relance vos listes dans un ordre différent, idéal pour varier le rythme.",
+        tutorial_more_title: "AUTRES FONCTIONNALITÉS",
+        tutorial_more_1: "Depuis le menu en haut à droite, gérez le mode d’étude, les voix et les listes actives.",
+        tutorial_more_2: "La section « Help & Guide » du même menu propose des détails techniques supplémentaires si besoin.",
+        tutorial_voice_title: "VOIX",
+        tutorial_voice_1: "L’application utilise les voix installées sur votre appareil (Windows, macOS, iOS ou Android) ; la restitution peut varier selon la plateforme.",
+        tutorial_voice_2: "Ajoutez vos clés OpenAI, ElevenLabs ou Google TTS pour accéder à des voix avancées (services payants et configuration requise).",
         no_voices: "🗣️ Aucune voix disponible",
         indicator_mode_prefix: "📖 Mode :",
         indicator_shuffle_on: "🔀 Mélange : Activé",
@@ -1437,12 +1705,18 @@
     const welcomeModal = document.getElementById('welcomeModal');
     const settingsModal = document.getElementById('settingsModal');
     const helpModal = document.getElementById('helpModal');
+    const tutorialModal = document.getElementById('tutorialModal');
     const wordListModal = document.getElementById('wordListModal');
     const confirmationDialog = document.getElementById('confirmationDialog');
     const toastNotification = document.getElementById('toastNotification');
     const historyModal = document.getElementById('historyModal');
     const historyModalContent = document.getElementById('historyModalContent');
     const historyBtn = document.getElementById('historyBtn');
+    const helpBackBtn = document.getElementById('helpBackBtn');
+    const tutorialBackBtn = document.getElementById('tutorialBackBtn');
+    const sheetModals = new Set();
+    if (helpModal) sheetModals.add(helpModal);
+    if (tutorialModal) sheetModals.add(tutorialModal);
 
 
     // --- CORE FUNCTIONS ---
@@ -3165,20 +3439,8 @@
     if (nextBtn) nextBtn.addEventListener('click', () => { if (!nextBtn.disabled) nextWord(); });
     if (repeatBtn) repeatBtn.addEventListener('click', () => { if (!repeatBtn.disabled) repeatWord(); });
     if (showBtn) showBtn.addEventListener('click', () => { if (!showBtn.disabled) showCurrentWord(); });
-    document.getElementById('helpBtn').addEventListener('click', () => {
-      const menuModalEl = document.getElementById('menuModal');
-      const menuBtnEl = document.getElementById('menuBtn');
-      if (menuModalEl) {
-        menuModalEl.classList.add('visible');
-        if (toastNotification) toastNotification.classList.remove('visible');
-        if (menuBtnEl) menuBtnEl.setAttribute('aria-expanded','true');
-        bodyScrollLock(true);
-        openMenuPanel();
-        openSubpanel('helpPanel');
-        const mco = document.getElementById('menuCloseOverlay'); if (mco) mco.style.display = 'block';
-        const mc = menuModalEl.querySelector('.modal-content'); if (mc) mc.focus();
-      }
-    });
+    const headerHelpBtn = document.getElementById('helpBtn');
+    if (headerHelpBtn) headerHelpBtn.addEventListener('click', () => openHelpSheet('header'));
     // Hamburger menu
     const menuModal = document.getElementById('menuModal');
     const menuBtn = document.getElementById('menuBtn');
@@ -3210,6 +3472,68 @@
       const mp = document.getElementById('menuPanel'); if (mp) { mp.classList.remove('sub-open'); mp.setAttribute('aria-hidden','true'); }
       bodyScrollLock(false);
     });
+
+    function closeMenuForSheet() {
+      if (!menuModal) return;
+      menuModal.classList.remove('visible');
+      menuBtn?.setAttribute('aria-expanded','false');
+      const overlay = document.getElementById('menuCloseOverlay');
+      if (overlay) {
+        overlay.style.display = 'none';
+        if (overlay._posHandler) {
+          window.removeEventListener('resize', overlay._posHandler);
+          window.removeEventListener('scroll', overlay._posHandler, true);
+          overlay._posHandler = null;
+        }
+      }
+      document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
+      const mp = document.getElementById('menuPanel'); if (mp) { mp.classList.remove('sub-open'); mp.setAttribute('aria-hidden','true'); }
+    }
+
+    function reopenMenuFromSheet() {
+      if (!menuModal) return;
+      menuModal.classList.add('visible');
+      if (toastNotification) toastNotification.classList.remove('visible');
+      menuBtn?.setAttribute('aria-expanded','true');
+      bodyScrollLock(true);
+      const overlay = document.getElementById('menuCloseOverlay');
+      if (overlay) overlay.style.display = 'block';
+      const mp = document.getElementById('menuPanel'); if (mp) { mp.setAttribute('aria-hidden','false'); mp.classList.remove('sub-open'); }
+      document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
+      const mc = menuModal.querySelector('.modal-content'); if (mc) mc.focus();
+    }
+
+    function openSheetModal(modal, origin = '') {
+      if (!modal) return;
+      if (origin === 'menu') {
+        closeMenuForSheet();
+        modal.dataset.origin = 'menu';
+      } else {
+        modal.dataset.origin = origin || '';
+      }
+      bodyScrollLock(true);
+      modal.classList.add('visible');
+      const scroller = modal.querySelector('.sheet-body');
+      if (scroller) scroller.scrollTop = 0;
+      const focusTarget = modal.querySelector('.sheet-back') || modal.querySelector('.modal-content');
+      if (focusTarget) focusTarget.focus();
+    }
+
+    function dismissSheetModal(modal) {
+      if (!modal) return;
+      const cameFromMenu = modal.dataset.origin === 'menu';
+      modal.classList.remove('visible');
+      modal.dataset.origin = '';
+      if (cameFromMenu) {
+        reopenMenuFromSheet();
+      } else {
+        bodyScrollLock(false);
+      }
+    }
+
+    function openHelpSheet(origin = '') { if (!helpModal) return; openSheetModal(helpModal, origin); }
+    function openTutorialSheet(origin = '') { if (!tutorialModal) return; openSheetModal(tutorialModal, origin); }
+
     const menuLangEn = document.getElementById('menuLangEn');
     const menuLangFr = document.getElementById('menuLangFr');
     if (menuLangEn) menuLangEn.addEventListener('click', () => { setLanguage('en'); });
@@ -3235,9 +3559,25 @@
     const btnAddWordList=document.getElementById('btnAddWordList'); const fileInputEl=document.getElementById('menuFileInput'); if(btnAddWordList && fileInputEl){ btnAddWordList.addEventListener('click',()=>fileInputEl.click()); }
     const menuHelpBtn = document.getElementById('menuHelpBtn');
     if (menuHelpBtn) {
-      const openHelpPanel = () => { openSubpanel('helpPanel'); };
-      menuHelpBtn.addEventListener('click', openHelpPanel);
-      menuHelpBtn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openHelpPanel(); } });
+      const open = (e) => { if (e && e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return; if (e) e.preventDefault(); openHelpSheet('menu'); };
+      menuHelpBtn.addEventListener('click', open);
+      menuHelpBtn.addEventListener('keydown', open);
+    }
+    const menuTutorialBtn = document.getElementById('menuTutorialBtn');
+    if (menuTutorialBtn) {
+      const openTut = (e) => { if (e && e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return; if (e) e.preventDefault(); openTutorialSheet('menu'); };
+      menuTutorialBtn.addEventListener('click', openTut);
+      menuTutorialBtn.addEventListener('keydown', openTut);
+    }
+    if (helpBackBtn) {
+      const back = (e) => { if (e && e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return; if (e) e.preventDefault(); dismissSheetModal(helpModal); };
+      helpBackBtn.addEventListener('click', back);
+      helpBackBtn.addEventListener('keydown', back);
+    }
+    if (tutorialBackBtn) {
+      const backTut = (e) => { if (e && e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return; if (e) e.preventDefault(); dismissSheetModal(tutorialModal); };
+      tutorialBackBtn.addEventListener('click', backTut);
+      tutorialBackBtn.addEventListener('keydown', backTut);
     }
 
     // Settings modal quick access → open Menu/subpanels
@@ -3471,13 +3811,22 @@
     // Keyboard Shortcuts & Modal Closing
     document.addEventListener("keydown", e => {
       if (e.key === 'Escape') { 
-        allModals.forEach(modal => modal.classList.remove('visible'));
-        document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
-        const mco = document.getElementById('menuCloseOverlay'); if (mco) { mco.style.display = 'none'; if (mco._posHandler) { window.removeEventListener('resize', mco._posHandler); window.removeEventListener('scroll', mco._posHandler, true); mco._posHandler = null; } }
-        // Reset to main panel so next open starts from main menu
-        document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
-        const mp = document.getElementById('menuPanel'); if (mp) { mp.classList.remove('sub-open'); mp.setAttribute('aria-hidden','true'); }
-        bodyScrollLock(false);
+        allModals.forEach(modal => {
+          if (!modal.classList.contains('visible')) return;
+          if (sheetModals.has(modal)) {
+            dismissSheetModal(modal);
+            return;
+          }
+          modal.classList.remove('visible');
+          if (modal.id === 'menuModal') { 
+            document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
+            const mco = document.getElementById('menuCloseOverlay'); if (mco) { mco.style.display = 'none'; if (mco._posHandler) { window.removeEventListener('resize', mco._posHandler); window.removeEventListener('scroll', mco._posHandler, true); mco._posHandler = null; } }
+            document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
+            const mp = document.getElementById('menuPanel'); if (mp) { mp.classList.remove('sub-open'); mp.setAttribute('aria-hidden','true'); }
+          } else {
+            bodyScrollLock(false);
+          }
+        });
       }
       if (e.target.tagName.toLowerCase() === 'input' || document.querySelector('.modal.visible')) return;
       const btnId = { ' ': 'nextBtn', 'r': 'repeatBtn', 's': 'showBtn' }[e.key.toLowerCase()];
@@ -3490,26 +3839,37 @@
     
     allModals.forEach(modal => {
         modal.addEventListener('click', e => { 
-          if (e.target === modal) { 
-            modal.classList.remove('visible'); 
-            if (modal.id === 'menuModal') { 
-              document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
-              const mco = document.getElementById('menuCloseOverlay'); if (mco) { mco.style.display = 'none'; if (mco._posHandler) { window.removeEventListener('resize', mco._posHandler); window.removeEventListener('scroll', mco._posHandler, true); mco._posHandler = null; } }
-              // Ensure panel is reset and scrolling unlocked
-              document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
-              const mp = document.getElementById('menuPanel'); if (mp) { mp.classList.remove('sub-open'); mp.setAttribute('aria-hidden','true'); }
-              bodyScrollLock(false);
-            }
+          if (e.target !== modal) return;
+          if (sheetModals.has(modal)) {
+            dismissSheetModal(modal);
+            return;
+          }
+          modal.classList.remove('visible'); 
+          if (modal.id === 'menuModal') { 
+            document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
+            const mco = document.getElementById('menuCloseOverlay'); if (mco) { mco.style.display = 'none'; if (mco._posHandler) { window.removeEventListener('resize', mco._posHandler); window.removeEventListener('scroll', mco._posHandler, true); mco._posHandler = null; } }
+            // Ensure panel is reset and scrolling unlocked
+            document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
+            const mp = document.getElementById('menuPanel'); if (mp) { mp.classList.remove('sub-open'); mp.setAttribute('aria-hidden','true'); }
+            bodyScrollLock(false);
+          } else {
+            bodyScrollLock(false);
           }
         });
         const closeBtn = modal.querySelector('.close-btn');
         if(closeBtn) closeBtn.addEventListener('click', () => { 
+          if (sheetModals.has(modal)) {
+            dismissSheetModal(modal);
+            return;
+          }
           modal.classList.remove('visible'); 
           if (modal.id === 'menuModal') { 
             document.getElementById('menuBtn')?.setAttribute('aria-expanded','false');
             const mco = document.getElementById('menuCloseOverlay'); if (mco) { mco.style.display = 'none'; if (mco._posHandler) { window.removeEventListener('resize', mco._posHandler); window.removeEventListener('scroll', mco._posHandler, true); mco._posHandler = null; } }
             document.querySelectorAll('#menuModal .subpanel').forEach(sp => sp.setAttribute('aria-hidden','true'));
             const mp = document.getElementById('menuPanel'); if (mp) { mp.classList.remove('sub-open'); mp.setAttribute('aria-hidden','true'); }
+            bodyScrollLock(false);
+          } else {
             bodyScrollLock(false);
           }
         });
